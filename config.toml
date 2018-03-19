@@ -1,0 +1,8 @@
+languageCode = "ja"
+title = "kazkn.com"
+baseurl = "http://kazkn.com/"
+hasCJKLanguage = true
+theme = "myblank"
+
+[params]
+author = "Kazuki Nishikawa"
