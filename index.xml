@@ -6,8 +6,58 @@
     <description>Recent content on kazkn.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Tue, 12 Dec 2017 00:00:00 +0900</lastBuildDate>
+    <lastBuildDate>Mon, 19 Mar 2018 22:45:39 +0900</lastBuildDate>
     <atom:link href="http://kazkn.com/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Vim の f/t を Emacs で</title>
+      <link>http://kazkn.com/post/2018/vim-like-f-in-emacs/</link>
+      <pubDate>Mon, 19 Mar 2018 22:45:39 +0900</pubDate>
+      
+      <guid>http://kazkn.com/post/2018/vim-like-f-in-emacs/</guid>
+      <description>&lt;p&gt;小ネタ。&lt;/p&gt;
+
+&lt;p&gt;今は Emacs をメインで使っているんだけど、もともとは長いこと Vim を使っていた。Vim を使っていた頃に重宝していたのが &lt;a href=&#34;http://vim-jp.org/vimdoc-ja/usr_03.html#03.3&#34;&gt;f, t キー&lt;/a&gt;なんだけど、Emacs にはそれと同じ機能を提供するコマンドが、デフォルトにはない。C-s, C-r が近いんだけど、これらはどちらかといえば Vim の /, ? に近く、f, t とはちょっと違う。重宝していただけに、ほしいなぁと思いつつ、C-s, C-r でだましだましやっていたんだけど、先日同僚と話している際に「一文字打ったら即座に &lt;code&gt;search-forward&lt;/code&gt; する関数を作りゃいいのか」という、言ってしまえば当たり前のことに気づいて、重い腰をあげたのだった。&lt;/p&gt;
+
+&lt;p&gt;コードは以下。f, t, ; は再現したつもり。F, T はサポートしてないけど、ゴールをずらすだけなので、やろうと思えばかんたんだと思う。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;(defvar *vim-ft-last-char*)
+
+(defun %vim-ft (char f-or-t)
+  (let ((forward (eq f-or-t &#39;f)))
+    (unless char
+      (if (eq last-command (if forward &#39;vim-f &#39;vim-t))
+          (setq char *vim-ft-last-char*)
+        (setq char (read-char &amp;quot;Character: &amp;quot;))))
+    (setq *vim-ft-last-char* char)
+
+    (let* ((search-fn (if forward &#39;search-forward &#39;search-backward))
+           (bound-fn (if forward &#39;point-at-eol &#39;point-at-bol))
+           (off (if forward 1 0))
+           (p (save-excursion
+                (forward-char off)
+                (let ((ep (funcall bound-fn)))
+                  (funcall search-fn (char-to-string char) ep nil)))))
+      (when p
+        (goto-char (if forward (1- p) p))))))
+
+(defun vim-f (&amp;amp;optional char)
+  (interactive)
+  (%vim-ft char &#39;f))
+
+(defun vim-t (&amp;amp;optional char)
+  (interactive)
+  (%vim-ft char &#39;t))
+
+(global-set-key (kbd &amp;quot;M-s&amp;quot;) &#39;vim-f)
+(global-set-key (kbd &amp;quot;M-r&amp;quot;) &#39;vim-t)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;M-s&lt;/code&gt; して何か文字を入力すると、同行内の次の「入力した文字」の位置にカーソルが移る。そのまま &lt;code&gt;M-s&lt;/code&gt; を続けると、文字入力なしに同行内の次の「入力した文字」の位置にカーソルが移る。&lt;code&gt;vim-f&lt;/code&gt; が f, ; を再現していて、&lt;code&gt;vim-t&lt;/code&gt; が t, ; を再現している。&lt;/p&gt;
+
+&lt;p&gt;たぶん探せば同じようなことを実現するコード片なりパッケージなりがあるんだろうけど、Emacs Lisp の練習台にちょうどいい大きさのタスクだったので自前で実装した。&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>tmux のキャプチャ機能を使った emacs とシェルの連携</title>
