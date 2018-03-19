@@ -1,6 +1,6 @@
 +++
 date = "2017-12-12T00:00:00+09:00"
-title = "tmux のキャプチャ機能を使った emacs とシェルの連携"
+title = "tmux のキャプチャ機能を使った Emacs とシェルの連携"
 draft = false
 
 +++
