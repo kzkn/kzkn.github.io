@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Goodbye BIND9</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <script>
+     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+     ga('create', 'UA-86485151-1', 'auto');
+     ga('send', 'pageview');
+    </script>
+  </head>
+
+<body>
+  <header>
+    <h1>Goodbye BIND9</h1>
+    <time>2017-02-22</time>
+  </header>
+  <main>
+    <article>
+	  
+
+<p><a href="https://www.cvedetails.com/product/144/ISC-Bind.html?vendor_id=64">BIND9 の脆弱性報告</a> にもいい加減うんざりしてきた。今年 (2017 年) に入ってからも、2 月 21 日現在ですでに <a href="https://www.cvedetails.com/cve/CVE-2016-9131/">3 件</a> の<a href="https://www.cvedetails.com/cve/CVE-2016-9147/">脆弱性が</a> <a href="https://www.cvedetails.com/cve/CVE-2016-9444/">報告されている</a>。</p>
+
+<p>そこで BIND9 からの卒業を考える。新たな仲間は <a href="https://www.nlnetlabs.nl/projects/nsd/">NSD</a> と <a href="https://www.nlnetlabs.nl/projects/unbound/">Unbound</a> だ。NSD も Unbound も、BIND9 に比べて脆弱性の報告が<a href="https://www.cvedetails.com/product/17420/Nlnetlabs-NSD.html?vendor_id=9613">ずっと</a> <a href="https://www.cvedetails.com/product/20882/Nlnetlabs-Unbound.html?vendor_id=9613">少ない</a>。BIND9 の設定にもうんざりしている。NSD, Unbound は設定も簡潔に見える。とにかく BIND9 には数多のフラストレーションを抱えており、隣の芝は青く見えるというもので、NSD, Unbound に逃げようという趣旨だ。</p>
+
+<p>BIND9 は広く普及していて、その意味では偉大なソフトウェアのひとつであることは間違いない。古くからインターネットを支えてきた、重要なソフトウェアのひとつだろう。その一方で BIND9 は複雑化する DNS の仕様を古くから実装してきたからか、その実装もまた複雑怪奇になっていると聞く。脆弱性が報告されるのも仕方がない。そろそろ BIND9 を楽にしてやってもいいのではないだろうか。</p>
+
+<p>余談だが、最近は <a href="https://www.isc.org/blogs/bind-9-refactoring/">BIND9 をリファクタリングしよう</a> という向きもあるらしい。</p>
+
+<h1 id="bind9-vs-nsd-unbound">BIND9 vs NSD, Unbound</h1>
+
+<p>詳しい説明は他に譲るとして、DNS サーバーの役割と BIND9, NSD, Unbound の関係について、かんたんに触れておく。</p>
+
+<p>DNS サーバーには <strong>権威サーバー</strong> という役割と <strong>キャッシュサーバー</strong> という大きく 2 つの役割がある。NSD は権威サーバーの実装、Unbound はキャッシュサーバーの実装である。BIND9 は両方の実装である。</p>
+
+<p>BIND9 の使い方にもよるが、基本的には BIND9 でやっていたことを役割ごとに NSD と Unbound に分割してやる必要がある。</p>
+
+<h1 id="bind9-から-nsd-へ">BIND9 から NSD へ</h1>
+
+<p>一言で言えば、zone ファイルを NSD へ移行する。zone ファイル自体は RFC 1305 で標準化されており、可搬性があるので、BIND9 で使っていたものをそのまま使いまわすことができる。</p>
+
+<p>以下は BIND9 の設定を NSD の設定に書きなおしたものだ:</p>
+
+<pre><code>// BIND9 named.conf
+
+options {
+  listen-on port 53 { 127.0.0.1; };
+  listen-on-v6 port 53 { ::1; };
+  version     &quot;unknown&quot;;
+  // snip
+};
+
+view &quot;internal&quot; {
+  match-clients { localhost; foobar-network; };
+  match-destinations { localhost; foobar-network; };
+
+  zone &quot;.&quot; IN {
+    type hint;
+    file &quot;named.ca&quot;;
+  };
+
+  /* 正引き foobar.local */
+  zone &quot;foobar.local&quot; IN {
+    type master;
+    file &quot;foobar.local.zone&quot;;
+  };
+
+  /* 正引き foobar.org */
+  zone &quot;foobar.org&quot; IN {
+    type master;
+    file &quot;foobar.local.zone&quot;;
+  };
+
+  /* 逆引き */
+  zone &quot;10.in-addr.arpa&quot; {
+    type master;
+    file &quot;foobar.local.rev.zone&quot;;
+  };
+
+  include &quot;/etc/named.rfc1912.zones&quot;;
+  include &quot;/etc/named.root.key&quot;;
+};
+</code></pre>
+
+<pre><code># NSD nsd.conf
+
+server:
+	port: 10053
+	logfile: &quot;/var/log/nsd.log&quot;
+
+zone:
+	name: &quot;foobar.local&quot;
+	zonefile: &quot;foobar.local.zone&quot;
+
+zone:
+	name: &quot;foobar.org&quot;
+	zonefile: &quot;foobar.local.zone&quot;
+
+zone:
+	name: &quot;10.in-addr.arpa&quot;
+	zonefile: &quot;foobar.local.rev.zone&quot;
+</code></pre>
+
+<h1 id="bind9-から-unbound-へ">BIND9 から Unbound へ</h1>
+
+<p>DNS サーバーへの要求のほとんどは <strong>名前解決</strong> であり、それはキャッシュサーバーの役割となる。キャッシュサーバーは自身が管理する名前と IP アドレスのマッピングから、クライアントに要求される名前の解決結果を返す。自身で解決できない場合には上位のサーバーに問い合わせし、その結果を返す。この時、上位のサーバーへの問い合わせ結果を自身に保存 (= キャッシュ) するので、キャッシュサーバーと呼ばれる。以後は上位サーバーに問い合わせすることなく、自身で名前解決できるようになり、高速に応答を返すことができるようになる。</p>
+
+<p>Unbound はキャッシュサーバーでありながらも、単純なレコードの定義 (A レコード, MX レコードなど) は自身にその定義を持つことができる。<code>local-data</code> という設定を使う。ワイルドカードや CNAME などの複雑な定義を要する場合には、権威サーバーに処理を移譲するよう設定する。BIND9 は自身が権威サーバー <strong>でも</strong> あるので、この点についてはあまり小難しいことを考える必要がなかった。</p>
+
+<p>以下は BIND9 の設定を Unbound の設定に書きなおしたものだ:</p>
+
+<pre><code>// BIND9 named.conf
+acl &quot;foobar-network&quot; {
+  10.0.0.0/8;
+};
+
+options {
+  listen-on port 53 { 127.0.0.1; };
+  listen-on-v6 port 53 { ::1; };  // ipv6 は使わない
+  version     &quot;unknown&quot;;
+  directory   &quot;/var/named&quot;;
+  dump-file   &quot;/var/named/data/cache_dump.db&quot;;
+  statistics-file &quot;/var/named/data/named_stats.txt&quot;;
+  memstatistics-file &quot;/var/named/data/named_mem_stats.txt&quot;;
+  allow-query { localhost; foobar-network; };
+  recursion yes;
+
+  /* dnssec は無効 */
+  dnssec-enable no;
+  dnssec-validation no;
+
+  /* Path to ISC DLV key */
+  bindkeys-file &quot;/etc/named.iscdlv.key&quot;;
+
+  managed-keys-directory &quot;/var/named/dynamic&quot;;
+
+  /* 自分で名前解決できない場合は上位へ転送 */
+  forwarders {
+    8.8.8.8;
+  };
+  forward only;
+};
+
+logging {
+  channel default {
+    file &quot;/var/log/named/default.log&quot; versions 5 size 10M;
+    severity info;
+    print-time yes;
+    print-severity yes;
+    print-category yes;
+  };
+
+  channel debug {
+    file &quot;data/named.run&quot;;
+    severity dynamic;
+    print-time yes;
+    print-severity yes;
+    print-category yes;
+  };
+
+  category default { &quot;debug&quot;; &quot;default&quot;; };
+  category queries { &quot;debug&quot;; };
+  category resolver { &quot;debug&quot;; };
+  category lame-servers { null; };  // error (connection refused) resolving というエラーログを抑止する
+};
+
+view &quot;internal&quot; {
+  match-clients { localhost; foobar-network; };
+  match-destinations { localhost; foobar-network; };
+
+  zone &quot;.&quot; IN {
+    type hint;
+    file &quot;named.ca&quot;;
+  };
+
+  /* 正引き foobar.local */
+  zone &quot;foobar.local&quot; IN {
+    type master;
+    file &quot;foobar.local.zone&quot;;
+  };
+
+  /* 正引き foobar.org */
+  zone &quot;foobar.org&quot; IN {
+    type master;
+    file &quot;foobar.local.zone&quot;;
+  };
+
+  /* 逆引き */
+  zone &quot;10.in-addr.arpa&quot; {
+    type master;
+    file &quot;foobar.local.rev.zone&quot;;
+  };
+
+  include &quot;/etc/named.rfc1912.zones&quot;;
+  include &quot;/etc/named.root.key&quot;;
+};
+</code></pre>
+
+<pre><code># Unbound unbound.conf
+
+server:
+	interface: 0.0.0.0
+	access-control: 127.0.0.1/32 allow
+	access-control: 10.0.0.0/8 allow
+	access-control: 0.0.0.0/0 deny
+	do-not-query-localhost: no
+	local-zone: &quot;10.in-addr.arpa&quot; nodefault
+
+stub-zone:
+	name: &quot;foobar.org&quot;
+	stub-addr: 127.0.0.1@10053
+
+stub-zone:
+	name: &quot;foobar.local&quot;
+	stub-addr: 127.0.0.1@10053
+
+stub-zone:
+	name: &quot;10.in-addr.arpa&quot;
+	stub-addr: 127.0.0.1@10053
+
+forward-zone:
+	name: &quot;.&quot;
+	forward-addr: 8.8.8.8
+</code></pre>
+
+    </article>
+  </main>
+  <footer><a href="http://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>
+

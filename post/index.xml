@@ -1,0 +1,2799 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on kazkn.com</title>
+    <link>http://kazkn.com/post/index.xml</link>
+    <description>Recent content in Posts on kazkn.com</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja</language>
+    <lastBuildDate>Tue, 12 Dec 2017 00:00:00 +0900</lastBuildDate>
+    <atom:link href="http://kazkn.com/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>tmux のキャプチャ機能を使った emacs とシェルの連携</title>
+      <link>http://kazkn.com/post/2017/emacs-tmux-sh/</link>
+      <pubDate>Tue, 12 Dec 2017 00:00:00 +0900</pubDate>
+      
+      <guid>http://kazkn.com/post/2017/emacs-tmux-sh/</guid>
+      <description>&lt;p&gt;この記事は &lt;a href=&#34;https://qiita.com/advent-calendar/2017/emacs&#34;&gt;Emacs Advent Calendar 2017&lt;/a&gt; の 12 日目の記事です。&lt;/p&gt;
+
+&lt;p&gt;Emacs とシェルを連携させたいとき主に &lt;code&gt;M-x shell&lt;/code&gt; を使っていたが、最近は tmux 上で起動したシェルを使うようになった。&lt;code&gt;M-x shell&lt;/code&gt; を使う主な理由は、シェルの出力を Emacs でいじりたい (主にヤンクしたい) ということ。しかしそのために微妙に操作感の違う &lt;code&gt;M-x shell&lt;/code&gt; をだましだまし使い続けるのも後ろめたい。普段使いで慣れているふつうのターミナルでシェルを使いつつ Emacs と連携できるならそれに越したことはない。&lt;/p&gt;
+
+&lt;p&gt;tmux のキャプチャ機能を使うことで容易にこれが達成できる。アイデアは &lt;a href=&#34;http://emacs.rubikitch.com/zsh-fish-emacs-eshell/&#34;&gt;こちら&lt;/a&gt; で紹介されていたもので、それを手元で実装した。本稿はそんな小ネタ的なお話。&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;流れはこんな感じ:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Emacs から &lt;code&gt;tmux new-window&lt;/code&gt; で &lt;code&gt;default-directory&lt;/code&gt; をカレントディレクトリとしたウィンドウを起動する&lt;/li&gt;
+&lt;li&gt;そのウィンドウで適当な操作を行う&lt;/li&gt;
+&lt;li&gt;キャプチャしたい内容が出力された時点で &lt;code&gt;tmux capture-pane&lt;/code&gt; でキャプチャしてファイルに書き出す&lt;/li&gt;
+&lt;li&gt;書き出したファイルを Emacs で開く&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Emacs とシェルにちょろっと設定を書くだけで実現できる。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-lisp&#34;&gt;(defun sh (&amp;amp;optional arg)
+  (interactive &amp;quot;P&amp;quot;)
+  (let* ((start-directory (if arg
+                              (ido-read-directory-name &amp;quot;Starting directory: &amp;quot; default-directory)
+                            default-directory))
+         (tmux (executable-find &amp;quot;tmux&amp;quot;))
+         (command (format &amp;quot;%s new-window -c %s&amp;quot; tmux start-directory)))
+    (call-process-shell-command command)))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://www.emacswiki.org/emacs/InteractivelyDoThings&#34;&gt;ido&lt;/a&gt; を使いたくなければ &lt;code&gt;ido-read-directory-name&lt;/code&gt; ではなく &lt;code&gt;read-directory-name&lt;/code&gt; を使うといい。&lt;/p&gt;
+
+&lt;p&gt;シェル (筆者は zsh を使っているが、他のシェルにも簡単に移植できるはず) には以下の設定を追加する。&lt;code&gt;alias&lt;/code&gt; はお好みで。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;alias e=emacsclient
+
+function _do_tmux_capture {
+  dir=&amp;quot;$HOME/tmp/capture&amp;quot;
+  if [ -n &amp;quot;$1&amp;quot; ]; then
+    out=&amp;quot;$dir/$1&amp;quot;
+  else
+    out=`mktemp -u --tmpdir=$dir`
+  fi
+  shift
+  mkdir -p &amp;quot;$dir&amp;quot;
+  tmux capture-pane &amp;quot;$@&amp;quot; &amp;gt;&amp;quot;$out&amp;quot;
+  echo &amp;quot;$out&amp;quot;
+}
+
+function cap { _do_tmux_capture &amp;quot;$1&amp;quot; -p }
+function caph { _do_tmux_capture &amp;quot;$1&amp;quot; -pS -32768 }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;こんな感じで使う:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;$ tmux
+$ emacs -nw
+# emacs 上で M-x sh
+# 制御が新しいウィンドウに移る
+$ ls -l
+合計 92
+-rw-r--r-- 1 kzkn kzkn  8728  6月 30 18:58 #%2Ascratch%2A#191002Nn#
+-rw-r--r-- 1 kzkn kzkn  8728  6月 27 21:58 #%2Ascratch%2A#29651XUl#
+-rw-r--r-- 1 kzkn kzkn 14232  9月 22 06:41 #%2Ascratch%2A#31070eMR#
+-rw-r--r-- 1 kzkn kzkn  8728  6月 27 21:46 #%2Ascratch%2A#3308PVn#
+-rw-r--r-- 1 kzkn kzkn   176  9月 22 06:42 README.md
+drwxr-xr-x 2 kzkn kzkn  4096  2月 22  2017 archetypes
+$ e `cap`
+# tmux の &amp;lt;prefix&amp;gt; l (筆者の環境なら C-t l) で Emacs に戻るとキャプチャした内容が Emacs 上に開かれている
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;cap&lt;/code&gt; と &lt;code&gt;caph&lt;/code&gt; はキャプチャ内容を出力したファイルのパスを出力するので、これを &lt;code&gt;emacsclient&lt;/code&gt; に食わせれば Emacs 上でキャプチャ内容を開いていじれるという寸法。Emacs で編集なりなんなりしたあとは、バッファを殺すなり &lt;code&gt;C-x #&lt;/code&gt; なりすれば &lt;code&gt;emacsclient&lt;/code&gt; が死ぬ。シェルは適当なタイミングで殺すといい。&lt;/p&gt;
+
+&lt;p&gt;ここでは &lt;code&gt;emacs -nw&lt;/code&gt; として非 GUI な Emacs を使っている。非 GUI な Emacs であれば &lt;code&gt;M-x sh&lt;/code&gt; した時点で新しい tmux ウィンドウにフォーカスが移るので、今回紹介した連携方法においては都合がいい。GUI な Emacs を使う場合は Alt-Tab などでターミナルのウィンドウ (ここでいうウィンドウは GUI 環境のウィンドウ) に切り替えなければならず、ちょっと面倒くさい。筆者はこれのためだけに GUI な Emacs から非 GUI な Emacs に移行した。&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>@ModelAttribute を使う</title>
+      <link>http://kazkn.com/post/2017/use-model-attribute/</link>
+      <pubDate>Tue, 19 Sep 2017 21:53:03 +0900</pubDate>
+      
+      <guid>http://kazkn.com/post/2017/use-model-attribute/</guid>
+      <description>
+
+&lt;p&gt;Spring 関連の小ネタで、&lt;a href=&#34;https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/ModelAttribute.html&#34;&gt;@ModelAttribute&lt;/a&gt; を使おう、という話。当たり前に使われているからか、私の探し方が悪いからか、「活用しよう」という記事をあまり見た覚えがないわりに、わりと便利に使えるので紹介したい。&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h1 id=&#34;modelattribute-の動き&#34;&gt;@ModelAttribute の動き&lt;/h1&gt;
+
+&lt;p&gt;&lt;code&gt;@ModelAttribute&lt;/code&gt; アノテーションは、コントローラのメソッドか引数につけて使う。いずれの場合も、ハンドラメソッドが動く前にアノテーションが検出され、メソッドについているか、引数についているかに応じて、Spring によって処理される。&lt;/p&gt;
+
+&lt;p&gt;メソッドについている場合、Spring がハンドラメソッドを呼ぶ前に、&lt;code&gt;@ModelAttribute&lt;/code&gt; つきのメソッドを呼び出す。Spring は、その戻り値を &lt;a href=&#34;https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/ui/Model.html&#34;&gt;Model&lt;/a&gt; に詰める。&lt;code&gt;Model&lt;/code&gt; に詰める際のキー (名前) は、&lt;code&gt;@ModelAttribute.name&lt;/code&gt; で指定する。未指定の場合は戻り値のオブジェクトのクラス名から自動生成されたものになる。&lt;/p&gt;
+
+&lt;p&gt;引数についている場合、Spring がハンドラメソッドを呼ぶ前に、その引数につけられた &lt;code&gt;@ModelAttribute.name&lt;/code&gt; に対応するオブジェクトを &lt;code&gt;Model&lt;/code&gt; から探す。&lt;code&gt;Model&lt;/code&gt; に該当するオブジェクトがなければ、そのタイミングで &lt;code&gt;new&lt;/code&gt; する。引数のオブジェクトが用意できたら、Spring はそのオブジェクトに対してリクエストボディのバインディングを行う。そうして用意されたオブジェクトが、ハンドラメソッドのオブジェクトとして渡される。バインディングを行いたくない場合は &lt;code&gt;@ModelAttribute.binding&lt;/code&gt; に &lt;code&gt;false&lt;/code&gt; を設定する。&lt;/p&gt;
+
+&lt;h1 id=&#34;modelattribute-の用途&#34;&gt;@ModelAttribute の用途&lt;/h1&gt;
+
+&lt;p&gt;かんたんな動きを抑えたところで、&lt;code&gt;@ModelAttribute&lt;/code&gt; の具体的な使い方をいくつか介したい。&lt;/p&gt;
+
+&lt;h2 id=&#34;リクエストボディの内容を受け取る&#34;&gt;リクエストボディの内容を受け取る&lt;/h2&gt;
+
+&lt;p&gt;ど定番の使い方。POST で送られてくるリクエストボディの内容を、オブジェクトにバインディングするというもの。ハンドラメソッドの引数に &lt;code&gt;@ModelAttribute&lt;/code&gt; をつける。特に説明する点はない。&lt;/p&gt;
+
+&lt;h2 id=&#34;全ハンドラメソッドに共通するオブジェクトを作る&#34;&gt;全ハンドラメソッドに共通するオブジェクトを作る&lt;/h2&gt;
+
+&lt;p&gt;例えばこんなコントローラがあったとする:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;@Controller
+@RequestMapping(&amp;quot;/&amp;quot;)
+public class HomeController {
+
+  @GetMapping
+  public String index(Model model) {
+    model.addAttribute(&amp;quot;menu&amp;quot;, findMenuForCurrentUser());
+    return &amp;quot;top&amp;quot;;
+  }
+  
+  @GetMapping
+  public String sitemap(Model model) {
+    model.addAttribute(&amp;quot;menu&amp;quot;, findMenuForCurrentUser());
+    return &amp;quot;sitemap&amp;quot;;
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;このコントローラでは全ハンドラメソッド (といっても 2 つしかないが) で &lt;code&gt;&amp;quot;menu&amp;quot;&lt;/code&gt; という Attribute を詰めている。&lt;code&gt;@ModelAttribute&lt;/code&gt; を使えば、これを DRY にできる。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;@ModelAttribute
+public Menu getMenu() {
+  return findMenuForCurrentUser();
+}
+
+@GetMapping
+public String index() {
+  return &amp;quot;top&amp;quot;;
+}
+
+@GetMapping
+public String sitemap() {
+  return &amp;quot;sitemap&amp;quot;;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;findMenuForCurrentUser&lt;/code&gt; の結果を &lt;code&gt;Model&lt;/code&gt; に突っ込む処理が、&lt;code&gt;@ModelAttribute&lt;/code&gt; を使うことで &lt;code&gt;getMenu&lt;/code&gt; に集約されている。&lt;/p&gt;
+
+&lt;h2 id=&#34;全ハンドラメソッドに共通するオブジェクトを作る-その-2&#34;&gt;全ハンドラメソッドに共通するオブジェクトを作る - その 2&lt;/h2&gt;
+
+&lt;p&gt;URL の一部をエンティティの ID とし、URL 内の ID から対象となるエンティティを検索して処理をする。なんていう設計は、よくあると思う。&lt;code&gt;@ModelAttribute&lt;/code&gt; を使うと、これも DRY にできる。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;@Controller
+@RequestMapping(&amp;quot;/posts/{id}&amp;quot;)
+public class PostController {
+  @ModelAttribute
+  public Post getPost(@PathVariable long id) {
+    return findPostById(id);
+  }
+  
+  @GetMapping
+  public String show() {
+    return &amp;quot;show&amp;quot;;
+  }
+  
+  @GetMapping(&amp;quot;/edit&amp;quot;)
+  public String edit() {
+    return &amp;quot;edit&amp;quot;;
+  }
+  
+  @PutMapping
+  public String update(@ModelAttribute Post post, BindingResult results) {
+    // ...
+    return &amp;quot;redirect:/posts/&amp;quot; + post.id;
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;ここでは URL 内の ID から Post というエンティティを探してくる処理を &lt;code&gt;@ModelAttribute&lt;/code&gt; つきのメソッドで実装した。&lt;code&gt;@ModelAttribute&lt;/code&gt; つきのメソッドでは、ハンドラメソッドと同じような引数を受け取ることができるので、&lt;code&gt;@PathVariable&lt;/code&gt; をメソッドの引数につけることができる。&lt;/p&gt;
+
+&lt;p&gt;ハンドラメソッド &lt;code&gt;update&lt;/code&gt; では引数にも &lt;code&gt;@ModelAttribute&lt;/code&gt; をつけているので、バインディングが行われる。このときバインディングする対象となるのは、&lt;code&gt;getPost&lt;/code&gt; の戻り値のオブジェクトとなる (引数のオブジェクトを &lt;code&gt;Model&lt;/code&gt; から探すから)。&lt;/p&gt;
+
+&lt;h2 id=&#34;存在チェック&#34;&gt;存在チェック&lt;/h2&gt;
+
+&lt;p&gt;URL の一部をエンティティの ID とし、URL 内の ID から対象となるエンティティを検索して処理をする。エンティティが見つからない場合は 404 とする。なんていう設計は、よくあると思う。&lt;code&gt;@ModelAttribute&lt;/code&gt; を使うと、これも DRY にできる。先の例の &lt;code&gt;getPost&lt;/code&gt; を修正する。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;@ModelAttribute
+public Post getPost(@PathVariable long id) {
+  return findPostById(id).orElseThrow(NotFoundException::new);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;ここでは Post が見つからなければ &lt;code&gt;NotFoundException&lt;/code&gt; (という例外が Spring に用意されているわけではない) を投げるようにした。&lt;code&gt;@ModelAttribute&lt;/code&gt; つきのメソッドは常にハンドラメソッドより前に呼び出されるので、Post が見つからなければハンドラメソッドに入る前に例外が飛ぶので、リクエストをエラーとすることができる。&lt;code&gt;NotFoundException&lt;/code&gt; を 404 にひもづける実装は &lt;a href=&#34;https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/ExceptionHandler.html&#34;&gt;@ExceptionHandler&lt;/a&gt; や &lt;a href=&#34;https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/ResponseStatus.html&#34;&gt;@ResponseStatus&lt;/a&gt; で行うとよい。&lt;/p&gt;
+
+&lt;h2 id=&#34;パラメータの前処理&#34;&gt;パラメータの前処理&lt;/h2&gt;
+
+&lt;p&gt;例えば送られてくるクエリパラメータを正規化するとか。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;@Controller
+@RequestMapping(&amp;quot;/search&amp;quot;)
+public class SearchController {
+  @ModelAttribute(name = &amp;quot;query&amp;quot;)
+  public String normalize(@RequestParam String q) {
+    return Normalizer.normalize(q, Normalizer.Form.NFKC);
+  }
+
+  @GetMapping(&amp;quot;/users&amp;quot;)
+  public String searchUsers(@ModelAttribute(name = &amp;quot;query&amp;quot;, binding = false) String query, Model model) {
+    model.addAttribute(&amp;quot;users&amp;quot;, searchUsersByQuery(query));
+    return &amp;quot;searchUsers&amp;quot;;
+  }
+  
+  @GetMapping(&amp;quot;/posts&amp;quot;)
+  public String searchPosts(@ModelAttribute(name = &amp;quot;query&amp;quot;, binding = false) String query, Model model) {
+    model.addAttribute(&amp;quot;posts&amp;quot;, searchPostsByQuery(query));
+    return &amp;quot;searchPosts&amp;quot;;
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;基本的な原理はこれまで解説してきた通り。&lt;code&gt;@ModelAttribute.binding&lt;/code&gt; を使うことで、リクエストボディのバインディングを行わないよう Spring に伝えている。今回は扱っているオブジェクトが &lt;code&gt;String&lt;/code&gt; なので特に問題はないが、独自の (mutable な) クラスで、かつバインディング不要な引数に &lt;code&gt;binding=false&lt;/code&gt; を付け忘れると、予期しないバインディングが行われた結果、バグを作りこむかもしれない。バインディングが不要なら、指定が必須 (= 指定しなきゃ動かない) かどうかにかかわらず、おとなしく &lt;code&gt;binding=false&lt;/code&gt; をつけておくのが無難だと思う。&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;とまぁ、色々便利といったわりには例が少なくなってしまったのだけど、POST のボディをバインディングする以外にも使い道があるよ、というお話でした。&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>積読消化 - 誰のためのデザイン</title>
+      <link>http://kazkn.com/post/2017/the-design-of-everyday-things/</link>
+      <pubDate>Tue, 20 Jun 2017 23:20:04 +0900</pubDate>
+      
+      <guid>http://kazkn.com/post/2017/the-design-of-everyday-things/</guid>
+      <description>&lt;p&gt;ずいぶん昔に買った本だが、序盤を読んではやめ、序盤を読んではやめ、というのを繰り返して、結局最近になるまで全体を通して読むことはなく、積まれていた本。一応全体を通しはしたものの、かなり飛ばしながら読んだ。改めて精読するかもしれないし、しないかもしれない。&lt;/p&gt;
+
+&lt;p&gt;この本は認知科学者がモノのデザインについて切り込んだ本。使いやすさを実現してこそよい「デザイン」であると主張している。そこに見た目のよさ、美しさは関係ない。&lt;/p&gt;
+
+&lt;p&gt;特に印象に残ったのは、間違えることを前提にデザインするべきであるという主張だった。人間はかならず間違いを起こす。間違ってメールを送信する、間違って大切なデータを消す、間違って公開したくない情報をネットに投稿してしまう etc&amp;hellip; どんなに注意していても、間違いを犯してしまう。そういうもの、と捉えるほかない。本書では人間のそういう側面を「前提」として捉え、間違えることを前提としてモノをデザインすべきと主張している。&lt;/p&gt;
+
+&lt;p&gt;なるほど、最近の情報システムはそういう向きのデザインが増えたように思う。Gmail にはメールの誤送信対策として&lt;a href=&#34;https://support.google.com/mail/answer/2819488?co=GENIE.Platform%3DDesktop&amp;amp;hl=ja&#34;&gt;メールの送信をキャンセルできる&lt;/a&gt;ようになっている。SI 業界では忌み嫌われている&lt;a href=&#34;https://www.google.co.jp/search?q=%E8%AB%96%E7%90%86%E5%89%8A%E9%99%A4&#34;&gt;論理削除&lt;/a&gt;も、間違った削除への対応策として使える面がある。間違いを犯しても、その間違いをリカバリする仕組みを、製品のデザインに取り込んでいる。&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;最近は一人でシステムの設計から実装までやることが多く、おのずと UI 部分の設計も行ったりしている。こういったデザイン方面の知見の獲得も取り組んでいきたい課題のひとつであると感じている。&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>時系列データのための SQL クエリ</title>
+      <link>http://kazkn.com/post/2017/query-for-tsd/</link>
+      <pubDate>Fri, 16 Jun 2017 00:56:29 +0900</pubDate>
+      
+      <guid>http://kazkn.com/post/2017/query-for-tsd/</guid>
+      <description>
+
+&lt;p&gt;物事を Event (E) と Resource (R) に分けてモデリングする手法を実践していると、おのずとイベントという時系列データを検索するためのクエリをたくさん書くことになる。時系列データに対するクエリは少し特徴があり、ここでひとつまとめておこうと思う。ここではいくつかの例、方法を紹介するが、よりよい解、または別の解もあると思う。このページで取り上げる SQL はすべて PostgreSQL 9.3 で動作確認している。&lt;/p&gt;
+
+&lt;p&gt;次のようなテーブル構成を例にとる。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;CREATE TABLE person (
+  id SERIAL PRIMARY KEY
+);
+
+CREATE TABLE person_attr_changes (
+  id SERIAL PRIMARY KEY,
+  person_id INTEGER NOT NULL,
+  name VARCHAR NOT NULL,
+  birthday DATE NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (person_id) REFERENCES person(id)
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;人物 (pesron) と、その人物の属性の変更履歴 (person_attr_changes) を持つテーブルを定義している。人物の属性は人物に対して 1 対多の関係となっている。人物の属性を変更すると、person_attr_changes テーブルに &lt;code&gt;UPDATE&lt;/code&gt; をかけるのではなく、変更を含む新たなレコードを &lt;code&gt;INSERT&lt;/code&gt; することを想定している。birthday が変わることは基本的にはないと思うが、name は苗字の変更などで現実的にありえる。&lt;/p&gt;
+
+&lt;p&gt;例えば 2017/6/15 時点での ID=1 (person.id=1) の人物の属性を取得することを考える。person_attr_changes には変更した時点のタイムスタンプとともに属性値が格納されているので、2017/6/15 以前の person_id=1 のレコードのうち、最後のレコードを選択すればよい。もしこの条件に引っかかるレコードがなければ、その時点では ID=1 の人物は存在しなかったことを意味する。&lt;/p&gt;
+
+&lt;p&gt;このような「ある条件を満たす集合の中で、最新のレコードを選択する」というのが、イベントデータを扱っていてもっとも頻出するパターンのクエリだった。&lt;/p&gt;
+
+&lt;p&gt;2 通りのクエリを考える。&lt;/p&gt;
+
+&lt;h2 id=&#34;not-exists-相関サブクエリ&#34;&gt;NOT EXISTS + 相関サブクエリ&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code&gt;SELECT a.*
+  FROM person_attr_changes a
+ WHERE a.person_id = 1
+   AND a.created_at &amp;lt;= &#39;2017-6-15&#39;::date
+   AND NOT EXISTS (SELECT *
+                     FROM person_attr_changes a2
+                    WHERE a2.person_id = 1
+                      AND a2.created_at &amp;lt;= &#39;2017-6-15&#39;::date
+                      AND a2.created_at &amp;gt; a.created_at)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;こんな感じになる。この相関サブクエリと &lt;code&gt;NOT EXISTS&lt;/code&gt; を使ったクエリは頻出する。というか愛用している。解説は後にするとして、まずはうまく動作していることを確認したい。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;select * from person_attr_changes order by id;
+ id | person_id |      name      |  birthday  |     created_at      
+----+-----------+----------------+------------+---------------------
+  1 |         1 | satou tanaka   | 1980-01-01 | 2017-06-13 00:00:00
+  2 |         1 | suzuki tanaka  | 1980-01-01 | 2017-06-14 00:00:00
+  3 |         1 | satou tanaka   | 1980-01-01 | 2017-06-16 00:00:00
+  4 |         2 | yamamoto inoue | 1988-02-03 | 2017-06-15 00:00:00
+(4 rows)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;person_id=1 の人物は、2017/6/13 に &amp;ldquo;satou tanaka&amp;rdquo; という名前で登録し、2017/6/14 に &amp;ldquo;suzuki tanaka&amp;rdquo; という名前に変更している。さらにその後の 2017/6/16 にはまたもとの &amp;ldquo;satou tanaka&amp;rdquo; という名前に戻している。このようなデータに対し、先ほどのクエリを投げる。言うまでもなく、ここで狙うのは &amp;ldquo;suzuki tanaka&amp;rdquo; のレコード。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SELECT a.*
+  FROM person_attr_changes a
+ WHERE a.person_id = 1
+   AND a.created_at &amp;lt;= &#39;2017-6-15&#39;::date
+   AND NOT EXISTS (SELECT *
+                     FROM person_attr_changes a2
+                    WHERE a2.person_id = 1
+                      AND a2.created_at &amp;lt;= &#39;2017-6-15&#39;::date
+                      AND a2.created_at &amp;gt; a.created_at);
+ id | person_id |     name      |  birthday  |     created_at      
+----+-----------+---------------+------------+---------------------
+  2 |         1 | suzuki tanaka | 1980-01-01 | 2017-06-14 00:00:00
+(1 row)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;うまくいった。&lt;/p&gt;
+
+&lt;p&gt;このクエリでは person_attr_changes に対して 2 つの &lt;code&gt;SELECT&lt;/code&gt; を発行している。いずれにおいても、person_id と created_at に対して同じ条件 (ID=1, 2017/6/15 以前) を与えている。サブクエリのほうではさらに &lt;code&gt;AND a2.created_at &amp;gt; a.created_at&lt;/code&gt; を付け加えている。これがキモとなる。これはつまり、&lt;code&gt;person_id = 1 AND created_at &amp;lt;= &#39;2017-6-15&#39;::date&lt;/code&gt; を満たす集合から、a.created_at より大きな created_at を持つレコードが存在しないレコード、すなわち最後のレコードを探し出している。&lt;/p&gt;
+
+&lt;p&gt;created_at が同一になりうる場合には、厳密にはこれだけではうまくいかない。複数のレコードがとれてくる可能性がある。先ほどのサンプルデータにそのようなデータを追加して試してみる。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;select * from person_attr_changes order by id;
+ id | person_id |      name       |  birthday  |     created_at      
+----+-----------+-----------------+------------+---------------------
+  1 |         1 | satou tanaka    | 1980-01-01 | 2017-06-13 00:00:00
+  2 |         1 | suzuki tanaka   | 1980-01-01 | 2017-06-14 00:00:00
+  3 |         1 | satou tanaka    | 1980-01-01 | 2017-06-16 00:00:00
+  4 |         2 | yamamoto inoue  | 1988-02-03 | 2017-06-15 00:00:00
+  5 |         2 | takahashi inoue | 1988-02-03 | 2017-06-15 00:00:00
+(5 rows)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;person_id=2 に created_at が同じレコードがふたつ存在している。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SELECT a.*
+  FROM person_attr_changes a
+ WHERE a.person_id = 2
+   AND a.created_at &amp;lt;= &#39;2017-6-15&#39;::date
+   AND NOT EXISTS (SELECT *
+                     FROM person_attr_changes a2
+                    WHERE a2.person_id = 2
+                      AND a2.created_at &amp;lt;= &#39;2017-6-15&#39;::date
+                      AND a2.created_at &amp;gt; a.created_at);
+ id | person_id |      name       |  birthday  |     created_at      
+----+-----------+-----------------+------------+---------------------
+  4 |         2 | yamamoto inoue  | 1988-02-03 | 2017-06-15 00:00:00
+  5 |         2 | takahashi inoue | 1988-02-03 | 2017-06-15 00:00:00
+(2 rows)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;両方のレコードがとれてくる。このようなことを防ぎたければ、絶対に重複せず、かつ前後関係を表すことのできる列 (連番が発行される ID など) を条件に加えればよい。PostgreSQL の場合は &lt;code&gt;ORDER BY&lt;/code&gt; と &lt;code&gt;LIMIT 1&lt;/code&gt; を組み合わせるのがもっともかんたんかもしれない。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SELECT a.*
+  FROM person_attr_changes a
+ WHERE a.person_id = 2
+   AND a.created_at &amp;lt;= &#39;2017-6-15&#39;::date
+   AND NOT EXISTS (SELECT *
+                     FROM person_attr_changes a2
+                    WHERE a2.person_id = 2
+                      AND a2.created_at &amp;lt;= &#39;2017-6-15&#39;::date
+                      AND a2.created_at &amp;gt; a.created_at)
+ ORDER BY a.id DESC
+ LIMIT 1;
+ id | person_id |      name       |  birthday  |     created_at      
+----+-----------+-----------------+------------+---------------------
+  5 |         2 | takahashi inoue | 1988-02-03 | 2017-06-15 00:00:00
+(1 row)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;すでに十分な数 (要件にもよるところがあるが、現実的にはせいぜい 2 レコード程度ではないだろうか) まで絞り込んだあとの集合に対するソートなので、さほどコストはかからない。&lt;/p&gt;
+
+&lt;h2 id=&#34;order-by-limit-1&#34;&gt;ORDER BY + LIMIT 1&lt;/h2&gt;
+
+&lt;p&gt;もうひとつの方法として、&lt;code&gt;ORDER BY&lt;/code&gt; と &lt;code&gt;LIMIT 1&lt;/code&gt; を使った方法を取り上げる。リレーショナルモデルを重んじる身としてはあまり使いたくない方法ではあるのだが、現実的に使わなければならない状況があったりするので、取り上げる。&lt;/p&gt;
+
+&lt;p&gt;上であげたクエリを、&lt;code&gt;ORDER BY&lt;/code&gt; と &lt;code&gt;LIMIT 1&lt;/code&gt; を使うクエリに書き換える。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SELECT a.*
+  FROM person_attr_changes a
+ WHERE a.person_id = 1
+   AND a.created_at &amp;lt;= &#39;2017-6-15&#39;::date
+   AND a.id = (SELECT a2.id
+                 FROM person_attr_changes a2
+                WHERE a2.person_id = 1
+                  AND a2.created_at &amp;lt;= &#39;2017-6-15&#39;::date
+                ORDER BY a2.created_at
+                LIMIT 1)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;NOT EXISTS&lt;/code&gt; と相関サブクエリを使ったクエリと異なるのは、&lt;code&gt;a.id = (SELECT a2.id&lt;/code&gt; 以下の部分となる。サブクエリの中で &lt;code&gt;ORDER BY&lt;/code&gt; と &lt;code&gt;LIMIT 1&lt;/code&gt; を使っている。サブクエリでは、person_id と created_at の条件を満たす集合を created_at の降順で並べ、その最初のレコードの id をスカラー値として選択している。メインクエリ (という呼び名が正しいかどうかは微妙だが) では、このスカラー値を id に持つ person_attr_changes のレコードを選択するような条件となっている。メインクエリでは a.id 以外の条件は必要なさそうに思えるし、実際なくても正しく動作するのだが、手元で試す限り、サブクエリと同じ条件を含んでいるほうが、PostgreSQL はよい実行計画を出力するようだ。&lt;/p&gt;
+
+&lt;h2 id=&#34;実行計画を見る&#34;&gt;実行計画を見る&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;NOT EXISTS&lt;/code&gt; + 相関サブクエリの弱点のひとつが、集合を十分に絞り込めない条件の場合にコストがかかってしまうということ。先の例では person_id と created_at で絞り込んだ集合の中から、created_at が最大のレコードを探しだした。これは person_id と created_at の条件によって、最大のレコードを探し出す集合を十分に絞り込んでいるため、高速に動作する。集合を絞り込む条件がゆるい、つまり集合を十分に絞り込めない場合、おのずと最大レコードを探し出す範囲も広がり、遅くなる。&lt;/p&gt;
+
+&lt;p&gt;このような状況でも &lt;code&gt;ORDER BY&lt;/code&gt; と &lt;code&gt;LIMIT 1&lt;/code&gt; を使ったクエリは高速に動作する。もちろん適切にインデックスをはっておく必要はあるが。ここではその違いを実行計画を見ながら比較していく。&lt;/p&gt;
+
+&lt;p&gt;もう少し量の多いデータを例を考える。さすがに 1 人の人物の属性を 100 万回変えるようなことはないと思うので、モデルを変える。センサーによる計測データを蓄積していくようなシナリオを考える。センサーは 1 秒に 1 回程度、計測データを出力する。データベースにはそのすべてをタイムスタンプ付きで記録していく。センサーは複数個存在する。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;CREATE TABLE sensor (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR NOT NULL
+);
+
+CREATE TABLE measure (
+  id BIGSERIAL PRIMARY KEY,
+  sensor_id INTEGER NOT NULL,
+  value VARCHAR NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (sensor_id) REFERENCES sensor(id)
+);
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;センサーを 100 個、センサーごとに 100 万件ずつの計測データをテストデータとして挿入する。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;INSERT INTO sensor (name) SELECT &#39;sensor-&#39; || i.v FROM generate_series(1, 100) AS i(v);
+INSERT INTO measure (sensor_id, value, created_at)
+  SELECT i.v, &#39;data-&#39; || i.v || &#39;-&#39; || j.v, &#39;2010-1-1&#39;::timestamp + (j.v || &#39; second&#39;)::interval
+    FROM generate_series(1, 100) AS i(v)
+       , generate_series(1, 1000000) AS j(v);
+
+CREATE INDEX idx_measure_sensor_id ON measure(sensor_id);
+CREATE INDEX idx_measure_created_at ON measure(created_at);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;今回はインデックスをはった。インデックスを使われ方が &lt;code&gt;NOT EXISTS&lt;/code&gt; と相関サブクエリを使ったクエリと &lt;code&gt;ORDER BY&lt;/code&gt; と &lt;code&gt;LIMIT 1&lt;/code&gt; を使ったクエリとで異なるので、その様子を実行計画で見てみたい。&lt;/p&gt;
+
+&lt;p&gt;軽くデータを俯瞰する。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SELECT MIN(created_at), MAX(created_at), COUNT(*) FROM measure;
+         min         |         max         |   count   
+---------------------+---------------------+-----------
+ 2010-01-01 00:00:01 | 2010-01-12 13:46:40 | 100000000
+(1 row)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;センサー 15 (sensor.id=15) における 2010/1/10 22:00:00 時点の最新の計測データを取得することを考える。&lt;/p&gt;
+
+&lt;p&gt;まずは &lt;code&gt;NOT EXISTS&lt;/code&gt; と相関サブクエリを使ったクエリ。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;EXPLAIN ANALYZE
+SELECT s.id, s.name, m.value, m.created_at as measured_at
+  FROM sensor s
+       INNER JOIN measure m ON m.sensor_id = s.id
+ WHERE m.sensor_id = 15
+   AND m.created_at &amp;lt;= &#39;2010-1-10 22:00:00&#39;
+   AND NOT EXISTS (SELECT *
+                     FROM measure m2
+                    WHERE m2.sensor_id = 15
+                      AND m2.created_at &amp;lt;= &#39;2010-1-10 22:00:00&#39;
+                      AND m2.created_at &amp;gt; m.created_at);
+
+                                                                           QUERY PLAN                                                                            
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Nested Loop  (cost=1.14..306403237.25 rows=550689 width=35) (actual time=11830.748..11858.808 rows=1 loops=1)
+   -&amp;gt;  Seq Scan on sensor s  (cost=0.00..2.25 rows=1 width=13) (actual time=0.039..0.046 rows=1 loops=1)
+         Filter: (id = 15)
+         Rows Removed by Filter: 99
+   -&amp;gt;  Nested Loop Anti Join  (cost=1.14..306397728.11 rows=550689 width=26) (actual time=11830.701..11858.752 rows=1 loops=1)
+         -&amp;gt;  Index Scan using idx_measure_sensor_id on measure m  (cost=0.57..37734.59 rows=826034 width=26) (actual time=1.074..261.470 rows=856800 loops=1)
+               Index Cond: (sensor_id = 15)
+               Filter: (created_at &amp;lt;= &#39;2010-01-10 22:00:00&#39;::timestamp without time zone)
+               Rows Removed by Filter: 143200
+         -&amp;gt;  Index Scan using idx_measure_created_at on measure m2  (cost=0.57..114708675.64 rows=275345 width=8) (actual time=0.013..0.013 rows=1 loops=856800)
+               Index Cond: ((created_at &amp;gt; m.created_at) AND (created_at &amp;lt;= &#39;2010-01-10 22:00:00&#39;::timestamp without time zone))
+               Filter: (sensor_id = 15)
+               Rows Removed by Filter: 14
+ Total runtime: 11859.438 ms
+(14 rows)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;次は &lt;code&gt;ORDER BY&lt;/code&gt; と &lt;code&gt;LIMIT 1&lt;/code&gt; を使ったクエリ。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;EXPLAIN ANALYZE
+SELECT s.id, s.name, m.value, m.created_at as measured_at
+  FROM sensor s
+       INNER JOIN measure m ON m.sensor_id = s.id
+ WHERE m.sensor_id = 15
+   AND m.created_at &amp;lt;= &#39;2010-1-10 22:00:00&#39;
+   AND m.id = (SELECT m2.id
+                 FROM measure m2
+                WHERE m2.sensor_id = 15
+                  AND m2.created_at &amp;lt;= &#39;2010-1-10 22:00:00&#39;
+                ORDER BY m2.created_at DESC
+                LIMIT 1);
+
+                                                                               QUERY PLAN                                                                               
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Nested Loop  (cost=414.84..425.12 rows=1 width=35) (actual time=0.205..0.217 rows=1 loops=1)
+   InitPlan 1 (returns $0)
+     -&amp;gt;  Limit  (cost=0.57..414.27 rows=1 width=16) (actual time=0.163..0.163 rows=1 loops=1)
+           -&amp;gt;  Index Scan Backward using idx_measure_created_at on measure m2  (cost=0.57..341732696.43 rows=826034 width=16) (actual time=0.161..0.161 rows=1 loops=1)
+                 Index Cond: (created_at &amp;lt;= &#39;2010-01-10 22:00:00&#39;::timestamp without time zone)
+                 Filter: (sensor_id = 15)
+                 Rows Removed by Filter: 85
+   -&amp;gt;  Seq Scan on sensor s  (cost=0.00..2.25 rows=1 width=13) (actual time=0.022..0.033 rows=1 loops=1)
+         Filter: (id = 15)
+         Rows Removed by Filter: 99
+   -&amp;gt;  Index Scan using measure_pkey on measure m  (cost=0.57..8.59 rows=1 width=26) (actual time=0.011..0.012 rows=1 loops=1)
+         Index Cond: (id = $0)
+         Filter: ((created_at &amp;lt;= &#39;2010-01-10 22:00:00&#39;::timestamp without time zone) AND (sensor_id = 15))
+ Total runtime: 0.285 ms
+(14 rows)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;EXPLAIN ANALYZE&lt;/code&gt; なので実際にクエリを発行し、そのときの実行計画および処理時間、行数などが出力されている。Total runtime を見ると速度の違いは一目瞭然。圧倒的に後者が速い。&lt;/p&gt;
+
+&lt;p&gt;前者では、まず &lt;code&gt;m.created_at &amp;lt;= &#39;2010-1-10 22:00:00&#39;&lt;/code&gt; で引っ掛ける集合を &lt;code&gt;Index Scan using idx_measure_created_at&lt;/code&gt; で集めている。これを満たすレコードは &lt;code&gt;rows=856800&lt;/code&gt; にあるとおり、たくさんある。これを次の &lt;code&gt;Index Scan using idx_measure_created_at on measure m2&lt;/code&gt; の条件に含めている。これらを &lt;code&gt;Nested Loop Anti Join&lt;/code&gt; で結合するため、ループの回数は &lt;code&gt;loops=856800&lt;/code&gt; となっている。つまり 2010-1-10 22:00:00 以前のレコード 856800 件を探すために一度スキャンし、さらにこの中から最大の created_at を持つレコードを探すために 856800 回ループしている。擬似コードに落とすとこんな感じ:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;m = find_by(created_at &amp;lt;= &#39;2010-1-10 22:00:00&#39;)  // m.length=856800
+max = m[0]  // max が所望のレコード
+for (m2 in m[1..])
+  if m2.created_at &amp;gt; max.created_at
+    max = m2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;後者はもっとかんたん。&lt;code&gt;Index Scan Backward using idx_measure_created_at&lt;/code&gt; によってインデックスを逆順にさかのぼり、&lt;code&gt;ORDER BY created_at DESC&lt;/code&gt; と &lt;code&gt;LIMIT 1&lt;/code&gt; によって引っ掛けたいレコードを即座に見つけている。そこから芋づる式に必要なデータを集めている。目的の measure レコードの特定に手間がかからないので速い。&lt;/p&gt;
+
+&lt;h2 id=&#34;他の例&#34;&gt;他の例&lt;/h2&gt;
+
+&lt;p&gt;他のバリエーションのクエリを考えてみる。モデルはセンサー、計測データのほうを使う。&lt;/p&gt;
+
+&lt;p&gt;センサーごとの最新の計測データを求めてみる。&lt;code&gt;ORDER BY&lt;/code&gt;, &lt;code&gt;LIMIT 1&lt;/code&gt; の手法であればかんたん。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SELECT m.*
+  FROM measure m
+       INNER JOIN (SELECT (SELECT m2.id
+                             FROM measure m2
+                            WHERE m2.sensor_id = s.id
+                            ORDER BY m2.created_at DESC
+                            LIMIT 1) AS id
+                     FROM sensor s) x
+         ON m.id = x.id
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;センサーごとの最新の measure.id を INNER JOIN の結合対象としているサブクエリで列挙する。レコード数の少ない sensor で駆動しているので、measure をスキャンする回数を抑えられる。これと measure を結合し、所望の計測データの集合を得る。一番内側のクエリに created_at に対する条件をつければ、ある時点におけるセンサーごとの最後の計測データを取得できる。&lt;/p&gt;
+
+&lt;p&gt;センサー 30 (sensor.id=30) の 2010-1-5 における計測値の最小値と最大値、およびそれぞれの計測日時。同じ値を複数計測していれば、それらすべてを選択する。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;SELECT m.*, &#39;max&#39; AS typ
+  FROM measure m
+ WHERE m.sensor_id = 30
+   AND m.created_at BETWEEN &#39;2010-1-5&#39; AND &#39;2010-1-5 23:59:59&#39;
+   AND NOT EXISTS (SELECT * FROM measure m2
+                    WHERE m2.sensor_id = 30
+                      AND m2.created_at BETWEEN &#39;2010-1-5&#39; AND &#39;2010-1-5 23:59:59&#39;
+                      AND m2.value &amp;gt; m.value)
+UNION ALL
+SELECT m.*, &#39;min&#39; AS typ
+  FROM measure m
+ WHERE m.sensor_id = 30
+   AND m.created_at BETWEEN &#39;2010-1-5&#39; AND &#39;2010-1-5 23:59:59&#39;
+   AND NOT EXISTS (SELECT * FROM measure m2
+                    WHERE m2.sensor_id = 30
+                      AND m2.created_at BETWEEN &#39;2010-1-5&#39; AND &#39;2010-1-5 23:59:59&#39;
+                      AND m2.value &amp;lt; m.value)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;考え方は &lt;code&gt;NOT EXISTS&lt;/code&gt; と相関サブクエリを使った手法を、ほとんどそのまま適用している。m2.value と m.value を、最大、最小それぞれの文脈に応じて比較している点が、これまでの例と異なっている。残念ながらこのクエリは遅くて使い物にならない。遅い原因はすでに解説した通り。&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;個人的にお気に入りの手法であるところの &lt;code&gt;NOT EXISTS&lt;/code&gt; と相関サブクエリを使った方法に不利な結論に至ってしまった。この手法のいいところは、SQL 標準機能だけを使っているということ。最近では &lt;code&gt;LIMIT&lt;/code&gt; 相当の機能も標準化されている (&lt;code&gt;FETCH FIRST ...&lt;/code&gt;) ものの、古い環境では使えない。LIMIT は SQL 標準に含まれないので、使えない環境もある (Oracle とか)。そんなときには &lt;code&gt;NOT EXISTS&lt;/code&gt; と相関サブクエリを使った手法が役に立つ。Oracle の場合は &lt;code&gt;LIMIT&lt;/code&gt; を使うのと似た方法で &lt;code&gt;ROWNUM&lt;/code&gt; を使う方法も考えられるが、ここでは省略する。&lt;/p&gt;
+
+&lt;p&gt;しかしまぁ、&lt;code&gt;LIMIT&lt;/code&gt; (およびそれ相当の機能) が使える環境であれば、おとなしく &lt;code&gt;ORDER BY&lt;/code&gt; と &lt;code&gt;LIMIT 1&lt;/code&gt; を使った方法のほうがいいんじゃないだろうか。パフォーマンスもよいし、わりとかんたんに理解できる点もポイントが高い。順序付ける項目が重複した場合の例外処理も &lt;code&gt;LIMIT 1&lt;/code&gt; によっておのずとカバーできる。リレーショナルモデル的には美しくない (個人の感想) けど、それは目を瞑れば済む話 (悲)。&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>bash と ffmpeg でハマった話</title>
+      <link>http://kazkn.com/post/2017/bash-loop-ffmpeg/</link>
+      <pubDate>Thu, 25 May 2017 22:04:21 +0900</pubDate>
+      
+      <guid>http://kazkn.com/post/2017/bash-loop-ffmpeg/</guid>
+      <description>&lt;p&gt;とてもハマった。一応解決には至ったので、記録を残しておくことにする。&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;mp4 から png を抽出するスクリプトを bash と ffmpeg を使って書いていた。処理対象のファイルは外部のコマンドから得られるので、それを &lt;code&gt;while read&lt;/code&gt; で回して ffmpeg に食わせるという、しごくかんたんなもの。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/bin/bash
+
+print_mp4_files | while read f
+do
+  ffmpeg -loglevel error -i &amp;quot;${f}&amp;quot; -f image2 -vcodec png -r 1 &amp;quot;%03d.png&amp;quot;
+done
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;ところがこれが動作しない。一行目しか処理されないのだ。また、処理対象のファイルが変わると、壊れたファイルとして扱われたり、&lt;code&gt;f&lt;/code&gt; に不正なファイル名が入ったりすることもあり、極めて不可解な挙動になる。&lt;/p&gt;
+
+&lt;p&gt;結論からいうと、ffmpeg に &lt;code&gt;&amp;lt;/dev/null&lt;/code&gt; を足せば解決する。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/bin/bash
+
+print_mp4_files | while read f
+do
+  ffmpeg -loglevel error -i &amp;quot;${f}&amp;quot; -f image2 -vcodec png -r 1 &amp;quot;%03d.png&amp;quot; &amp;lt;/dev/null
+done
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;なぜこんなことになるのか。&lt;a href=&#34;https://unix.stackexchange.com/questions/36310/strange-errors-when-using-ffmpeg-in-a-loop&#34;&gt;Stack Overflow&lt;/a&gt; や &lt;a href=&#34;http://mywiki.wooledge.org/BashFAQ/089&#34;&gt;BashFAQ&lt;/a&gt; に解説が見つかった。&lt;/p&gt;
+
+&lt;p&gt;ffmpeg は stdin を読むプログラムである。実際、ffmpeg の実行中に &amp;ldquo;q&amp;rdquo; と入力すると、処理が中断され、プロセスも終了する。bash では、子プロセスの stdin は親プロセスの stdin を継承するようになっており、&lt;code&gt;read&lt;/code&gt; で読むはずの「次のファイル」が ffmpeg によって食われてしまい、謎の挙動を生んでいる。よって &lt;code&gt;&amp;lt;/dev/null&lt;/code&gt; を足すことで、ffmpeg プロセス (子プロセス) が bash プロセス (親プロセス) の stdin を継承しないようになり、問題を回避できる。&lt;/p&gt;
+
+&lt;p&gt;少し実験してみた。まず、stdin から &lt;code&gt;fgetc&lt;/code&gt; して &lt;code&gt;printf&lt;/code&gt; するだけのかんたんなプログラム getc.c を用意する。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#include &amp;lt;stdio.h&amp;gt;
+
+int main() {
+  int c = fgetc(stdin);
+  printf(&amp;quot;getc: %c\n&amp;quot;, c);
+  return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;コンパイルする。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ gcc -o getc getc.c
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;スクリプトを書き換える。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/bin/bash
+
+while read f
+do
+  echo &amp;quot;sh: $f&amp;quot;
+  ./getc
+done &amp;lt;&amp;lt;EOF
+10
+20
+30
+EOF
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;実行してみる:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ ./stdin.sh
+sh: 10
+getc: 2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;read&lt;/code&gt; が stdin から読んだ一行目 &amp;ldquo;10&amp;rdquo; が &lt;code&gt;f&lt;/code&gt; に入る。その後実行した getc により、stdin から次の文字 &amp;ldquo;2&amp;rdquo; が出力される。親プロセスと子プロセスの stdin がつながっている様子が分かる。&lt;/p&gt;
+
+&lt;p&gt;残りの入力 &amp;ldquo;0\n30\n&amp;rdquo; がなぜ消費されないのか、謎は残る。サブプロセスが終了するタイミングで stdin を閉じてしまい、それにつられて親プロセスの stdin まで閉じてしまっているとか、そういうことだろうか。別の機会にもう少し調べてみたい。&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;残った謎について調べた。結論から言うと、↑の見解は完全に間違いで、getc.c の &lt;code&gt;fgetc&lt;/code&gt; によって stdin の内容が全部読み取られることで、次の &lt;code&gt;read&lt;/code&gt; で EOF を検出している。&lt;/p&gt;
+
+&lt;p&gt;検証用に stdin.sh を次のように改造する:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#!/bin/bash
+
+prog=&amp;quot;$1&amp;quot;
+while read f
+do
+  echo &amp;quot;sh: $f&amp;quot;
+  ./&amp;quot;${prog}&amp;quot;
+done &amp;lt;&amp;lt;EOF
+10xyz
+20xyz
+30xyz
+EOF
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;while&lt;/code&gt; に食わせる入力値をちょっと派手にしたのと、起動するプログラムを外部から指定するようにしたのと、2 点の修正を加えている。&lt;/p&gt;
+
+&lt;p&gt;まずは先ほどの getc.c を使って動かす。システムコールの動きが見たいので、strace に食わせる。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ strace -f -eread,lseek ./stdin.sh getc
+read(3, &amp;quot;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&amp;gt;\0\1\0\0\0\320\303\0\0\0\0\0\0&amp;quot;..., 832) = 832
+read(3, &amp;quot;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&amp;gt;\0\1\0\0\0\320\16\0\0\0\0\0\0&amp;quot;..., 832) = 832
+read(3, &amp;quot;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&amp;gt;\0\1\0\0\0P \2\0\0\0\0\0&amp;quot;..., 832) = 832
+read(3, &amp;quot;MemTotal:        7870540 kB\nMemF&amp;quot;..., 1024) = 1024
+lseek(3, 0, SEEK_CUR)                   = 0
+read(3, &amp;quot;#!/bin/bash\n\nprog=\&amp;quot;$1\&amp;quot;\nwhile rea&amp;quot;..., 80) = 80
+lseek(3, 0, SEEK_SET)                   = 0
+lseek(255, 0, SEEK_CUR)                 = 0
+read(255, &amp;quot;#!/bin/bash\n\nprog=\&amp;quot;$1\&amp;quot;\nwhile rea&amp;quot;..., 102) = 102
+lseek(4, 0, SEEK_CUR)                   = 0
+lseek(0, 0, SEEK_CUR)                   = 0
+read(0, &amp;quot;10xyz\n20xyz\n30xyz\n&amp;quot;, 128)   = 18
+lseek(0, -12, SEEK_CUR)                 = 6
+sh: 10xyz
+Process 4800 attached
+[pid  4800] read(3, &amp;quot;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&amp;gt;\0\1\0\0\0P \2\0\0\0\0\0&amp;quot;..., 832) = 832
+[pid  4800] read(0, &amp;quot;20xyz\n30xyz\n&amp;quot;, 4096) = 12
+getc: 2
+[pid  4800] +++ exited with 0 +++
+--- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=4800, si_status=0, si_utime=0, si_stime=0} ---
+lseek(0, 0, SEEK_CUR)                   = 18
+read(0, &amp;quot;&amp;quot;, 128)                        = 0
+read(255, &amp;quot;&amp;quot;, 102)                      = 0
++++ exited with 0 +++
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;stdin.sh から fork した子プロセス (pid=4800, ./getc のこと) で 4096 バイトも read(2) していることが伺える。&lt;code&gt;fgetc&lt;/code&gt; の戻り値は 1 文字だけだが、libc 内部にはそれ以上の内容をバッファリングするので、このような動作になっている。当然 stdin の最後まで読み込まれるので、stdin.sh における次の read(1) では読み込む内容がなく (= EOF)、プログラムは終了する。&lt;/p&gt;
+
+&lt;p&gt;よく見ると親プロセス (= stdin.sh) でも&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;read(0, &amp;quot;10xyz\n20xyz\n30xyz\n&amp;quot;, 128)   = 18
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;こんなことをやっている。しかしその直後に 1 行分だけ読んだことにするための &lt;code&gt;lseek&lt;/code&gt; が入っているので、&lt;code&gt;fgetc&lt;/code&gt; によるバッファリングのような問題は起きない。&lt;/p&gt;
+
+&lt;p&gt;では、&lt;code&gt;fgetc&lt;/code&gt; ではなく read(2) を使ってみるとどうか。次のような read.c を用意する。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;#include &amp;lt;unistd.h&amp;gt;
+#include &amp;lt;stdio.h&amp;gt;
+
+int main() {
+  int c;
+  read(0, &amp;amp;c, 1);
+  printf(&amp;quot;read: %c\n&amp;quot;, c);
+  return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;コンパイルして、まずは strace なしで動かす。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ gcc -o read read.c
+$ ./stdin.sh read
+sh: 10xyz
+read: 2
+sh: 0xyz
+read: 3
+sh: 0xyz
+read: 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;すべての内容が出力されるようになった。これは read(2) を直接使うことで、確実に 1 バイトしか消費しないように制御を変更したため。一応 strace の内容も確認しておく。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ strace -f -eread,lseek ./stdin.sh read
+read(3, &amp;quot;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&amp;gt;\0\1\0\0\0\320\303\0\0\0\0\0\0&amp;quot;..., 832) = 832
+read(3, &amp;quot;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&amp;gt;\0\1\0\0\0\320\16\0\0\0\0\0\0&amp;quot;..., 832) = 832
+read(3, &amp;quot;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&amp;gt;\0\1\0\0\0P \2\0\0\0\0\0&amp;quot;..., 832) = 832
+read(3, &amp;quot;MemTotal:        7870540 kB\nMemF&amp;quot;..., 1024) = 1024
+lseek(3, 0, SEEK_CUR)                   = 0
+read(3, &amp;quot;#!/bin/bash\n\nprog=\&amp;quot;$1\&amp;quot;\nwhile rea&amp;quot;..., 80) = 80
+lseek(3, 0, SEEK_SET)                   = 0
+lseek(255, 0, SEEK_CUR)                 = 0
+read(255, &amp;quot;#!/bin/bash\n\nprog=\&amp;quot;$1\&amp;quot;\nwhile rea&amp;quot;..., 102) = 102
+lseek(4, 0, SEEK_CUR)                   = 0
+lseek(0, 0, SEEK_CUR)                   = 0
+read(0, &amp;quot;10xyz\n20xyz\n30xyz\n&amp;quot;, 128)   = 18
+lseek(0, -12, SEEK_CUR)                 = 6
+sh: 10xyz
+Process 4775 attached
+[pid  4775] read(3, &amp;quot;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&amp;gt;\0\1\0\0\0P \2\0\0\0\0\0&amp;quot;..., 832) = 832
+[pid  4775] read(0, &amp;quot;2&amp;quot;, 1)             = 1
+read: 2
+[pid  4775] +++ exited with 0 +++
+--- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=4775, si_status=0, si_utime=0, si_stime=0} ---
+lseek(0, 0, SEEK_CUR)                   = 7
+read(0, &amp;quot;0xyz\n30xyz\n&amp;quot;, 128)           = 11
+lseek(0, -6, SEEK_CUR)                  = 12
+sh: 0xyz
+Process 4776 attached
+[pid  4776] read(3, &amp;quot;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&amp;gt;\0\1\0\0\0P \2\0\0\0\0\0&amp;quot;..., 832) = 832
+[pid  4776] read(0, &amp;quot;3&amp;quot;, 1)             = 1
+read: 3
+[pid  4776] +++ exited with 0 +++
+--- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=4776, si_status=0, si_utime=0, si_stime=0} ---
+lseek(0, 0, SEEK_CUR)                   = 13
+read(0, &amp;quot;0xyz\n&amp;quot;, 128)                  = 5
+sh: 0xyz
+Process 4777 attached
+[pid  4777] read(3, &amp;quot;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&amp;gt;\0\1\0\0\0P \2\0\0\0\0\0&amp;quot;..., 832) = 832
+[pid  4777] read(0, &amp;quot;&amp;quot;, 1)              = 0
+read: 
+[pid  4777] +++ exited with 0 +++
+--- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=4777, si_status=0, si_utime=0, si_stime=0} ---
+lseek(0, 0, SEEK_CUR)                   = 18
+read(0, &amp;quot;&amp;quot;, 128)                        = 0
+read(255, &amp;quot;&amp;quot;, 102)                      = 0
++++ exited with 0 +++
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;思ったとおりに動いているっぽい。&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;code&gt;fgetc&lt;/code&gt; でもバッファリングするという動作は、言われてみれば「あぁ、確かに」となるのだけど、1 文字しか返さないという関数の仕様上、考えからすっかり抜けてしまっていた。ふと strace の存在を思い出して調べてみたところ、read(2) の使われ方が思ったのと違い、バッファリングの存在を思い出したのだった。先入観はよくない。また、調査のためのツールは色々使えるようになっておくに越したことはない。strace をちゃんと使ったのは初めてだったかもしれない。&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>積読消化 - パーフェクト JavaScript</title>
+      <link>http://kazkn.com/post/2017/perfect-js/</link>
+      <pubDate>Tue, 25 Apr 2017 20:56:07 +0900</pubDate>
+      
+      <guid>http://kazkn.com/post/2017/perfect-js/</guid>
+      <description>&lt;p&gt;積読消化、第二弾。パーフェクト JavaScript を読んだ。雰囲気で JavaScript を書いているのを、いい加減に是正したいという願いから、この本を手にしたことを覚えている。&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;本書は JavaScript の言語仕様から、(発売当時としては新しい分野だった) HTML5 で追加された API やサーバーサイド JavaScript まで、JavaScript に関するトピックを幅広く扱った本である。幅広く扱いつつも、ちょいちょいマニアックな話題にも触れてあり、広く浅い本とはまた違う。&lt;/p&gt;
+
+&lt;p&gt;言語仕様とクライアントサイド環境に関する節をしっかり読んだ。その他の、ライブラリ (jQuery)、HTML5、サーバーサイドに関する話題は、パラッと目を通すだけにとどめた。ライブラリと HTML5 は知ってる内容だったり都度調べれば済む話だし、サーバーサイド JS はあまり興味がない。また、HTML5 の章は、ApplicationCache API など現在では削除された API の解説も含まれている。致し方ないが、内容が古い面もある。&lt;/p&gt;
+
+&lt;p&gt;JavaScript の数値型は Number だけだというのは知っていたが、これが 64bit の浮動小数点型 (だけ) であることは知らなかった。整数を捨てている。Lua なんかがそんな設計だった気がする。&lt;/p&gt;
+
+&lt;p&gt;文字列型と文字列オブジェクト (new String で得るオブジェクト) が異なる型を持つことも知らなかった。Java のラッパー型と同じようなものだと解説されていたが、動的型付けで Box/Unbox が暗黙のうちに切り替わるのは、なんとも辛い。自分から文字列 (や数値、論理値) オブジェクトを積極的に使うことはないと思うが、罠にはまらないよう、知っておくことは決して損ではない。&lt;/p&gt;
+
+&lt;p&gt;不変オブジェクトを定義できるという点も新たな発見だった。&lt;code&gt;Object&lt;/code&gt; の &lt;a href=&#34;https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Object/preventExtensions&#34;&gt;preventExtensions&lt;/a&gt;, &lt;a href=&#34;https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Object/seal&#34;&gt;seal&lt;/a&gt;, &lt;a href=&#34;https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze&#34;&gt;freeze&lt;/a&gt; の 3 つの関数によって提供される。動的型付けの言語は Python が初めてで、Java から本格的なプログラミングに入った身としては、なんでも変更できることに驚いた。動的型付けの言語は Python のように色んなものを動的に変えられるのが当たり前だと思っていて、JavaScript も基本的にはそれに漏れないと思うのだけど、逆に不変オブジェクトを定義できる方法が提供されているということに、考えすら至っていなかったのだった。&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;冒頭で述べたとおり、半分くらいは (ほぼ) 読み飛ばした。が、発見は色々とあった。雰囲気で JavaScript を書いているサーバーサイドプログラマーは、この手の本を一読して JavaScript の基本を抑えておくのもいいかもしれない。&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>積読消化 - 人月の神話</title>
+      <link>http://kazkn.com/post/2017/the-m3/</link>
+      <pubDate>Mon, 17 Apr 2017 23:01:24 +0900</pubDate>
+      
+      <guid>http://kazkn.com/post/2017/the-m3/</guid>
+      <description>&lt;p&gt;これまでたくさんの技術書を買ってきて、残念ながら積みっぱなしで読んでいない本がいくつか (も) ある。今年はこれを一掃すべく、技術書を新たに買わず、書棚に並ぶ積みっぱなしの本を読むことに時間をあてようと、年の初めに誓った。と言いながらすでに 4 月に突入しており、依然として 1 冊も消化しないまま時間が過ぎていたのだが、この頃一念発起して、1 冊読んだ。表題の「人月の神話」である。&lt;/p&gt;
+
+&lt;p&gt;読むだけでもいいのだが、何かしら本を読んだことにまつわる OUTPUT を出すことで、本への理解が深まることを狙いとして、書評などという大げさなものではないが、読書感想文を書くことにした。&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;言わずと知れたソフトウェア開発にまつわる本の中でも名著と呼ばれる作品で、ずいぶん前から書棚にあった。一章二章程度は読んでいたと思うのだが、通読はしていなかった。&lt;/p&gt;
+
+&lt;p&gt;本書は大規模ソフトウェアのシステム開発におけるマネジメントに焦点を当てた本である。ぐらいの前提知識はあったのだが、実際に読んでみると、プログラミングやそれにまつわるツールといったところにも言及があって、少し驚いた。1970 年代に書かれた本なので、具体例はいちいち古めかしい。読んでも正直よく知らない (もしくは名前ぐらいしか知らない) 単語が出てくる。OS/360 とか。特にデバッグやプログラミング、ツールに関する話題は、現代では類書が多くあるので本書では斜め読みする程度にとどめた。&lt;/p&gt;
+
+&lt;p&gt;本書によれば、人と月が交換可能であるには、作業者の間でコミュニケーションをとる必要がない場合に限る、とある。作業者間でコミュニケーションをとる必要がある場合、作業者を増やせば増やすほど、コミュニケーションコストが増していく。この状態のまま作業者を増やし続けていくと、いつしか作業者を増やすことによる作業者一人あたりのコスト減よりも、コミュニケーションコストの増分のほうが大きくなってしまう。&lt;/p&gt;
+
+&lt;p&gt;経験上、ソフトウェアの開発において、コミュニケーションをとる必要がないようにするのは難しいか、ごく一部の作業に限られるように思う。ソフトウェアの開発は意思決定の連続なので、識者、あるいは関係者への相談は絶え間ない。プログラミング中においても、API の策定、API の使い方の説明、コードの説明、テスト方法の情報展開など、コミュニケーションをとらなければならない機会はいくらでもある。&lt;/p&gt;
+
+&lt;p&gt;先にあげた本書の人月に関する説明は、とてもしっくりくる。普段もやもや考えていたことが、すっきりと理解できたような、そんな気分になる。&lt;/p&gt;
+
+&lt;p&gt;16 章は、かの有名な「銀の弾はない」という格言の章である。この章が書かれた当時、銀の弾として期待された技術や手法を、バッサバッサと「銀の弾ではない」と切り捨てていく様は、残念な気持ちになると同時に、とても気持ちがいい。&lt;/p&gt;
+
+&lt;p&gt;ソフトウェアの難しさを本質的困難と偶有的困難の 2 つに分けてアプローチしている。本質的困難とは、ソフトウェアにそもそも備わっている性質からくる難しさで、偶有的困難とは、主にソフトウェアの表現にまつわる難しさであると説いている。偶有的困難をいくら軽減しても、本質的な難しさは軽減されないので、限界があるとのこと。偶有的困難を軽減するツールの例として、高水準言語、ツール、よいハードウェアの導入などを挙げている。いくら高級なプログラミング言語を使ったところで、ソフトウェアの本質的な難しさ (本書では「仕様の決定と、そのテスト」を挙げている) は軽減されない。確かに。&lt;/p&gt;
+
+&lt;p&gt;ソフトウェアの本質的な難しさへの取り組みのひとつとして、迅速なプロトタイピングを挙げている。現代のアジャイルと似たようなアプローチではないかと理解している。現代のソフトウェアは、事前に正確かつ完璧に設計することが難しい。これは顧客が事前に正確な要件を提示することも難しければ、技術者がそれを正確に仕様に落とすことも難しいことに起因する。この溝を埋めるひとつの方法として、迅速なプロトタイピングを挙げている。実際に動くものをみることで、顧客は本当の要件に気づく。また、技術者なプロトタイピングによって仕様の理解を深める。これを繰り返していくことで、仕様を洗練させ、ソフトウェアの品質を高めることに繋がる。&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;上でも少し書いたが、全体的に例が古めかしく、改めて古い本であることを認識させられた。その一方で、内容は陳腐化しているどころか、現代ではベストプラクティスとして語られているような内容がいくつもあった。著者の慧眼によるものか、逆に現代のベストプラクティスが本書をベースにしているものなのかは分からないが、読んでみる価値は大いにあったと思ったのだった。&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Spring Boot &#43; Nashorn &#43; React &#43; SSR</title>
+      <link>http://kazkn.com/post/2017/spring-boot-nashorn-react-ssr/</link>
+      <pubDate>Thu, 13 Apr 2017 00:03:07 +0900</pubDate>
+      
+      <guid>http://kazkn.com/post/2017/spring-boot-nashorn-react-ssr/</guid>
+      <description>
+
+&lt;p&gt;表題のようなことをやってみたという話。以下のブログ記事をおおいに参考にさせていただいている。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://r7kamura.hatenablog.com/entry/2016/10/10/173610&#34;&gt;Ruby on Rails on React on SSR on SPA&lt;/a&gt;&lt;/p&gt;
+
+&lt;h1 id=&#34;ソースの構成&#34;&gt;ソースの構成&lt;/h1&gt;
+
+&lt;p&gt;Maven で作ったフォルダ構成に、フロントエンド用のソースを置く場所をつくっている。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ tree .
+tree .
+.
+├── pom.xml
+├── src
+│   ├── main
+│   │   ├── frontend
+│   │   │   ├── package.json
+│   │   │   ├── src
+│   │   │   │   ├── AutomatedCurrentTime.js
+│   │   │   │   ├── CurrentTime.js
+│   │   │   │   ├── Link.js
+│   │   │   │   ├── Router.js
+│   │   │   │   ├── client.js
+│   │   │   │   ├── http.js
+│   │   │   │   └── server.js
+│   │   │   └── webpack.config.js
+│   │   ├── java
+│   │   │   └── org
+│   │   │       └── genva
+│   │   │           └── ssrpoc
+│   │   │               └── App.java
+│   │   └── resources
+│   │       ├── application.yml
+│   │       ├── static
+│   │       │   └── js
+│   │       │       └── polyfill.js
+│   │       └── templates
+│   │           ├── layout.html
+│   │           └── test.html
+│   └── test
+│       └── java
+└── target
+    └── classes
+        └── static
+            └── js
+                ├── client.bundle.js
+                └── server.bundle.js
+
+18 directories, 17 files
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&#34;java-のビルド&#34;&gt;java のビルド&lt;/h1&gt;
+
+&lt;p&gt;&lt;code&gt;mvn eclipse:eclipse&lt;/code&gt; とか m2e とかで Eclipse にプロジェクトを読み込んで開発する。特に変わったところはない。&lt;/p&gt;
+
+&lt;h1 id=&#34;js-のビルド&#34;&gt;js のビルド&lt;/h1&gt;
+
+&lt;p&gt;npm を使う。個別にインストールしてもいいし、&lt;a href=&#34;https://github.com/eirslett/frontend-maven-plugin&#34;&gt;frontend-maven-plugin&lt;/a&gt; のような maven に統合する仕組みもある。今回は独自にインストールした npm を使った。frontend-maven-plugin を使うと node や npm が target 配下に自動的にインストールされる。多少は導入が楽になると思う。&lt;/p&gt;
+
+&lt;p&gt;ビルドは &lt;code&gt;npm run watch&lt;/code&gt; を裏で走らせるようにした。webpack のファイル監視機能を使って、ファイルが修正されたら自動的にビルドする。package.json はこんな感じ:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{
+  &amp;quot;name&amp;quot;: &amp;quot;ssrpoc-frontend&amp;quot;,
+  &amp;quot;version&amp;quot;: &amp;quot;1.0.0&amp;quot;,
+  &amp;quot;description&amp;quot;: &amp;quot;&amp;quot;,
+  &amp;quot;main&amp;quot;: &amp;quot;index.js&amp;quot;,
+  &amp;quot;scripts&amp;quot;: {
+    &amp;quot;watch&amp;quot;: &amp;quot;webpack -d -w&amp;quot;,
+    &amp;quot;dev-build&amp;quot;: &amp;quot;webpack -d --display-modules&amp;quot;
+  },
+  &amp;quot;author&amp;quot;: &amp;quot;&amp;quot;,
+  &amp;quot;license&amp;quot;: &amp;quot;ISC&amp;quot;,
+  &amp;quot;dependencies&amp;quot;: {
+    &amp;quot;react&amp;quot;: &amp;quot;^15.4.2&amp;quot;,
+    &amp;quot;react-dom&amp;quot;: &amp;quot;^15.4.2&amp;quot;,
+    &amp;quot;react-helmet&amp;quot;: &amp;quot;^5.0.2&amp;quot;
+  },
+  &amp;quot;devDependencies&amp;quot;: {
+    &amp;quot;babel-core&amp;quot;: &amp;quot;^6.24.0&amp;quot;,
+    &amp;quot;babel-loader&amp;quot;: &amp;quot;^6.4.1&amp;quot;,
+    &amp;quot;babel-preset-es2015&amp;quot;: &amp;quot;^6.24.0&amp;quot;,
+    &amp;quot;babel-preset-react&amp;quot;: &amp;quot;^6.23.0&amp;quot;,
+    &amp;quot;webpack&amp;quot;: &amp;quot;^2.3.3&amp;quot;
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;出力先をクラスパスの通った target/classes 配下にすることで、Eclipse で起動した java プログラムからも、自動的にその修正内容が見えるようになっている。出力先の設定は webpack.config.js に書く。webpack.config.js はこんな感じ:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;var path = require(&#39;path&#39;);
+
+module.exports = {
+  entry: {
+    client: &#39;./src/client.js&#39;,
+    server: &#39;./src/server.js&#39;,
+  },
+  output: {
+    path: path.resolve(__dirname, &#39;../../../target/classes/static/js&#39;),
+    filename: &#39;[name].bundle.js&#39;,
+  },
+  module: {
+    loaders: [
+      {
+        test: /\.jsx?$/,
+        include: [
+          path.resolve(__dirname, &#39;./src&#39;)
+        ],
+        loader: &#39;babel-loader&#39;,
+        query: {
+          presets: [&#39;es2015&#39;, &#39;react&#39;]
+        }
+      }
+    ]
+  }
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&#34;js-の構成&#34;&gt;js の構成&lt;/h1&gt;
+
+&lt;p&gt;js のエントリポイントは client.js と server.js のふたつを用意した。それぞれ、client.js はブラウザから、server.js はサーバーで SSR するときに読まれるスクリプトとしている。内容はほとんど一緒で、react-dom の render を使う (client.js) か、react-dom/server の renderToString を使う (server.js) かの差ぐらいしかない。&lt;/p&gt;
+
+&lt;p&gt;以下は server.js の中身 (原文ママ):&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;import React from &#39;react&#39;;
+import { renderToString } from &#39;react-dom/server&#39;;
+import Router from &#39;./Router&#39;;
+import Helmet from &#39;react-helmet&#39;;
+
+const components = {
+  Router,
+};
+
+window.render = (component, props) =&amp;gt; {
+  if (components[component]) {
+    const Component = components[component];
+    const html = renderToString(&amp;lt;Component {...props} /&amp;gt;);
+    window.helmetTitle = Helmet.rewind().title.toString();
+    return html;
+  }
+  else {
+    throw &amp;quot;No available component: &amp;quot; + component;
+  }
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;SSR するときには &lt;code&gt;window.render&lt;/code&gt; を呼び出す。レンダリングしたいコンポーネントの名前と props を渡す。&lt;/p&gt;
+
+&lt;p&gt;http.js は XHR を使ってサーバーを叩く処理を書いたもの。特に変わったところはないので紹介は省く。&lt;/p&gt;
+
+&lt;p&gt;あと JS ファイルは React のコンポーネントを定義している。Router や Link は、&lt;a href=&#34;http://r7kamura.hatenablog.com/entry/2016/10/10/173610&#34;&gt;参考ページ&lt;/a&gt; にあるそれと似たような方針で作っている。&lt;/p&gt;
+
+&lt;h1 id=&#34;spring-の設定&#34;&gt;Spring の設定&lt;/h1&gt;
+
+&lt;p&gt;ここが一番苦労した。Spring で&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;一発目は SSR&lt;/li&gt;
+&lt;li&gt;以後は JSON だけをやり取りして CSR&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;というのを透過的にやりたい場合、ある程度の道具を自分で用意する必要がある。またそれを Spring にうまく統合する必要がある。&lt;/p&gt;
+
+&lt;h2 id=&#34;viewresolver&#34;&gt;ViewResolver&lt;/h2&gt;
+
+&lt;p&gt;一発目は html, 二発目以降は json という要望に答えるためには、クライアントサイドの協力が必要になる。二度目以降で json を求める際には、Accept ヘッダに application/json と設定するようにする。サーバーはこのヘッダを見て、返す内容を切り替えるようにする。&lt;/p&gt;
+
+&lt;p&gt;Spring の ContentNegotiatingViewResolver がこの要求を満たすのにちょうどよかった。ContentNegotiatingViewResolver を以下のように設定した:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@Bean
+public ContentNegotiatingViewResolver viewResolver(
+        ThymeleafViewResolver thymeleafViewResolver,
+        JsonViewResolver jsonViewResolver) {
+    ContentNegotiatingViewResolver resolver = new ContentNegotiatingViewResolver();
+    resolver.setViewResolvers(Arrays.asList(thymeleafViewResolver, jsonViewResolver));
+    return resolver;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;html 向けには ThymeleafViewResolver が提供する View を、json 向けには JsonViewResolver が提供する View を使うようになる。JsonViewResolver は独自に定義した ViewResolver で、以下のように定義している:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;public static class JsonViewResolver extends AbstractCachingViewResolver {
+    private final ObjectMapper mapper;
+
+    public JsonViewResolver(ObjectMapper mapper) {
+        this.mapper = mapper;
+    }
+
+    @Override
+    protected View loadView(String viewName, Locale locale) throws Exception {
+        MappingJackson2JsonView view = new MappingJackson2JsonView(mapper);
+        view.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        return view;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;ContentNegotiatingViewResolver に MappingJackson2JsonView が application/json 向けの View であることを知らせるため、必ず &lt;code&gt;setContentType&lt;/code&gt; するようにしている。&lt;/p&gt;
+
+&lt;h2 id=&#34;javascript-engine-nashorn&#34;&gt;JavaScript Engine (Nashorn)&lt;/h2&gt;
+
+&lt;p&gt;SSR では (当然) サーバーサイドで JavaScript のコードを走らせる必要がある。Java から使いやすいのは JRE に組み込まれている Nashorn なので、これを使う。&lt;/p&gt;
+
+&lt;p&gt;ScriptEngine の初期化、server.js の読み込みにはそれなりに時間がかかるので、インスタンスは使いまわしたい。しかし Nashorn はスレッドセーフではないので、スレッドをまたいでのインスタンスの共有は避けたいので、ThreadLocal に持ちたい。&lt;/p&gt;
+
+&lt;p&gt;また、ScriptEngine に読ませる server.js は、開発中はどんどん書き換えられる。かといって server.js を毎回読むのは遅すぎて辛い。なので、読み込んだときの server.js のタイムスタンプを覚えておき、更新された場合には自動的にリロードする仕組みを用意すると、開発が楽になる。&lt;/p&gt;
+
+&lt;p&gt;この辺を踏まえて、&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Reload の仕組みを持つ ScriptEngine のラッパー&lt;/li&gt;
+&lt;li&gt;↑を ThreadLocal に持つ Bean&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;を定義した。View は上記の Bean から取得したラッパーを通じて ScriptEngine を得る。この際、必要に応じて読み込み済みスクリプトのリロードを行う。&lt;/p&gt;
+
+&lt;p&gt;まずは前者の抜粋:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;public static class RelodableScriptEngine {
+    // 一部省略
+
+    public void addScript(String script) {
+        this.scripts.add(script);
+        this.timestamps.put(script, -1L);
+    }
+
+    public ScriptEngine get() {
+        return engine;
+    }
+
+    public RelodableScriptEngine reload() throws ScriptException, IOException {
+        for (String script : scripts) {
+            Resource resource = resourceLoader.getResource(script);
+            long lastModified = resource.lastModified();
+            if (timestamps.get(script) &amp;lt; lastModified) {
+                engine.eval(new InputStreamReader(resource.getInputStream()), scriptBindings);
+                timestamps.put(script, lastModified);
+            }
+        }
+
+        return this;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;View で render する直前に reload して、以後は get だけの reload なしで ScriptEngine を取得するようにして使っている。reload が必要最低限に抑えられる。&lt;/p&gt;
+
+&lt;p&gt;次に後者の抜粋:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;public static class ReloadableScriptEngineFactory implements ApplicationContextAware {
+
+    private final ThreadLocal&amp;lt;RelodableScriptEngine&amp;gt; engines = new ThreadLocal&amp;lt;&amp;gt;();
+
+    // 一部省略
+
+    public RelodableScriptEngine getScriptEngine() throws Exception {
+        RelodableScriptEngine e = engines.get();
+        if (e != null)
+            return e;
+
+        ScriptEngine engine = scriptEngineManager.getEngineByName(engineName);
+        e = new RelodableScriptEngine(engine, context);
+        scripts.forEach(e::addScript);
+        e.reload();  // initial load
+        engines.set(e);
+        return e;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;RelodableScriptEngine を ThreadLocal で保持るだけの、なんの変哲もないクラスである。自身が持つスクリプトファイルのリストを RelodableScriptEngine に受け渡し、ロードした上でインスタンスを返す。Bean の定義は以下のようにしている:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@Bean
+public ReloadableScriptEngineFactory reloadableScriptEngineFactory() {
+    ReloadableScriptEngineFactory factory = new ReloadableScriptEngineFactory();
+    factory.addScript(&amp;quot;classpath:/static/js/polyfill.js&amp;quot;);
+    factory.addScript(&amp;quot;classpath:/static/js/server.bundle.js&amp;quot;);
+    return factory;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;polyfill.js は Nashorn にない JavaScript のオブジェクトを定義する短いスクリプトである。ググると色々バリエーションが見つかるので、紹介はそちらに譲りたい。server.bundle.js は server.js を webpack したスクリプトである。&lt;/p&gt;
+
+&lt;p&gt;サーバーサイドで JS コードを実行する箇所のすべてでこの仕組みを使っている。&lt;/p&gt;
+
+&lt;p&gt;なお、Nashorn がスレッドセーフでないことは、以下から確認できる:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;ScriptEngineManager sem = new ScriptEngineManager();
+Optional&amp;lt;ScriptEngineFactory&amp;gt; factory = sem.getEngineFactories().stream()
+        .filter(f -&amp;gt; f.getEngineName().equals(&amp;quot;Oracle Nashorn&amp;quot;))
+        .findFirst();
+factory.ifPresent(f -&amp;gt; System.out.printf(&amp;quot;nashorn threading: %s%n&amp;quot;, f.getParameter(&amp;quot;THREADING&amp;quot;)));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;実行すると &lt;code&gt;nashorn threading: null&lt;/code&gt; と出力される。&lt;a href=&#34;http://docs.oracle.com/javase/8/docs/api/javax/script/ScriptEngineFactory.html#getParameter-java.lang.String-&#34;&gt;Javadoc&lt;/a&gt; によれば、&lt;code&gt;getParameter(&amp;quot;THREADING&amp;quot;)&lt;/code&gt; で null が返ってくる場合は&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;The engine implementation is not thread safe, and cannot be used to execute scripts concurrently on multiple threads.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;であるとのことなので、Nashorn は (現時点では) スレッドセーフではない。&lt;/p&gt;
+
+&lt;h2 id=&#34;thymeleaf-テンプレートからサーバーサイド-js-を叩く&#34;&gt;Thymeleaf テンプレートからサーバーサイド JS を叩く&lt;/h2&gt;
+
+&lt;p&gt;Helmet などを使うにあたって、Thymeleaf のテンプレートから JS を叩けるようにしておくと便利なのであった。Thymeleaf にはそんな仕組みがないので、自前で用意する。Thymeleaf にはテンプレートエンジンを拡張するための仕組みが&lt;a href=&#34;http://www.thymeleaf.org/doc/tutorials/3.0/extendingthymeleaf.html&#34;&gt;用意されている&lt;/a&gt;ので、これを使う。&lt;/p&gt;
+
+&lt;p&gt;まず、どのように使うかを考える。こんな感じで使えるものを用意する:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;head&amp;gt;
+  &amp;lt;title serverjs:replace=&amp;quot;window.helmetTitle&amp;quot;&amp;gt;Server Side Rendering - Proof of Concept&amp;lt;/title&amp;gt;
+  &amp;lt;meta http-equiv=&amp;quot;X-UA-Compatible&amp;quot; content=&amp;quot;IE=edge&amp;quot; /&amp;gt;
+&amp;lt;/head&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;title 要素の &lt;code&gt;serverjs:replace&lt;/code&gt; の部分が、用意したい部品である。JS 式を属性の値に渡して、その評価結果を要素としてまるごと置き換える。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;public static class ServerJsReplaceAttrProcessor extends AbstractAttributeTagProcessor {
+    private static final String ATTR_NAME = &amp;quot;replace&amp;quot;;
+    private static final int PRECEDENCE = 10000;
+
+    private ReloadableScriptEngineFactory engineFactory;
+
+    public ServerJsReplaceAttrProcessor(ReloadableScriptEngineFactory engineFactory, String dialectPrefix) {
+        super(TemplateMode.HTML,  // this processor will apply only to HTML mode
+                dialectPrefix,    // prefix to be applied to name for matching
+                null,             // no tag name: match any tag name
+                false,            // no prefix to be applied to tag name
+                ATTR_NAME,        // name of the attribute that will be matched
+                true,             // apply dialect prefix to attribute name
+                PRECEDENCE,       // precedence (inside dialect&#39;s precedence)
+                true);            // remove the matched attribute afterwards
+
+        this.engineFactory = engineFactory;
+    }
+
+    @Override
+    protected void doProcess(ITemplateContext context, IProcessableElementTag tag, AttributeName attributeName,
+            String attributeValue, IElementTagStructureHandler structureHandler) {
+        try {
+            RelodableScriptEngine engine = engineFactory.getScriptEngine();
+            Object val = engine.get().eval(attributeValue);
+            structureHandler.replaceWith(String.valueOf(val), false);
+        }
+        catch (Exception e) {
+            throw new TemplateProcessingException(&amp;quot;failed to eval js: &#39;&amp;quot; + attributeValue + &amp;quot;&#39;&amp;quot;, e);
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Thymeleaf のチュートリアルのコピペっぽいところはご容赦いただきたい。事前に準備しておいた RelodableScriptEngine を使って属性値を評価し、要素をまるごと置き換えている。今回はまるごと置き換える用途でしか使うことがなかったのでこれだけだが、テキスト要素だけを設定するようにするとか、他にも IProcessor 実装のバリエーションはいくつか考えられる。&lt;/p&gt;
+
+&lt;p&gt;この ServerJsReplaceAttrProcessor を使えるようにするため、Dialect を用意する。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;public static class ServerJsDialect extends AbstractProcessorDialect {
+    private ReloadableScriptEngineFactory engineFactory;
+
+    public ServerJsDialect(ReloadableScriptEngineFactory engineFactory) {
+        super(&amp;quot;ServerJsDialect&amp;quot;, &amp;quot;serverjs&amp;quot;, 1000);
+        this.engineFactory = engineFactory;
+    }
+
+    @Override
+    public Set&amp;lt;IProcessor&amp;gt; getProcessors(String dialectPrefix) {
+        Set&amp;lt;IProcessor&amp;gt; procs = new HashSet&amp;lt;&amp;gt;();
+        procs.add(new ServerJsReplaceAttrProcessor(engineFactory, dialectPrefix));
+        return procs;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;特に疑問点はない。あとはこれを Bean 定義すれば、Thymeleaf の autoconfigure によって自動的にテンプレートエンジンへ登録される。&lt;/p&gt;
+
+&lt;h2 id=&#34;ssr-の実行とテンプレートへの埋め込み&#34;&gt;SSR の実行とテンプレートへの埋め込み&lt;/h2&gt;
+
+&lt;p&gt;ServerJsDialect によって Thymeleaf テンプレート内で JS 式を評価できるようになった。しかし、例えば Helmet を使ってタイトルを得るには、React によるレンダリングを行ったあとで式を評価しなければならない。なので、事前に React を実行しておいて、それを埋め込むのはテンプレートへの引数などを利用しつつ、そのエンジンの状態は &lt;code&gt;serverjs:replace&lt;/code&gt; の実行まで保持するようにしたい。また、次のレンダリング実行時には、エンジンはある程度まっさらな状態に戻したい。しかし server.js を読み込みなおすのはパフォーマンスへの影響が大きいので、これを考慮する必要もある。&lt;/p&gt;
+
+&lt;p&gt;といったちょっと込み入った要望に答えるため、以下のような実装とした。ThymeleafView を拡張し、render 前に SSR を実行、model にレンダリング結果を保持する。テンプレート側のどこかで &lt;code&gt;th:utext=&amp;quot;${react_component}&amp;quot;&lt;/code&gt; を埋め込めば、レンダリング結果を展開することができる。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;public static class ServerJsThymeleafView extends ThymeleafView {
+    public static final String KEY_PROPS = &amp;quot;props&amp;quot;;
+    public static final String KEY_REACT_COMPONENT = &amp;quot;react_component&amp;quot;;
+    
+    // コンストラクタ、initApplicationContext は省略
+
+    @Override
+    public void render(Map&amp;lt;String, ?&amp;gt; model, HttpServletRequest request, HttpServletResponse response)
+            throws Exception {
+        RelodableScriptEngine engine = engineFactory.getScriptEngine().reload().newBindings();
+        model = renderReactComponent(model, engine.get());
+        super.render(model, request, response);
+    }
+
+    private Map&amp;lt;String, ?&amp;gt; renderReactComponent(Map&amp;lt;String, ?&amp;gt; model, ScriptEngine engine) throws Exception {
+        Map&amp;lt;String, Object&amp;gt; map = new HashMap&amp;lt;&amp;gt;();
+        if (model != null)
+            map.putAll(model);
+
+        String html = react.render(engine, &amp;quot;Router&amp;quot;, (String) map.get(KEY_PROPS));
+        map.put(KEY_REACT_COMPONENT, html);
+
+        return map;
+    }
+}
+
+public static class ReactComponent {
+    public String render(ScriptEngine engine, String component, String props) throws Exception {
+        Object html = engine.eval(&amp;quot;render(&#39;&amp;quot; + component + &amp;quot;&#39;, &amp;quot; + props + &amp;quot;)&amp;quot;);
+        return String.valueOf(html);
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;エンジンの状態を (ある程度) リセットするために、ReloadableScriptEngine に newBindings というメソッドを用意している。ReloadableScriptEngine.reload したときに使った Bindings のコピーを作って ScriptEngine に設定するというメソッドである。SSR の実行ではこの Bindings を使うことで、scripts の読み込み結果以外の状態を、まっさらに戻すことができる。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;public static class RelodableScriptEngine {
+    // 一部省略
+    public RelodableScriptEngine newBindings() {
+        this.engine.setBindings(new SimpleBindings(scriptBindings), ScriptContext.ENGINE_SCOPE);
+        return this;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Thymeleaf のテンプレート (layout.html) は、結局こうなった:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;&amp;lt;!DOCTYPE html&amp;gt;
+&amp;lt;html xmlns:th=&amp;quot;http://www.thymeleaf.org&amp;quot;&amp;gt;
+  &amp;lt;head&amp;gt;
+    &amp;lt;title serverjs:replace=&amp;quot;window.helmetTitle&amp;quot;&amp;gt;Server Side Rendering - Proof of Concept&amp;lt;/title&amp;gt;
+    &amp;lt;meta http-equiv=&amp;quot;X-UA-Compatible&amp;quot; content=&amp;quot;IE=edge&amp;quot; /&amp;gt;
+  &amp;lt;/head&amp;gt;
+  &amp;lt;body&amp;gt;
+    &amp;lt;div id=&amp;quot;app&amp;quot; th:utext=&amp;quot;${react_component}&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
+
+    &amp;lt;script th:src=&amp;quot;@{/js/client.bundle.js}&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;
+    &amp;lt;script th:inline=&amp;quot;javascript&amp;quot;&amp;gt;
+    (function() {
+        var props = /*[(${props})]*/ { now: &#39;&#39; };
+        window.render(&#39;Router&#39;, props, document.getElementById(&#39;app&#39;));
+    })();
+    &amp;lt;/script&amp;gt;
+  &amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;router-による-routing-の判断材料を用意する&#34;&gt;Router による Routing の判断材料を用意する&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://r7kamura.hatenablog.com/entry/2016/10/10/173610&#34;&gt;くだんの記事&lt;/a&gt; では &lt;code&gt;actionPath&lt;/code&gt; と呼ばれているものを用意する。はじめは View の名前を使えばいいんじゃないかと思ったが、View (Thymeleaf テンプレート) はほぼ同じものを共通して使うことになりそうなので、具合が悪い。記事にならって actionPath に相当する文字列を用意することにした。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;public static class ReactAttrsInterceptor extends HandlerInterceptorAdapter {
+    private ObjectMapper mapper;
+
+    public ReactAttrsInterceptor(ObjectMapper mapper) {
+        this.mapper = mapper;
+    }
+
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
+            ModelAndView modelAndView) throws Exception {
+        if (modelAndView != null) {
+            ModelMap model = modelAndView.getModelMap();
+            model.addAttribute(&amp;quot;actionPath&amp;quot;, buildActionPath(handler, modelAndView));
+            if (!isJson(request)) {
+                if (modelAndView.getViewName().isEmpty())
+                    modelAndView.setViewName(&amp;quot;layout&amp;quot;);
+                model.addAttribute(&amp;quot;props&amp;quot;, mapper.writeValueAsString(model));
+            }
+        }
+    }
+
+    private String buildActionPath(Object handler, ModelAndView mav) {
+        if (handler instanceof HandlerMethod) {
+            return buildActionPath((HandlerMethod) handler);
+        }
+        else {
+            System.err.println(&amp;quot;Unsupported handler: &amp;quot; + (handler != null ? handler.getClass() : &amp;quot;null&amp;quot;));
+            return &amp;quot;&amp;quot;;
+        }
+    }
+
+    private String buildActionPath(HandlerMethod handler) {
+        String typeName = handler.getBeanType().getSimpleName();
+        if (typeName.endsWith(&amp;quot;Controller&amp;quot;))
+            typeName = typeName.substring(0, typeName.length() - &amp;quot;Controller&amp;quot;.length());
+
+        String methodName = handler.getMethod().getName();
+        return typeName + &amp;quot;#&amp;quot; + methodName;
+    }
+
+    private boolean isJson(HttpServletRequest request) {
+        String accept = request.getHeader(&amp;quot;Accept&amp;quot;);
+        if (accept != null)
+            return accept.contains(&amp;quot;application/json&amp;quot;);
+        else
+            return false;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;ハンドラのクラスが &lt;code&gt;IndexController&lt;/code&gt;、メソッドが &lt;code&gt;show&lt;/code&gt; なら &lt;code&gt;Index#show&lt;/code&gt; にする、といった適当な実装である。とりあえずこれでも動く、というレベル。&lt;/p&gt;
+
+&lt;p&gt;なお、この実装では他にも作り込みがある。html が求められている (&lt;code&gt;Accept: application/json&lt;/code&gt; ではない) 場合には、モデルの内容を JSON 化した文字列を &lt;code&gt;props&lt;/code&gt; としてモデルに追加している。これは SSR で React に食わせる props となる。JSON が求められている場合にはモデルをそのまま JSON 化してしまえば同じものが得られるので必要ない。&lt;/p&gt;
+
+&lt;p&gt;このインターセプタを Spring MVC に認識させるよう設定する:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;@Configuration
+public static class WebConfig extends WebMvcConfigurerAdapter {
+    @Autowired
+    private ObjectMapper mapper;
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new ReactAttrsInterceptor(mapper));
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;残りのタスク-ソース&#34;&gt;残りのタスク、ソース&lt;/h2&gt;
+
+&lt;p&gt;あとはコントローラを書いたり main メソッドを書いたりする程度のことやれば、どうにかこうにか動く状態になる。&lt;/p&gt;
+
+&lt;p&gt;すでにこのページでほぼ全体のソースを挙げているが、一部は省略していたりする。省略のないソース全体は &lt;a href=&#34;https://github.com/kzkn/spring-ssr-poc&#34;&gt;Github&lt;/a&gt; にアップしている。&lt;/p&gt;
+
+&lt;h1 id=&#34;まとめ&#34;&gt;まとめ&lt;/h1&gt;
+
+&lt;p&gt;サーバーサイドである程度の苦労が必要だった。そしてそのわりにはあまり満足の行くパフォーマンスは得られず、個人的には、これを実用するのは難しいと感じている。とはいうものの SSR 自体の価値がないわけではない。Node を使うなどの、別の方法を模索したい。&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>はじめての Spring IoC コンテナ</title>
+      <link>http://kazkn.com/post/2017/intro-spring-ioc-container/</link>
+      <pubDate>Wed, 15 Mar 2017 21:34:43 +0900</pubDate>
+      
+      <guid>http://kazkn.com/post/2017/intro-spring-ioc-container/</guid>
+      <description>
+
+&lt;p&gt;広大な Spring Framework の世界において、その中心 (というより底という表現がしっくりくるかもしれない) にあるのが IoC コンテナです。Spring Boot を使ってお気楽ご気楽にプログラミングできるのも、AOP で宣言的ほげほげできるのも、全部 IoC コンテナの下支えがあってこそ。Spring Boot を使ってアプリケーション開発する場合においても、それを支える IoC コンテナの知識があるのとないのとでは、開発、問題解決の効率が格段に変わってくるでしょう、たぶん。&lt;/p&gt;
+
+&lt;p&gt;Java は 10 年ぐらい触っているが、Web アプリケーションの開発に携わる機会に恵まれず、おのずと Spring Framework を触る機会もなかった。最近になって Web 開発案件に携わり、Spring Boot を採用し、Spring 童貞を卒業した。が、Spring 本体であるところの IoC コンテナの知識が乏しく、問題にぶつかるたびに Google と格闘していた。そこで今一度、Spring Boot をよりよく使うためにも、IoC コンテナについてお勉強したのだった。&lt;/p&gt;
+
+&lt;h1 id=&#34;用語&#34;&gt;用語&lt;/h1&gt;
+
+&lt;p&gt;まずは Spring の IoC コンテナを語る上で把握しておくべき用語について触れる。&lt;/p&gt;
+
+&lt;h2 id=&#34;ioc-とは&#34;&gt;IoC とは&lt;/h2&gt;
+
+&lt;p&gt;IoC = Inversion of Cotnrol = 制御の反転&lt;/p&gt;
+
+&lt;p&gt;ライブラリ vs フレームワークみたいな話だと理解している。ライブラリはアプリケーションから制御されるが、フレームワークはアプリケーションを制御する。(一般的に) フレームワークは IoC に則っていると言える。&lt;/p&gt;
+
+&lt;p&gt;A -&amp;gt; B に依存関係があるとき、A が B を呼び出すのが通常の制御、B が A を呼び出すのが反転した制御。GUI フレームワークなんかは反転した制御の典型。アプリは GUI フレームワークに依存しているが、すべての制御は GUI フレームワーク側が行う。例えば Java の Swing なら EDT でループを回すのは GUI フレームワークの仕事。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://ja.wikipedia.org/wiki/%E5%88%B6%E5%BE%A1%E3%81%AE%E5%8F%8D%E8%BB%A2&#34;&gt;https://ja.wikipedia.org/wiki/%E5%88%B6%E5%BE%A1%E3%81%AE%E5%8F%8D%E8%BB%A2&lt;/a&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;ソフトウェア工学において、制御の反転（Inversion of Control、IoC）とは、コンピュータ・プログラムの中で、個別の目的のために書かれたコード部分が、一般的で再利用可能なライブラリによるフロー制御を受ける形の設計を指す。この設計を採用した ソフトウェアアーキテクチャは、伝統的な手続き型プログラミングと比べると制御の方向が反転している。すなわち、従来の手続き型プログラミングでは、個別に開発するコードが、そのプログラムの目的を表現しており、汎用的なタスクを行う場合に再利用可能なライブラリを呼び出す形で作られる。一方、制御を反転させたプログラミングでは、再利用可能なコードの側が、個別目的に特化したコードを制御する。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&#34;ioc-コンテナとは&#34;&gt;IoC コンテナとは&lt;/h2&gt;
+
+&lt;p&gt;アプリケーションを構成するオブジェクトの組み立てを行う人。オブジェクト同士の依存関係は、オブジェクト自身が解決するのではなく、IoC コンテナが解決する。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://kakutani.com/trans/fowler/injection.html&#34;&gt;http://kakutani.com/trans/fowler/injection.html&lt;/a&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;ここで疑問なのは、軽量コンテナは制御のどういった側面を反転させているのか、ということだ。 私がはじめて制御の反転というものに遭遇したとき、それはユーザインタフェースのメインループのことだった。 初期のユーザインターフェースは、アプリケーションプログラムで制御されていた。 「名前の入力」「住所の入力」みたいな一連のコマンドを取り扱いたいとなれば、 プログラムでプロンプトの表示と、それぞれの入力を制御する。 これがグラフィカルなUI(コンソールベースでもいいけど)になると、UIフレームワークにはメインループがあり、フレームワークからスクリーンの様ざまなフィールドの代わりとしてイベントハンドラが提供されている。プログラムではこのイベントハンドラを取り扱う。ここではプログラムの中心となる制御が反転されている。制御は個々のプログラムからフレームワークへと移されているのだ。&lt;/p&gt;
+
+&lt;p&gt;新種のコンテナにおいて反転されているのは、プラグイン実装のルックアップ方法である。 私の素朴なサンプルでいえば、MovieLister は MovieFinder の実装を直接インスタンス化することでルックアップしている。 これだと、ファインダはプラグインではなくなっている。 新種のコンテナが採用しているアプローチには、プラグインを利用するにあたって必ず従わなければならない取り決めが存在する。 この規約があることで、コンテナはMovieFinder 実装を MovieLister オブジェクトにインジェクト(inject: 注入)することが可能になる。&lt;/p&gt;
+
+&lt;p&gt;結論をいえば、このパターンにはもっと明確な名前が必要なように思う。 「制御の反転」という用語では包括的すぎる。これでは混乱する人が出てくるのも無理はない。 様ざまな IoC 支持者と多くの議論を重ねた末、その名前は Dependency Injection (依存オブジェクト注入)に落ち着いた。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;DI (Dependency Injection) は IoC の一種である。Spring の IoC コンテナが提供しているのは DI なので、Spring においては IoC コンテナ = DI コンテナと言ってよさそう。&lt;/p&gt;
+
+&lt;p&gt;ここでいう &lt;strong&gt;コンテナ&lt;/strong&gt; とは、「雑多なオブジェクトを自身の管理下におき、それらを協調させるオブジェクトのこと」と理解している。2000 年代の Java 界隈では何かとコンテナと呼ばれるものがあった (今もある)。Servlet コンテナ、EJB コンテナ、軽量コンテナ etc&amp;hellip; Spring の IoC コンテナは、最後の軽量コンテナに属する。今どきコンテナと言えば Docker に代表されるそれだが、Spring の文脈では別の意味となる。&lt;/p&gt;
+
+&lt;h2 id=&#34;bean&#34;&gt;Bean&lt;/h2&gt;
+
+&lt;p&gt;Spring の IoC コンテナによって管理されるオブジェクトを Bean と呼ぶ。&lt;a href=&#34;https://ja.wikipedia.org/wiki/JavaBeans&#34;&gt;JavaBeans&lt;/a&gt; とは違う。&lt;/p&gt;
+
+&lt;p&gt;Spring の設定とは、すなわち Bean の設定のことを指す。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;どのような Bean を定義するか&lt;/li&gt;
+&lt;li&gt;Bean にどのようなプロパティを与えるか&lt;/li&gt;
+&lt;li&gt;Bean をどのように初期化するか&lt;/li&gt;
+&lt;li&gt;Bean をどのように破棄するか&lt;/li&gt;
+&lt;li&gt;どの Bean と Bean をつなげるか&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;といった設定を IoC コンテナに食わせると、IoC コンテナは Bean のオブジェクトツリーを構築し、適切に生成/破棄を行う。&lt;/p&gt;
+
+&lt;p&gt;IoC コンテナが扱うオブジェクトは、基本的には POJO である。特定のインタフェースの実装することや、アノテーションをつけることが求められる場合もある。POJO なので、ユニットテストではふつうに new できる。&lt;/p&gt;
+
+&lt;h1 id=&#34;コンテナの表現&#34;&gt;コンテナの表現&lt;/h1&gt;
+
+&lt;p&gt;Spring の IoC コンテナは &lt;code&gt;ApplicationContext&lt;/code&gt; インタフェースで表現されている。実装のバリエーションは&lt;a href=&#34;http://docs.spring.io/spring/docs/current/javadoc-api/org/springframework/context/ApplicationContext.html&#34;&gt;いくつもある&lt;/a&gt;。&lt;/p&gt;
+
+&lt;p&gt;Spring Boot では &lt;code&gt;SpringApplication&lt;/code&gt; クラスが &lt;code&gt;ApplicationContext&lt;/code&gt; の実装を選択している。デフォルトでは &lt;code&gt;AnnotationConfigApplicationContext&lt;/code&gt; か &lt;code&gt;AnnotationConfigEmbeddedWebApplicationContext&lt;/code&gt; を&lt;a href=&#34;https://github.com/spring-projects/spring-boot/blob/67556ba8eaf22a352b03fe197a0c452f695835a6/spring-boot/src/main/java/org/springframework/boot/SpringApplication.java#L167&#34;&gt;使うようになっている&lt;/a&gt;。&lt;/p&gt;
+
+&lt;p&gt;設定の読み込み、Bean の管理、依存関係の解決などは &lt;code&gt;ApplicationContext&lt;/code&gt; によって提供される。Spring の中心には常に ApplicationContext がある。&lt;/p&gt;
+
+&lt;p&gt;厳密には、Bean の管理と依存関係の解決は &lt;code&gt;BeanFactory&lt;/code&gt; によって提供される。&lt;code&gt;ApplicationContext&lt;/code&gt; は &lt;code&gt;BeanFactory&lt;/code&gt; のスーパーセットである。&lt;code&gt;ApplicationContext&lt;/code&gt; と &lt;code&gt;BeanFactory&lt;/code&gt; の比較は&lt;a href=&#34;http://docs.spring.io/spring/docs/current/spring-framework-reference/htmlsingle/#context-introduction-ctx-vs-beanfactory&#34;&gt;リファレンス&lt;/a&gt;が詳しい。アプリケーション開発においては、よほど特別な理由がない限り &lt;code&gt;BeanFacotry&lt;/code&gt; を直接使うことはなさそう。&lt;/p&gt;
+
+&lt;h1 id=&#34;beanpostprocessor&#34;&gt;BeanPostProcessor&lt;/h1&gt;
+
+&lt;p&gt;IoC コンテナを拡張するためのインタフェースとして &lt;code&gt;BeanPostProcessor&lt;/code&gt; がある。このインタフェースは 2 つのメソッドを提供する:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Object postProcessBeforeInitialization(Object bean, String beanName)&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Object postProcessAfterInitialization(Object bean, String beanName)&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;いずれも Bean のインスタンスと名前を受け取り、オブジェクトを返す。戻り値のオブジェクトが、与えられた名前の Bean のインスタンスとして使われる。&lt;/p&gt;
+
+&lt;p&gt;それぞれ Bean の初期化前と初期化後に呼ばれるメソッドである。ここでいう初期化とは、&lt;code&gt;InitializingBean&lt;/code&gt; の &lt;code&gt;afterPropertiesSet&lt;/code&gt; の呼び出しや Bean の &lt;code&gt;initMethod&lt;/code&gt; に指定したメソッドの呼び出しのことを指す。つまり、IoC コンテナが Bean のインスタンスを生成し、依存関係を解決し、初期化メソッドを呼び出す前後で呼び出されるフックであると言える。&lt;/p&gt;
+
+&lt;p&gt;この仕組みは Spring の中で広く使われている。AOP を始め、Bean の Validation、定期実行など。どのような実装があるかは &lt;a href=&#34;http://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/beans/factory/config/BeanPostProcessor.html&#34;&gt;BeanPostProcessor の Javadoc&lt;/a&gt; が詳しい。&lt;/p&gt;
+
+&lt;p&gt;アプリケーション開発でこの仕組みを直接使うことはないかもしれないが、このような仕組みの存在を覚えておくと、Spring がどのようにして魔法のような機能を実現しているか、なんとなく想像できる。例えば AOP なら、メソッドの引数で受け取ったオブジェクトの Proxy を返すように実装すれば、実現できそうである (実際そうなっているかはさておき)。&lt;/p&gt;
+
+&lt;h1 id=&#34;java-config&#34;&gt;Java Config&lt;/h1&gt;
+
+&lt;p&gt;かつての Spring は XML による設定だけを提供していたが、最近のバージョンでは Java Config と呼ばれるアノテーションベースの設定方法が用意されている。Spring Boot は、デフォルトで Java Config を使うようになっているので、Java Config による設定についてのみ触れる。&lt;/p&gt;
+
+&lt;p&gt;基本となるのは &lt;code&gt;@Bean&lt;/code&gt; と &lt;code&gt;@Configuration&lt;/code&gt; である。&lt;/p&gt;
+
+&lt;h2 id=&#34;configuration&#34;&gt;@Configuration&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;@Configuration&lt;/code&gt; はクラスにつけるアノテーションである。そのクラスが設定を主としたクラスであることを、IoC コンテナに知らせるためのマーカーである。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;@Configuration
+public class Config {
+  // ...
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;このクラスの中に、設定を書いていく。&lt;/p&gt;
+
+&lt;h2 id=&#34;bean-1&#34;&gt;@Bean&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;@Bean&lt;/code&gt; はメソッドにつけるアノテーションである。メソッドが Bean 定義であることを IoC コンテナに知らせるためのマーカーである。メソッドの戻り値は IoC コンテナによって管理される Bean となる。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;@Configuration
+public class Config {
+  @Bean
+  public MyApiGateway myApiGateway() {
+    return new MyApiGateway();
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Bean に依存関係を設定するには、メソッドの引数を使う。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;@Configuration
+public class Config {
+  @Bean
+  public HttpClient httpClient() {
+    return new HttpClient();
+  }
+  
+  @Bean
+  public MyApiGateway myApiGateway(HttpClient httpClient) {
+    return new MyApiGateway(httpClient);
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;MyApiGateway は HttpClient に依存する。依存する HttpClient もまた Bean として定義されている。MyApiGateway が依存する HttpClient のインスタンスは、IoC コンテナによって与えられる。&lt;/p&gt;
+
+&lt;h2 id=&#34;scope&#34;&gt;@Scope&lt;/h2&gt;
+
+&lt;p&gt;Bean のライフサイクルは IoC コンテナによって管理される。デフォルトでは、コンテナの起動時にインスタンス化され、シングルトンとして扱われる。すなわちひとつのオブジェクトが全ての場所で共有される。そしてコンテナの終了とともに、インスタンスも破棄される。&lt;/p&gt;
+
+&lt;p&gt;Bean のライフサイクルを変えたい (= シングルトンにしたくない) 場合には &lt;code&gt;@Scope&lt;/code&gt; を使う。Spring では、Bean がいつ生成され、いつ破棄されるかを、Bean の「スコープ」と表現している。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;@Configuration
+public class Config {
+  @Bean
+  public HttpClient httpClient() {
+    return new HttpClient();
+  }
+  
+  @Bean
+  @Scope(&amp;quot;prototype&amp;quot;)
+  public MyApiGateway myApiGateway(HttpClient httpClient) {
+    return new MyApiGateway(httpClient);
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;デフォルトで用意されているスコープは以下の通り:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;singleton
+
+&lt;ul&gt;
+&lt;li&gt;シングルトン。デフォルト&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;prototype
+
+&lt;ul&gt;
+&lt;li&gt;ApplicationContext.getBean するたびに new する。&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;基本的にはこの 2 つ。Web 向けとして:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;request&lt;/li&gt;
+&lt;li&gt;session&lt;/li&gt;
+&lt;li&gt;globalSession&lt;/li&gt;
+&lt;li&gt;application&lt;/li&gt;
+&lt;li&gt;websocket&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;が用意されている。&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://docs.spring.io/spring/docs/current/spring-framework-reference/htmlsingle/#beans-factory-scopes&#34;&gt;http://docs.spring.io/spring/docs/current/spring-framework-reference/htmlsingle/#beans-factory-scopes&lt;/a&gt; が詳しい。&lt;/p&gt;
+
+&lt;h2 id=&#34;component&#34;&gt;@Component&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;@Component&lt;/code&gt; はクラスにつけるアノテーションである。このアノテーションをつけたクラスが、IoC コンテナの管理対象であることを知らせるためのマーカーである。&lt;code&gt;@Component&lt;/code&gt; がついたクラスは &lt;code&gt;@Bean&lt;/code&gt; による Bean 定義を書かずとも、IoC コンテナの管理対象になる。同じような役割の Bean が大量にある場合には、いちいち &lt;code&gt;@Bean&lt;/code&gt; で Bean を定義していくよりも手軽で使いでがある。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;@Component&lt;/code&gt; はクラスだけでなくアノテーションにもつけることができる (= メタアノテーション)。&lt;code&gt;@Component&lt;/code&gt; がついたアノテーションをつけたクラスもまた、IoC コンテナの管理対象として扱われる。&lt;code&gt;@Component&lt;/code&gt; がついたアノテーションはステレオタイプと呼ばれたりもする。&lt;/p&gt;
+
+&lt;p&gt;典型的なコンポーネントとして、3 つのステレオタイプが用意されている:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@Controller&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Web アプリケーションのコントローラクラスであることを表す&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@Service&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;サービス層のクラスであることを表す&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@Repository&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;永続層のクラスであることを表す&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;例えば以下のクラスは &lt;code&gt;@Bean&lt;/code&gt; による Bean 定義を書かずとも、IoC コンテナによって、適切に DI が行われ、オブジェクトが管理される。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;@Service
+public class AuthService {
+  private UsersRepository users;
+  
+  public AuthService(UsersRepository users) {
+    this.users = users;
+  }
+
+  // ...
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;autowired&#34;&gt;@Autowired&lt;/h2&gt;
+
+&lt;p&gt;かつての XML 設定では Bean の依存関係の解決は、設定ファイルで明示的に指定するのが基本だった。後に &lt;a href=&#34;http://docs.spring.io/spring/docs/current/spring-framework-reference/htmlsingle/#beans-factory-autowire&#34;&gt;Autowire&lt;/a&gt; と呼ばれる依存関係の自動解決の仕組みが入った。これは XML ファイルによる設定でも使える。Java Config では &lt;code&gt;@Autowired&lt;/code&gt; アノテーションを使って、Autowire の設定を行う。&lt;/p&gt;
+
+&lt;p&gt;Spring 4.3 から、コンストラクタには &lt;code&gt;@Autowired&lt;/code&gt; を使わなくても &lt;a href=&#34;http://docs.spring.io/spring/docs/current/spring-framework-reference/htmlsingle/#_core_container_improvements_3&#34;&gt;Autowire されるようになった&lt;/a&gt;。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;@Component
+public class Spring42 {
+  @Autowired
+  public Spring42(MyBean obj) { }
+}
+
+@Component
+public class Spring43 {
+  public Spring43(MyBean obj) { }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;フィールドインジェクション、セッターインジェクション (メソッドインジェクション) を使う場合には &lt;code&gt;@Autowired&lt;/code&gt; を使う。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;@Component
+public class MyBean1 {
+  @Autowired
+  private MyBean2 obj;
+  
+  @Autowired
+  public void setup(MyBean3 a, MyBean4 b) { }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;IoC コンテナが MyBean1 を構築する際、&lt;code&gt;@Autowired&lt;/code&gt; がついたメンバを探す。&lt;code&gt;@Autowired&lt;/code&gt; がついたメンバの型 (フィールドならその型、メソッドならパラメータの型) を持つオブジェクトに依存するものと判断する。IoC コンテナはこれらの型を自身から探してきて&lt;/p&gt;
+
+&lt;h2 id=&#34;value&#34;&gt;@Value&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;@Value&lt;/code&gt; はフィールドやメソッドのパラメータにつけるアノテーションである。構造を持ったオブジェクトではなく、整数や文字列といった単純な値をコンテナから与えてもらうときに使う。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;@Configuration
+public class Config {
+  @Bean
+  public MyApiGateway myApiGateway(@Value(&amp;quot;${myapi.baseurl}&amp;quot;) String baseUrl) {
+    return new MyApiGateway(baseUrl);
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;@Value&lt;/code&gt; の引数には &lt;a href=&#34;http://docs.spring.io/spring/docs/current/spring-framework-reference/htmlsingle/#expressions&#34;&gt;SpEL&lt;/a&gt; を書く。上の例では &lt;code&gt;${myapi.baseurl}&lt;/code&gt; としており、これはプロパティ &lt;code&gt;myapi.baseurl&lt;/code&gt; を &lt;code&gt;baseUrl&lt;/code&gt; に設定することを表現している。&lt;/p&gt;
+
+&lt;h2 id=&#34;postconstruct-predestroy&#34;&gt;@PostConstruct, @PreDestroy&lt;/h2&gt;
+
+&lt;p&gt;Bean の構築後、破棄前にフックをかけることができる。&lt;code&gt;@PostConstruct&lt;/code&gt; は構築後、&lt;code&gt;@PreDestroy&lt;/code&gt; は破棄前に呼ばれるメソッドにつけるアノテーションである。これらのアノテーションは Spring 独自ではなく &lt;a href=&#34;https://en.wikipedia.org/wiki/JSR_250&#34;&gt;JSR-250&lt;/a&gt; で標準化されているアノテーションである。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;public class MyApiGateway {
+  private HttpClient client;
+  
+  public MyApiGateway(HttpClient httpClient) {
+    this.httpClient = httpClient;
+  }
+
+  @PostConstruct
+  public void init() {
+    httpClient.post(&amp;quot;http://mygreatapi.example.com/hello&amp;quot;);
+  }
+  
+  @PreDestroy
+  public void destroy() {
+    httpClient.post(&amp;quot;http://mygreatapi.example.com/bye&amp;quot;);
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;@PostConstruct&lt;/code&gt; は DI が完了した状態で呼ばれる。&lt;/p&gt;
+
+&lt;p&gt;なお、Java Config では Bean 定義を Java プログラムのメソッド内に書くので、Bean を new したあとに初期化メソッドを呼んでしまえば済む話である。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;@Bean
+public MyApiGateway myApiGateway() {
+  MyApiGateway gw = new MyApiGateway();
+  gw.init();
+  return gw;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;@Component&lt;/code&gt; がついたクラスの場合にはこのようなことができないので、&lt;code&gt;@PostConstruct&lt;/code&gt; を使って初期化メソッドを書く。&lt;/p&gt;
+
+&lt;h1 id=&#34;environment&#34;&gt;Environment&lt;/h1&gt;
+
+&lt;p&gt;Spring では実行環境を &lt;code&gt;Environment&lt;/code&gt; インタフェースによって抽象化している。実行環境には、&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;プロファイル&lt;/li&gt;
+&lt;li&gt;プロパティ
+
+&lt;ul&gt;
+&lt;li&gt;環境変数&lt;/li&gt;
+&lt;li&gt;JVM のシステムプロパティ&lt;/li&gt;
+&lt;li&gt;プロパティファイルによる設定&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;を含む。&lt;/p&gt;
+
+&lt;p&gt;プロファイルは &lt;strong&gt;モード&lt;/strong&gt; みたいなもの。よくあるのは、開発中は develop プロファイル、リリース版は production プロファイルを指定する、みたいな感じである。プロファイルごとに有効な設定を切り替えることができる。Bean 定義をプロファイルごとに変えることもできる。&lt;/p&gt;
+
+&lt;h1 id=&#34;終わりに&#34;&gt;終わりに&lt;/h1&gt;
+
+&lt;p&gt;まとめは特にない。途中途中、説明が雑になっているのは、長くなりすぎてダレてしまったからであると白状しておく。&lt;/p&gt;
+
+&lt;p&gt;これぐらい覚えておけば Spring Boot がどんな感じで動いているのか、なんとなく想像できるんじゃなかろうか。&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>はじめての Spring Boot</title>
+      <link>http://kazkn.com/post/2017/intro-spring-boot/</link>
+      <pubDate>Sat, 11 Mar 2017 15:44:46 +0900</pubDate>
+      
+      <guid>http://kazkn.com/post/2017/intro-spring-boot/</guid>
+      <description>
+
+&lt;p&gt;最近の Spring Framework ベースのアプリケーション開発で欠かせないのが &lt;a href=&#34;https://projects.spring.io/spring-boot/&#34;&gt;Spring Boot&lt;/a&gt; である。Spring Boot とは、公式によれば:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Spring Boot makes it easy to create stand-alone, production-grade Spring based Applications that you can &amp;ldquo;just run&amp;rdquo;. We take an opinionated view of the Spring platform and third-party libraries so you can get started with minimum fuss. Most Spring Boot applications need very little Spring configuration.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;であるとのこと。Spring Boot にはいろんな機能が備わっているわけだが、これらはひとえに Spring Framework ベースのアプリケーションをかんたんに作り、かんたんに運用するために用意されている。それでいて出来上がるアプリケーションはオモチャのようなものではなく、紛れもない本物の Spring Framework ベースのアプリケーションである。&lt;/p&gt;
+
+&lt;p&gt;このページでは、まずは Spring Boot ベースのかんたんな Web アプリケーションを作ってみることにする。その後、少し話題を変えて、Spring Boot の中身を追ってみたい。今回は起動プロセスをかんたんに調べてみることにした。&lt;/p&gt;
+
+&lt;h2 id=&#34;プロジェクトを作る&#34;&gt;プロジェクトを作る&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://start.spring.io/&#34;&gt;Spring Initializr&lt;/a&gt; でプロジェクトのひな形を作ることができる。&lt;/p&gt;
+
+&lt;p&gt;ここでは&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Maven Project&lt;/li&gt;
+&lt;li&gt;Spring Boot 1.5.2&lt;/li&gt;
+&lt;li&gt;Project Metadata
+
+&lt;ul&gt;
+&lt;li&gt;group: org.genva&lt;/li&gt;
+&lt;li&gt;artifact: fortune&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Dependencies
+
+&lt;ul&gt;
+&lt;li&gt;web&lt;/li&gt;
+&lt;li&gt;devtools&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;として、ひな形を作る。fortune.zip が落ちてくるので、適当な場所に展開する。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ unzip fortune.zip
+$ tree fortune
+fortune
+├── mvnw
+├── mvnw.cmd
+├── pom.xml
+└── src
+    ├── main
+    │   ├── java
+    │   │   └── org
+    │   │       └── genva
+    │   │           └── FortuneApplication.java
+    │   └── resources
+    │       ├── application.properties
+    │       ├── static
+    │       └── templates
+    └── test
+        └── java
+            └── org
+                └── genva
+                    └── FortuneApplicationTests.java
+
+12 directories, 6 files
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Eclipse 用のプロジェクト設定を生成する。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ cd fortune
+$ ./mvnw eclipse:eclipse
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Maven をインストールしていなくても、そのラッパースクリプトである mvnw を使うことで、自動的に Maven が導入される。&lt;/p&gt;
+
+&lt;h2 id=&#34;起動する&#34;&gt;起動する&lt;/h2&gt;
+
+&lt;p&gt;プロジェクトを Eclipse で開き、 &lt;code&gt;org.genva.fortune.FortuneApplication&lt;/code&gt; を Java Application として実行する。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;15:58:55.047 [main] DEBUG org.springframework.boot.devtools.settings.DevToolsSettings - Included patterns for restart : []
+15:58:55.051 [main] DEBUG org.springframework.boot.devtools.settings.DevToolsSettings - Excluded patterns for restart : [/spring-boot-starter/target/classes/, /spring-boot-autoconfigure/target/classes/, /spring-boot-starter-[\w-]+/, /spring-boot/target/classes/, /spring-boot-actuator/target/classes/, /spring-boot-devtools/target/classes/]
+15:58:55.052 [main] DEBUG org.springframework.boot.devtools.restart.ChangeableUrls - Matching URLs for reloading : [file:/home/kazuki/sources/writing/spring/fortune/target/test-classes/, file:/home/kazuki/sources/writing/spring/fortune/target/classes/]
+
+  .   ____          _            __ _ _
+ /\\ / ___&#39;_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | &#39;_ | &#39;_| | &#39;_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  &#39;  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v1.5.2.RELEASE)
+
+2017-03-11 15:58:55.478  INFO 10029 --- [  restartedMain] org.genva.FortuneApplication             : Starting FortuneApplication on carrot with PID 10029 (/home/kazuki/sources/writing/spring/fortune/target/classes started by kazuki in /home/kazuki/sources/writing/spring/fortune)
+2017-03-11 15:58:55.479  INFO 10029 --- [  restartedMain] org.genva.FortuneApplication             : No active profile set, falling back to default profiles: default
+2017-03-11 15:58:55.571  INFO 10029 --- [  restartedMain] ationConfigEmbeddedWebApplicationContext : Refreshing org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext@38bed225: startup date [Sat Mar 11 15:58:55 JST 2017]; root of context hierarchy
+2017-03-11 15:58:57.303  INFO 10029 --- [  restartedMain] s.b.c.e.t.TomcatEmbeddedServletContainer : Tomcat initialized with port(s): 8080 (http)
+
+(snip)
+
+2017-03-11 15:58:58.780  INFO 10029 --- [  restartedMain] s.b.c.e.t.TomcatEmbeddedServletContainer : Tomcat started on port(s): 8080 (http)
+2017-03-11 15:58:58.785  INFO 10029 --- [  restartedMain] org.genva.FortuneApplication             : Started FortuneApplication in 3.707 seconds (JVM running for 4.236)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;最後のメッセージが表示されれば、アプリケーションの起動が完了している。組み込み Tomcat は :8080 で待ち構えていることが分かる。また、メインスレッドの名前が restartedMain になっていることから、spring-boot-devtools が効いていることが分かる。&lt;/p&gt;
+
+&lt;h2 id=&#34;コントローラを追加する&#34;&gt;コントローラを追加する&lt;/h2&gt;
+
+&lt;p&gt;コントローラを追加し、HTTP 経由でアプリケーションを叩けるようにする。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;@RestController
+public class FortuneController {
+    @GetMapping
+    public String index() {
+        return LocalDateTime.now().toString();
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;クラスを追加したり、ファイルを保存したりすると、アプリケーションが自動的に再起動する様子がログから分かる。これは spring-boot-devtools によるもの。アプリケーションのクラスローダーと依存ライブラリのクラスローダーが分かれていて、アプリケーションのソースが更新されると、自動的にアプリケーションのクラスローダーだけが破棄、再読み込みされる。アプリケーションのクラスだけが再読み込みされるので、再起動にかかる時間は短く済む。&lt;/p&gt;
+
+&lt;p&gt;さて、コントローラにアクセスしてみよう。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ curl http://localhost:8080/
+2017-03-11T16:05:26.669
+$ curl http://localhost:8080/
+2017-03-11T16:05:46.557
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;現在日時が返ってきている。ちゃんと機能しているようだ。&lt;/p&gt;
+
+&lt;h2 id=&#34;fortune-の出力を返すようにする&#34;&gt;fortune の出力を返すようにする&lt;/h2&gt;
+
+&lt;p&gt;現在日時を返すだけではつまらないし、せっかくの Spring なので依存性注入も使いたい。そこで fortune (/usr/games/fortune) の出力を応答として返すようにする。このような業務処理 (fortune の出力を得ることを、業務と呼ぶべきかどうかはさておき) は、コントローラのようなプレゼンテーション層ではなくサービスなどのモデル層に書くべき処理である。今回はサービスクラスとして作ることにした。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;@Service
+public class FortuneService {
+    public String get() {
+        ProcessBuilder pb = new ProcessBuilder(&amp;quot;/usr/games/fortune&amp;quot;);
+        Process p = null;
+        try {
+            p = pb.start();
+            p.waitFor();
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                return br.lines().collect(Collectors.joining(&amp;quot;\n&amp;quot;));
+            }
+        }
+        catch (IOException | InterruptedException e) {
+            return &amp;quot;MOU DAMEPO&amp;quot;;
+        }
+        finally {
+            if (p != null) {
+                closeQuietly(p.getErrorStream());
+                closeQuietly(p.getOutputStream());
+                closeQuietly(p.getInputStream());
+                p.destroy();
+            }
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;/usr/games/fortune のプロセスを起動し、その出力を得るだけのプログラムである。Java でのプロセスの扱いはとても面倒で、かつ間違いが起きやすいので、なるべくなら避けたいものである。&lt;code&gt;closeQuietly&lt;/code&gt; は例外を握りつぶしつつ &lt;code&gt;Closeable.close&lt;/code&gt; を呼ぶメソッドで、そういうユーティリティがあるものと思ってほしい。&lt;/p&gt;
+
+&lt;p&gt;これを使うよう、コントローラを修正する。層をまたいだ依存関係の設定は、外部 (ここでは Spring) にまかせてしまう (これが依存性注入と呼ばれるもの)。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;@RestController
+public class FortuneController {
+    private FortuneService fortune;
+
+    public FortuneController(FortuneService fortune) {
+        this.fortune = fortune;
+    }
+
+    @GetMapping
+    public String index() {
+        return fortune.get();
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;改めて curl で叩く。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ curl http://localhost:8080/
+You are not dead yet.  But watch for further reports.
+$ curl http://localhost:8080/
+Wagner&#39;s music is better than it sounds.
+                -- Mark Twain
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;ありがたいお言葉が返ってくるようになった。&lt;/p&gt;
+
+&lt;p&gt;なお、最初に FortuneApplication を起動してから、fortune の結果を得られるようになるまで、Eclipse を使ったアプリケーションの再起動は一度も行わなかった。spring-boot-devtools は素晴らしい。&lt;/p&gt;
+
+&lt;h2 id=&#34;パッケージング-デプロイ&#34;&gt;パッケージング、デプロイ&lt;/h2&gt;
+
+&lt;p&gt;パッケージングは Maven で package すればおしまい。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ ./mvnw package
+$ file target/fortune-0.0.1-SNAPSHOT.jar
+target/fortune-0.0.1-SNAPSHOT.jar: Java Jar file data (zip)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;この jar ファイルは Maven の spring-boot プラグインによって後処理 (repackage) されたもので、特殊なレイアウトになっている。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ unzip -l target/fortune-0.0.1-SNAPSHOT.jar
+Archive:  target/fortune-0.0.1-SNAPSHOT.jar
+  Length      Date    Time    Name
+---------  ---------- -----   ----
+        0  2017-03-11 17:03   META-INF/
+      563  2017-03-11 17:03   META-INF/MANIFEST.MF
+        0  2017-03-11 17:03   BOOT-INF/
+        0  2017-03-11 17:03   BOOT-INF/classes/
+        0  2017-03-11 16:30   BOOT-INF/classes/org/
+        0  2017-03-11 16:30   BOOT-INF/classes/org/genva/
+        0  2017-03-11 17:03   BOOT-INF/classes/application.properties
+      717  2017-03-11 17:03   BOOT-INF/classes/org/genva/FortuneController.class
+      156  2017-03-11 17:03   BOOT-INF/classes/org/genva/FortuneService.class
+     2504  2017-03-11 17:03   BOOT-INF/classes/org/genva/UnixFortuneService.class
+      699  2017-03-11 17:03   BOOT-INF/classes/org/genva/FortuneApplication.class
+        0  2017-03-11 17:03   META-INF/maven/
+        0  2017-03-11 17:03   META-INF/maven/org.genva/
+        0  2017-03-11 17:03   META-INF/maven/org.genva/fortune/
+     1571  2017-03-11 06:53   META-INF/maven/org.genva/fortune/pom.xml
+      117  2017-03-11 17:03   META-INF/maven/org.genva/fortune/pom.properties
+        0  2017-03-11 17:03   BOOT-INF/lib/
+     2346  2017-03-03 15:47   BOOT-INF/lib/spring-boot-starter-web-1.5.2.RELEASE.jar
+     2289  2017-03-03 15:46   BOOT-INF/lib/spring-boot-starter-1.5.2.RELEASE.jar
+     2310  2017-03-03 15:46   BOOT-INF/lib/spring-boot-starter-logging-1.5.2.RELEASE.jar
+   309130  2017-03-01 20:40   BOOT-INF/lib/logback-classic-1.1.11.jar
+   475477  2017-03-01 20:39   BOOT-INF/lib/logback-core-1.1.11.jar
+    16516  2017-02-24 12:09   BOOT-INF/lib/jcl-over-slf4j-1.7.24.jar
+     4597  2017-02-24 12:09   BOOT-INF/lib/jul-to-slf4j-1.7.24.jar
+    23647  2017-02-24 12:09   BOOT-INF/lib/log4j-over-slf4j-1.7.24.jar
+   273599  2016-02-19 13:13   BOOT-INF/lib/snakeyaml-1.17.jar
+     2294  2017-03-03 15:47   BOOT-INF/lib/spring-boot-starter-tomcat-1.5.2.RELEASE.jar
+  3015953  2017-01-10 21:03   BOOT-INF/lib/tomcat-embed-core-8.5.11.jar
+   239791  2017-01-10 21:03   BOOT-INF/lib/tomcat-embed-el-8.5.11.jar
+   241640  2017-01-10 21:03   BOOT-INF/lib/tomcat-embed-websocket-8.5.11.jar
+   725129  2016-12-08 10:48   BOOT-INF/lib/hibernate-validator-5.3.4.Final.jar
+    63777  2013-04-10 15:02   BOOT-INF/lib/validation-api-1.1.0.Final.jar
+    66802  2015-05-28 09:49   BOOT-INF/lib/jboss-logging-3.3.0.Final.jar
+    64982  2016-09-27 22:24   BOOT-INF/lib/classmate-1.3.3.jar
+  1237433  2017-02-21 01:07   BOOT-INF/lib/jackson-databind-2.8.7.jar
+    55784  2016-07-03 22:20   BOOT-INF/lib/jackson-annotations-2.8.0.jar
+   282314  2017-02-20 17:01   BOOT-INF/lib/jackson-core-2.8.7.jar
+   817936  2017-03-01 08:34   BOOT-INF/lib/spring-web-4.3.7.RELEASE.jar
+   380004  2017-03-01 08:32   BOOT-INF/lib/spring-aop-4.3.7.RELEASE.jar
+   762747  2017-03-01 08:31   BOOT-INF/lib/spring-beans-4.3.7.RELEASE.jar
+  1139269  2017-03-01 08:32   BOOT-INF/lib/spring-context-4.3.7.RELEASE.jar
+   915615  2017-03-01 08:34   BOOT-INF/lib/spring-webmvc-4.3.7.RELEASE.jar
+   263286  2017-03-01 08:32   BOOT-INF/lib/spring-expression-4.3.7.RELEASE.jar
+   667710  2017-03-03 15:34   BOOT-INF/lib/spring-boot-1.5.2.RELEASE.jar
+  1045757  2017-03-03 15:41   BOOT-INF/lib/spring-boot-autoconfigure-1.5.2.RELEASE.jar
+    41205  2017-02-24 12:08   BOOT-INF/lib/slf4j-api-1.7.24.jar
+  1118609  2017-03-01 08:31   BOOT-INF/lib/spring-core-4.3.7.RELEASE.jar
+        0  2017-03-11 17:03   org/
+        0  2017-03-11 17:03   org/springframework/
+        0  2017-03-11 17:03   org/springframework/boot/
+        0  2017-03-11 17:03   org/springframework/boot/loader/
+     2415  2017-03-03 15:28   org/springframework/boot/loader/LaunchedURLClassLoader$1.class
+     1454  2017-03-03 15:28   org/springframework/boot/loader/PropertiesLauncher$ArchiveEntryFilter.class
+     1807  2017-03-03 15:28   org/springframework/boot/loader/PropertiesLauncher$PrefixMatchingArchiveFilter.class
+     4599  2017-03-03 15:28   org/springframework/boot/loader/Launcher.class
+     1165  2017-03-03 15:28   org/springframework/boot/loader/ExecutableArchiveLauncher$1.class
+        0  2017-03-11 17:03   org/springframework/boot/loader/jar/
+     2002  2017-03-03 15:28   org/springframework/boot/loader/jar/JarFile$1.class
+     9657  2017-03-03 15:28   org/springframework/boot/loader/jar/Handler.class
+     3350  2017-03-03 15:28   org/springframework/boot/loader/jar/JarEntry.class
+     1427  2017-03-03 15:28   org/springframework/boot/loader/jar/JarFile$3.class
+     2943  2017-03-03 15:28   org/springframework/boot/loader/jar/CentralDirectoryEndRecord.class
+      430  2017-03-03 15:28   org/springframework/boot/loader/jar/CentralDirectoryVisitor.class
+     1300  2017-03-03 15:28   org/springframework/boot/loader/jar/JarFile$JarFileType.class
+    10924  2017-03-03 15:28   org/springframework/boot/loader/jar/JarFileEntries.class
+    12697  2017-03-03 15:28   org/springframework/boot/loader/jar/JarFile.class
+     1540  2017-03-03 15:28   org/springframework/boot/loader/jar/JarFileEntries$1.class
+      672  2017-03-03 15:28   org/springframework/boot/loader/jar/JarURLConnection$1.class
+     1199  2017-03-03 15:28   org/springframework/boot/loader/jar/JarFile$2.class
+      262  2017-03-03 15:28   org/springframework/boot/loader/jar/JarEntryFilter.class
+     4457  2017-03-03 15:28   org/springframework/boot/loader/jar/AsciiBytes.class
+     4602  2017-03-03 15:28   org/springframework/boot/loader/jar/CentralDirectoryParser.class
+     2169  2017-03-03 15:28   org/springframework/boot/loader/jar/Bytes.class
+     1629  2017-03-03 15:28   org/springframework/boot/loader/jar/ZipInflaterInputStream.class
+     1967  2017-03-03 15:28   org/springframework/boot/loader/jar/JarFileEntries$EntryIterator.class
+      306  2017-03-03 15:28   org/springframework/boot/loader/jar/FileHeader.class
+     3641  2017-03-03 15:28   org/springframework/boot/loader/jar/JarURLConnection$JarEntryName.class
+     9111  2017-03-03 15:28   org/springframework/boot/loader/jar/JarURLConnection.class
+     5449  2017-03-03 15:28   org/springframework/boot/loader/jar/CentralDirectoryFileHeader.class
+        0  2017-03-11 17:03   org/springframework/boot/loader/data/
+     1531  2017-03-03 15:28   org/springframework/boot/loader/data/ByteArrayRandomAccessData.class
+     3534  2017-03-03 15:28   org/springframework/boot/loader/data/RandomAccessDataFile$DataInputStream.class
+     2051  2017-03-03 15:28   org/springframework/boot/loader/data/RandomAccessDataFile$FilePool.class
+     1341  2017-03-03 15:28   org/springframework/boot/loader/data/RandomAccessData$ResourceAccess.class
+     3390  2017-03-03 15:28   org/springframework/boot/loader/data/RandomAccessDataFile.class
+      551  2017-03-03 15:28   org/springframework/boot/loader/data/RandomAccessData.class
+     4698  2017-03-03 15:28   org/springframework/boot/loader/LaunchedURLClassLoader.class
+     1533  2017-03-03 15:28   org/springframework/boot/loader/JarLauncher.class
+     1468  2017-03-03 15:28   org/springframework/boot/loader/MainMethodRunner.class
+     1382  2017-03-03 15:28   org/springframework/boot/loader/PropertiesLauncher$1.class
+     3128  2017-03-03 15:28   org/springframework/boot/loader/ExecutableArchiveLauncher.class
+     1669  2017-03-03 15:28   org/springframework/boot/loader/WarLauncher.class
+        0  2017-03-11 17:03   org/springframework/boot/loader/archive/
+     1749  2017-03-03 15:28   org/springframework/boot/loader/archive/JarFileArchive$EntryIterator.class
+     3792  2017-03-03 15:28   org/springframework/boot/loader/archive/ExplodedArchive$FileEntryIterator.class
+     1068  2017-03-03 15:28   org/springframework/boot/loader/archive/ExplodedArchive$FileEntry.class
+     1051  2017-03-03 15:28   org/springframework/boot/loader/archive/JarFileArchive$JarFileEntry.class
+      302  2017-03-03 15:28   org/springframework/boot/loader/archive/Archive$Entry.class
+     7016  2017-03-03 15:28   org/springframework/boot/loader/archive/JarFileArchive.class
+     4974  2017-03-03 15:28   org/springframework/boot/loader/archive/ExplodedArchive.class
+      906  2017-03-03 15:28   org/springframework/boot/loader/archive/Archive.class
+     1438  2017-03-03 15:28   org/springframework/boot/loader/archive/ExplodedArchive$FileEntryIterator$EntryComparator.class
+      399  2017-03-03 15:28   org/springframework/boot/loader/archive/Archive$EntryFilter.class
+      273  2017-03-03 15:28   org/springframework/boot/loader/archive/ExplodedArchive$1.class
+    17141  2017-03-03 15:28   org/springframework/boot/loader/PropertiesLauncher.class
+        0  2017-03-11 17:03   org/springframework/boot/loader/util/
+     4887  2017-03-03 15:28   org/springframework/boot/loader/util/SystemPropertyUtils.class
+---------                     -------
+ 14428721                     107 files
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;依存ライブラリが jar ファイルのまま内包されていることが分かる。内包する jar ファイルをクラスパスに含めつつアプリケーションの main メソッド (ここでは FortuneApplication.main) を叩くため、spring-boot-loader のクラス群があらかじめ jar ファイル内に展開されている。&lt;/p&gt;
+
+&lt;p&gt;この jar ファイルを使ってアプリケーションを起動するには、java コマンドを叩けばいい。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ java -jar target/fortune-0.0.1-SNAPSHOT.jar
+
+  .   ____          _            __ _ _
+ /\\ / ___&#39;_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | &#39;_ | &#39;_| | &#39;_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  &#39;  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v1.5.2.RELEASE)
+
+2017-03-11 17:08:05.071  INFO 12061 --- [           main] org.genva.FortuneApplication             : Starting FortuneApplication v0.0.1-SNAPSHOT on carrot with PID 12061 (/home/kazuki/sources/writing/spring/fortune/target/fortune-0.0.1-SNAPSHOT.jar started by kazuki in /home/kazuki/sources/writing/spring/fortune)
+(snip)
+2017-03-11 17:08:07.998  INFO 12061 --- [           main] s.b.c.e.t.TomcatEmbeddedServletContainer : Tomcat started on port(s): 8080 (http)
+2017-03-11 17:08:08.002  INFO 12061 --- [           main] org.genva.FortuneApplication             : Started FortuneApplication in 3.364 seconds (JVM running for 3.902)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Eclipse から起動したときと異なり、メインスレッドの名前が main となっていることが分かる。spring-boot:repackage により、spring-boot-devtools が除外されているため。特に難しいことは考えることなく、リリースする jar ファイルでは spring-boot-devtools による余計な制御が行われないようになっている。&lt;/p&gt;
+
+&lt;p&gt;デプロイするには、この jar ファイルを適当な場所におき、systemd なりから叩くようにすればよい。詳しくは Spring Boot の&lt;a href=&#34;http://docs.spring.io/spring-boot/docs/current/reference/html/deployment-install.html&#34;&gt;リファレンス&lt;/a&gt;参照。&lt;/p&gt;
+
+&lt;p&gt;ここでは紹介しないが、war ファイルとしてパッケージングし、任意の Servlet コンテナにデプロイすることもできる。詳しくは (やはり) &lt;a href=&#34;http://docs.spring.io/spring-boot/docs/current/reference/html/build-tool-plugins-maven-plugin.html#build-tool-plugins-maven-packaging&#34;&gt;リファレンス&lt;/a&gt;を参照。&lt;/p&gt;
+
+&lt;h2 id=&#34;組み込み-tomcat-の起動プロセスを追う&#34;&gt;組み込み Tomcat の起動プロセスを追う&lt;/h2&gt;
+
+&lt;p&gt;少し Spring Boot の中を覗いてみることにする。&lt;/p&gt;
+
+&lt;p&gt;Spring Boot は、Auto Configuration とそこから駆動される便利クラス群から成り立っている。まずは組み込み Tomcat が使われることを決定付ける Auto Configuration を見てみる。&lt;/p&gt;
+
+&lt;p&gt;Eclipse で &lt;code&gt;org.apache.catalina.startup.Tomcat&lt;/code&gt; クラスの参照を探すと、 &lt;code&gt;org.springframework.boot.autoconfigure.web.EmbeddedTomcat&lt;/code&gt; というクラスが見つかる。パッケージ名に autoconfigure とあることから、これが Tomcat を使うよう決定づける Auto Configuration であると推測できる。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;/**
+ * Nested configuration if Tomcat is being used.
+ */
+@Configuration
+@ConditionalOnClass({ Servlet.class, Tomcat.class })
+@ConditionalOnMissingBean(value = EmbeddedServletContainerFactory.class, search = SearchStrategy.CURRENT)
+public static class EmbeddedTomcat {
+
+	@Bean
+	public TomcatEmbeddedServletContainerFactory tomcatEmbeddedServletContainerFactory() {
+		return new TomcatEmbeddedServletContainerFactory();
+	}
+
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;EmbeddedServletContainerFactory&lt;/code&gt; の実装として、 &lt;code&gt;TomcatEmbeddedServletContainerFactory&lt;/code&gt; を Bean 定義している。こいつが Tomcat のインスタンスを作っているものと推測できる。なお、この設定 (&lt;code&gt;EmbeddedTomcat&lt;/code&gt;) が有効になるのは、 &lt;code&gt;javax.servlet.Servlet&lt;/code&gt; と &lt;code&gt;org.apache.catalina.startup.Tomcat&lt;/code&gt; がクラスパス内に存在し、かつ &lt;code&gt;EmbeddedServletContainerFactory&lt;/code&gt; の Bean 定義がない場合に限る。独自に &lt;code&gt;EmbeddedServletContainerFactory&lt;/code&gt; の Bean を定義したり、Web 環境でない場合には、この設定は有効とならない。このように、実行時の環境、条件に応じて設定の有効/無効が自動的に切り替わることから、Auto Configuration と呼ばれている。&lt;/p&gt;
+
+&lt;p&gt;次に &lt;code&gt;TomcatEmbeddedServletContainerFactory&lt;/code&gt; を追う。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;@Override
+public EmbeddedServletContainer getEmbeddedServletContainer(
+		ServletContextInitializer... initializers) {
+	Tomcat tomcat = new Tomcat();
+    // (snip)
+	return getTomcatEmbeddedServletContainer(tomcat);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Tomcat のインスタンスを作り、&lt;code&gt;TomcatEmbeddedServletContainer&lt;/code&gt; でラップして返している。&lt;/p&gt;
+
+&lt;p&gt;このメソッドの参照を Eclipse で探すと、&lt;code&gt;EmbeddedWebApplicationContext&lt;/code&gt; が見つかる。ソースを読むと、&lt;code&gt;onRefresh&lt;/code&gt; メソッド経由で &lt;code&gt;getEmbeddedServletContainer&lt;/code&gt; を呼び出していることが分かる。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;@Override
+protected void onRefresh() {
+	super.onRefresh();
+	try {
+		createEmbeddedServletContainer();
+	}
+	catch (Throwable ex) {
+		throw new ApplicationContextException(&amp;quot;Unable to start embedded container&amp;quot;,
+				ex);
+	}
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;onRefresh&lt;/code&gt; は、Spring の IoC コンテナを &lt;code&gt;refresh&lt;/code&gt; したときに呼び出されるフックである。ApplicationContext の実装ごとの、特別な Bean の準備するために呼び出される。アプリケーションの起動時はもちろん、spring-boot-devtools でアプリケーションのクラスローダーを再読み込みするときにも呼び出される。以上が Servlet コンテナの構築の流れとなる。&lt;/p&gt;
+
+&lt;p&gt;続けて、起動の流れを追う。&lt;code&gt;TomcatEmbeddedServletContainer.start&lt;/code&gt; の参照を探すと、先ほどと同様に &lt;code&gt;EmbeddedWebApplicationContext&lt;/code&gt; が見つかる。さらに追っていくと、&lt;code&gt;finishRefresh&lt;/code&gt; 経由で呼び出していることが分かる。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;@Override
+protected void finishRefresh() {
+	super.finishRefresh();
+	EmbeddedServletContainer localContainer = startEmbeddedServletContainer();
+	if (localContainer != null) {
+		publishEvent(
+				new EmbeddedServletContainerInitializedEvent(this, localContainer));
+	}
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;finishRefresh&lt;/code&gt; は IoC コンテナの &lt;code&gt;refresh&lt;/code&gt; が完了するタイミングで呼び出されるフックである。すなわち Bean 定義の読み込みや設定がひと通り終わったタイミングで Servlet コンテナが動き始める。&lt;/p&gt;
+
+&lt;p&gt;FortuneApplication の main メソッドで呼び出している &lt;code&gt;SpringApplication.run&lt;/code&gt; では、実際に利用する ApplicationContext の決定が行われる。Web 環境で使われるデフォルトの ApplicationContext の実装は、&lt;code&gt;org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext&lt;/code&gt; となっている。&lt;code&gt;AnnotationConfigEmbeddedWebApplicationContext&lt;/code&gt; は &lt;code&gt;EmbeddedWebApplicationContext&lt;/code&gt; のサブクラスである。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;public static final String DEFAULT_WEB_CONTEXT_CLASS = &amp;quot;org.springframework.&amp;quot;
+		+ &amp;quot;boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext&amp;quot;;
+
+(snip)
+
+protected ConfigurableApplicationContext createApplicationContext() {
+	Class&amp;lt;?&amp;gt; contextClass = this.applicationContextClass;
+	if (contextClass == null) {
+		try {
+			contextClass = Class.forName(this.webEnvironment
+					? DEFAULT_WEB_CONTEXT_CLASS : DEFAULT_CONTEXT_CLASS);
+		}
+		catch (ClassNotFoundException ex) {
+			throw new IllegalStateException(
+					&amp;quot;Unable create a default ApplicationContext, &amp;quot;
+							+ &amp;quot;please specify an ApplicationContextClass&amp;quot;,
+					ex);
+		}
+	}
+	return (ConfigurableApplicationContext) BeanUtils.instantiate(contextClass);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;これにより、&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;IoC コンテナの実装として &lt;code&gt;EmbeddedWebApplicationContext&lt;/code&gt; が使われ、&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;onRefresh&lt;/code&gt; で Tomcat のインスタンスが作られ、&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;finishRefresh&lt;/code&gt; で Tomcat が動き出す&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;ということが分かった。&lt;/p&gt;
+
+&lt;p&gt;Tomcat の起動プロセスがわかったところで「だからなんだ」という話なのだが、黒魔術だらけの Spring Boot であっても、順を追って調べれば、どうにかその中身を理解できるということを試したかった。中身についての知識や、解析方法がわかっていれば、何か問題や課題にぶつかったとき、落ち着いて対処することができる。&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Goodbye BIND9</title>
+      <link>http://kazkn.com/post/2017/goodbye-bind9/</link>
+      <pubDate>Wed, 22 Feb 2017 22:26:27 +0900</pubDate>
+      
+      <guid>http://kazkn.com/post/2017/goodbye-bind9/</guid>
+      <description>
+
+&lt;p&gt;&lt;a href=&#34;https://www.cvedetails.com/product/144/ISC-Bind.html?vendor_id=64&#34;&gt;BIND9 の脆弱性報告&lt;/a&gt; にもいい加減うんざりしてきた。今年 (2017 年) に入ってからも、2 月 21 日現在ですでに &lt;a href=&#34;https://www.cvedetails.com/cve/CVE-2016-9131/&#34;&gt;3 件&lt;/a&gt; の&lt;a href=&#34;https://www.cvedetails.com/cve/CVE-2016-9147/&#34;&gt;脆弱性が&lt;/a&gt; &lt;a href=&#34;https://www.cvedetails.com/cve/CVE-2016-9444/&#34;&gt;報告されている&lt;/a&gt;。&lt;/p&gt;
+
+&lt;p&gt;そこで BIND9 からの卒業を考える。新たな仲間は &lt;a href=&#34;https://www.nlnetlabs.nl/projects/nsd/&#34;&gt;NSD&lt;/a&gt; と &lt;a href=&#34;https://www.nlnetlabs.nl/projects/unbound/&#34;&gt;Unbound&lt;/a&gt; だ。NSD も Unbound も、BIND9 に比べて脆弱性の報告が&lt;a href=&#34;https://www.cvedetails.com/product/17420/Nlnetlabs-NSD.html?vendor_id=9613&#34;&gt;ずっと&lt;/a&gt; &lt;a href=&#34;https://www.cvedetails.com/product/20882/Nlnetlabs-Unbound.html?vendor_id=9613&#34;&gt;少ない&lt;/a&gt;。BIND9 の設定にもうんざりしている。NSD, Unbound は設定も簡潔に見える。とにかく BIND9 には数多のフラストレーションを抱えており、隣の芝は青く見えるというもので、NSD, Unbound に逃げようという趣旨だ。&lt;/p&gt;
+
+&lt;p&gt;BIND9 は広く普及していて、その意味では偉大なソフトウェアのひとつであることは間違いない。古くからインターネットを支えてきた、重要なソフトウェアのひとつだろう。その一方で BIND9 は複雑化する DNS の仕様を古くから実装してきたからか、その実装もまた複雑怪奇になっていると聞く。脆弱性が報告されるのも仕方がない。そろそろ BIND9 を楽にしてやってもいいのではないだろうか。&lt;/p&gt;
+
+&lt;p&gt;余談だが、最近は &lt;a href=&#34;https://www.isc.org/blogs/bind-9-refactoring/&#34;&gt;BIND9 をリファクタリングしよう&lt;/a&gt; という向きもあるらしい。&lt;/p&gt;
+
+&lt;h1 id=&#34;bind9-vs-nsd-unbound&#34;&gt;BIND9 vs NSD, Unbound&lt;/h1&gt;
+
+&lt;p&gt;詳しい説明は他に譲るとして、DNS サーバーの役割と BIND9, NSD, Unbound の関係について、かんたんに触れておく。&lt;/p&gt;
+
+&lt;p&gt;DNS サーバーには &lt;strong&gt;権威サーバー&lt;/strong&gt; という役割と &lt;strong&gt;キャッシュサーバー&lt;/strong&gt; という大きく 2 つの役割がある。NSD は権威サーバーの実装、Unbound はキャッシュサーバーの実装である。BIND9 は両方の実装である。&lt;/p&gt;
+
+&lt;p&gt;BIND9 の使い方にもよるが、基本的には BIND9 でやっていたことを役割ごとに NSD と Unbound に分割してやる必要がある。&lt;/p&gt;
+
+&lt;h1 id=&#34;bind9-から-nsd-へ&#34;&gt;BIND9 から NSD へ&lt;/h1&gt;
+
+&lt;p&gt;一言で言えば、zone ファイルを NSD へ移行する。zone ファイル自体は RFC 1305 で標準化されており、可搬性があるので、BIND9 で使っていたものをそのまま使いまわすことができる。&lt;/p&gt;
+
+&lt;p&gt;以下は BIND9 の設定を NSD の設定に書きなおしたものだ:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;// BIND9 named.conf
+
+options {
+  listen-on port 53 { 127.0.0.1; };
+  listen-on-v6 port 53 { ::1; };
+  version     &amp;quot;unknown&amp;quot;;
+  // snip
+};
+
+view &amp;quot;internal&amp;quot; {
+  match-clients { localhost; foobar-network; };
+  match-destinations { localhost; foobar-network; };
+
+  zone &amp;quot;.&amp;quot; IN {
+    type hint;
+    file &amp;quot;named.ca&amp;quot;;
+  };
+
+  /* 正引き foobar.local */
+  zone &amp;quot;foobar.local&amp;quot; IN {
+    type master;
+    file &amp;quot;foobar.local.zone&amp;quot;;
+  };
+
+  /* 正引き foobar.org */
+  zone &amp;quot;foobar.org&amp;quot; IN {
+    type master;
+    file &amp;quot;foobar.local.zone&amp;quot;;
+  };
+
+  /* 逆引き */
+  zone &amp;quot;10.in-addr.arpa&amp;quot; {
+    type master;
+    file &amp;quot;foobar.local.rev.zone&amp;quot;;
+  };
+
+  include &amp;quot;/etc/named.rfc1912.zones&amp;quot;;
+  include &amp;quot;/etc/named.root.key&amp;quot;;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code&gt;# NSD nsd.conf
+
+server:
+	port: 10053
+	logfile: &amp;quot;/var/log/nsd.log&amp;quot;
+
+zone:
+	name: &amp;quot;foobar.local&amp;quot;
+	zonefile: &amp;quot;foobar.local.zone&amp;quot;
+
+zone:
+	name: &amp;quot;foobar.org&amp;quot;
+	zonefile: &amp;quot;foobar.local.zone&amp;quot;
+
+zone:
+	name: &amp;quot;10.in-addr.arpa&amp;quot;
+	zonefile: &amp;quot;foobar.local.rev.zone&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&#34;bind9-から-unbound-へ&#34;&gt;BIND9 から Unbound へ&lt;/h1&gt;
+
+&lt;p&gt;DNS サーバーへの要求のほとんどは &lt;strong&gt;名前解決&lt;/strong&gt; であり、それはキャッシュサーバーの役割となる。キャッシュサーバーは自身が管理する名前と IP アドレスのマッピングから、クライアントに要求される名前の解決結果を返す。自身で解決できない場合には上位のサーバーに問い合わせし、その結果を返す。この時、上位のサーバーへの問い合わせ結果を自身に保存 (= キャッシュ) するので、キャッシュサーバーと呼ばれる。以後は上位サーバーに問い合わせすることなく、自身で名前解決できるようになり、高速に応答を返すことができるようになる。&lt;/p&gt;
+
+&lt;p&gt;Unbound はキャッシュサーバーでありながらも、単純なレコードの定義 (A レコード, MX レコードなど) は自身にその定義を持つことができる。&lt;code&gt;local-data&lt;/code&gt; という設定を使う。ワイルドカードや CNAME などの複雑な定義を要する場合には、権威サーバーに処理を移譲するよう設定する。BIND9 は自身が権威サーバー &lt;strong&gt;でも&lt;/strong&gt; あるので、この点についてはあまり小難しいことを考える必要がなかった。&lt;/p&gt;
+
+&lt;p&gt;以下は BIND9 の設定を Unbound の設定に書きなおしたものだ:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;// BIND9 named.conf
+acl &amp;quot;foobar-network&amp;quot; {
+  10.0.0.0/8;
+};
+
+options {
+  listen-on port 53 { 127.0.0.1; };
+  listen-on-v6 port 53 { ::1; };  // ipv6 は使わない
+  version     &amp;quot;unknown&amp;quot;;
+  directory   &amp;quot;/var/named&amp;quot;;
+  dump-file   &amp;quot;/var/named/data/cache_dump.db&amp;quot;;
+  statistics-file &amp;quot;/var/named/data/named_stats.txt&amp;quot;;
+  memstatistics-file &amp;quot;/var/named/data/named_mem_stats.txt&amp;quot;;
+  allow-query { localhost; foobar-network; };
+  recursion yes;
+
+  /* dnssec は無効 */
+  dnssec-enable no;
+  dnssec-validation no;
+
+  /* Path to ISC DLV key */
+  bindkeys-file &amp;quot;/etc/named.iscdlv.key&amp;quot;;
+
+  managed-keys-directory &amp;quot;/var/named/dynamic&amp;quot;;
+
+  /* 自分で名前解決できない場合は上位へ転送 */
+  forwarders {
+    8.8.8.8;
+  };
+  forward only;
+};
+
+logging {
+  channel default {
+    file &amp;quot;/var/log/named/default.log&amp;quot; versions 5 size 10M;
+    severity info;
+    print-time yes;
+    print-severity yes;
+    print-category yes;
+  };
+
+  channel debug {
+    file &amp;quot;data/named.run&amp;quot;;
+    severity dynamic;
+    print-time yes;
+    print-severity yes;
+    print-category yes;
+  };
+
+  category default { &amp;quot;debug&amp;quot;; &amp;quot;default&amp;quot;; };
+  category queries { &amp;quot;debug&amp;quot;; };
+  category resolver { &amp;quot;debug&amp;quot;; };
+  category lame-servers { null; };  // error (connection refused) resolving というエラーログを抑止する
+};
+
+view &amp;quot;internal&amp;quot; {
+  match-clients { localhost; foobar-network; };
+  match-destinations { localhost; foobar-network; };
+
+  zone &amp;quot;.&amp;quot; IN {
+    type hint;
+    file &amp;quot;named.ca&amp;quot;;
+  };
+
+  /* 正引き foobar.local */
+  zone &amp;quot;foobar.local&amp;quot; IN {
+    type master;
+    file &amp;quot;foobar.local.zone&amp;quot;;
+  };
+
+  /* 正引き foobar.org */
+  zone &amp;quot;foobar.org&amp;quot; IN {
+    type master;
+    file &amp;quot;foobar.local.zone&amp;quot;;
+  };
+
+  /* 逆引き */
+  zone &amp;quot;10.in-addr.arpa&amp;quot; {
+    type master;
+    file &amp;quot;foobar.local.rev.zone&amp;quot;;
+  };
+
+  include &amp;quot;/etc/named.rfc1912.zones&amp;quot;;
+  include &amp;quot;/etc/named.root.key&amp;quot;;
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code&gt;# Unbound unbound.conf
+
+server:
+	interface: 0.0.0.0
+	access-control: 127.0.0.1/32 allow
+	access-control: 10.0.0.0/8 allow
+	access-control: 0.0.0.0/0 deny
+	do-not-query-localhost: no
+	local-zone: &amp;quot;10.in-addr.arpa&amp;quot; nodefault
+
+stub-zone:
+	name: &amp;quot;foobar.org&amp;quot;
+	stub-addr: 127.0.0.1@10053
+
+stub-zone:
+	name: &amp;quot;foobar.local&amp;quot;
+	stub-addr: 127.0.0.1@10053
+
+stub-zone:
+	name: &amp;quot;10.in-addr.arpa&amp;quot;
+	stub-addr: 127.0.0.1@10053
+
+forward-zone:
+	name: &amp;quot;.&amp;quot;
+	forward-addr: 8.8.8.8
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>DNS Server etcetera</title>
+      <link>http://kazkn.com/post/2017/dns-server/</link>
+      <pubDate>Wed, 22 Feb 2017 22:25:29 +0900</pubDate>
+      
+      <guid>http://kazkn.com/post/2017/dns-server/</guid>
+      <description>
+
+&lt;p&gt;DNS のあれこれについて。&lt;/p&gt;
+
+&lt;h1 id=&#34;権威サーバーとキャッシュサーバー&#34;&gt;権威サーバーとキャッシュサーバー&lt;/h1&gt;
+
+&lt;p&gt;DNS といっても、大きく 2 つの機能に分かれている。それが権威サーバーと
+キャッシュサーバー。権威サーバーは自身が管理するドメインの名前と IP ア
+ドレスを解決するサーバー。データソースみたいなもの。キャッシュサーバー
+は、自身以外のドメインも含めた名前解決サーバー。自身が管理していないド
+メインについては、再帰的に上位サーバーへ問い合わせる。問い合わせ結果を
+キャッシュする (?) ので、キャッシュサーバーと呼ばれる。名前解決専用み
+たいなもの。&lt;/p&gt;
+
+&lt;p&gt;BIND は両方の機能を持つ。NSD は権威サーバーのみ、Unbound はキャッシュ
+サーバーのみの機能を持つ。&lt;/p&gt;
+
+&lt;h1 id=&#34;zone-ファイル&#34;&gt;zone ファイル&lt;/h1&gt;
+
+&lt;p&gt;zone ファイルの形式は RFC 1035 で規定されている。なので BIND でも NSD
+でも使いまわせる。&lt;/p&gt;
+
+&lt;h1 id=&#34;内部向け-dns-外部向け-dns&#34;&gt;内部向け DNS, 外部向け DNS&lt;/h1&gt;
+
+&lt;p&gt;zone ごとにアクセスを受け付けるホストを設定することができる。このとき
+ローカルネットワークからのアクセスを認めるのが内部向け、どこのアクセス
+からでも受け入れるのが外部向けの DNS であると言える。&lt;/p&gt;
+
+&lt;p&gt;内部向けは、その名の通り内部ネットワーク用の名前解決サーバーである。&lt;/p&gt;
+
+&lt;p&gt;外部向けは、自身が管理するドメインを、外部ネットワークに知らせるための
+サーバーであると言える。例えば IP アドレス a.b.c.d を自身が持つドメイ
+ン example.com に割り当てるとして、外部向け DNS にて&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;exapmle.com IN A a.b.c.d
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;のような記述を行っておく。このような設定しておき、しばらく放っておくと、
+名前の情報が外部の DNS サーバーへ「浸透」して、他の DNS サーバーでも
+example.com の名前解決ができるようになる。&lt;/p&gt;
+
+&lt;h1 id=&#34;mydns-jp-について&#34;&gt;mydns.jp について&lt;/h1&gt;
+
+&lt;p&gt;mydns.jp では、サービス自体が DNS サーバーを提供している。よって
+mydns.jp の DDNS サービスを使ってサーバーを運用する場合、外部向けの
+DNS は不要である (mydns.jp が肩代わりしている)。&lt;/p&gt;
+
+&lt;h1 id=&#34;nsd-と-unbound-の連携&#34;&gt;NSD と Unbound の連携&lt;/h1&gt;
+
+&lt;p&gt;名前解決はあくまでも Unbound が行うものである。ローカルネットワーク専
+用の名前解決を行う場合には、&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Unbound 自身の設定に 名前 &amp;lt;-&amp;gt; アドレス の対応を埋め込む&lt;/li&gt;
+&lt;li&gt;権威サーバーに移譲する&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;の 2 つの対応を選択することができる。前者は CNAME などを扱えないので、
+この辺が使いたければ後者を選択することになる。権威サーバーとは、すなわ
+ち NSD や BIND のことを指す。&lt;/p&gt;
+
+&lt;p&gt;NSD と Unbound は、役目は異なるものの同じ DNS サーバーという括りである
+ため、デフォルトのポート番号として、いずれも 53 番が割り当てられている。
+同じサーバー上で 2 つのサービスを同時に動かしたい場合には、ポート番号
+を変える必要がある。&lt;/p&gt;
+
+&lt;p&gt;Unbound には &lt;code&gt;do-not-query-localhost&lt;/code&gt; というオプションがあり、その名の
+通り、ローカルホストへの名前解決クエリを発行するかどうかのオプションで
+ある。デフォルトでは &lt;code&gt;yes&lt;/code&gt; (つまりクエリ発行しない) となっているが、同
+一ホスト上で移譲先の権威サーバーを動かす場合には、これを &lt;code&gt;no&lt;/code&gt; としなけ
+ればならない。&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>PostgreSQL Transaction</title>
+      <link>http://kazkn.com/post/2017/postgresql-transaction/</link>
+      <pubDate>Wed, 22 Feb 2017 22:23:07 +0900</pubDate>
+      
+      <guid>http://kazkn.com/post/2017/postgresql-transaction/</guid>
+      <description>
+
+&lt;p&gt;PostgreSQL のトランザクションの実装について調査したときのメモ書き。&lt;/p&gt;
+
+&lt;h1 id=&#34;acid&#34;&gt;ACID&lt;/h1&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Atomicity (原子性)
+
+&lt;ul&gt;
+&lt;li&gt;それ以上分解できない単位の操作&lt;/li&gt;
+&lt;li&gt;ALL or NOTHING&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Consistency (一貫性、整合性)
+
+&lt;ul&gt;
+&lt;li&gt;予め定められたルールに則った状態である&lt;/li&gt;
+&lt;li&gt;正の値しかとらない、など
+
+&lt;ul&gt;
+&lt;li&gt;よくわからん&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Isolation (分離性、独立性)
+
+&lt;ul&gt;
+&lt;li&gt;実行中のトランザクションが他のトランザクションに影響しない&lt;/li&gt;
+&lt;li&gt;実行中のトランザクションの状態を外から参照、変更することはできない&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Durability (永続性)
+
+&lt;ul&gt;
+&lt;li&gt;一度コミットされたトランザクションは、何があっても残る&lt;/li&gt;
+&lt;li&gt;障害が発生しても、コミットされたトランザクションの結果は残る&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Consistency がよくわからん。制約の話をしている？&lt;/p&gt;
+
+&lt;p&gt;Durability は技術的な限界がある。変更されたデータがどのようなデバイス
+に存在するのか。例えばローカルディスクなのか、ネットワーク越しの遠い場
+所にあるのか、いずれにせよ、伝送のタイミングで消失してしまう可能性があ
+る。「何があっても残る」というのは、現実的には完全に実現することは難し
+い。&lt;/p&gt;
+
+&lt;h1 id=&#34;レコードの可視性&#34;&gt;レコードの可視性&lt;/h1&gt;
+
+&lt;ul&gt;
+&lt;li&gt;PostgreSQL のテーブルの中には、複数バージョンのタプルが存在する&lt;/li&gt;
+&lt;li&gt;最初は一行、更新されるたびに行が追加されていく&lt;/li&gt;
+&lt;li&gt;各タプルは、自身を「作成したトランザクション」と「削除したトランザ
+クション」の情報を持つ&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;この仕組みにより Isolation を実現。複数のトランザクションにデータをう
+まく見せる。&lt;/p&gt;
+
+&lt;h1 id=&#34;atomicity-原子性&#34;&gt;Atomicity (原子性)&lt;/h1&gt;
+
+&lt;p&gt;コミット済みのデータだけを処理対象とする。コミット済みかどうかは、タプ
+ルのヘッダを見れば分かる。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;タプルごとの可視性情報&lt;/li&gt;
+&lt;li&gt;コミットログ (clog) によるトランザクションの状態情報&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;この辺を使う。&lt;/p&gt;
+
+&lt;p&gt;前者は前述の通り。タプルの生き死にが分かる。&lt;/p&gt;
+
+&lt;p&gt;後者はトランザクションの実行状態が分かる。タプルからは自身を作成したト
+ランザクションへのポインタがあるので、そのトランザクションがコミット済
+みかどうか判断できれば、タプルがコミット済みかどうかも判断できる。&lt;/p&gt;
+
+&lt;p&gt;ちなみにアボートされたトランザクションの情報も残るらしい。当然、そのト
+ランザクションから作成されたタプルは処理対象外となる。&lt;/p&gt;
+
+&lt;h1 id=&#34;consistency-一貫性&#34;&gt;Consistency (一貫性)&lt;/h1&gt;
+
+&lt;p&gt;制約の話。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;ステートメント実行時に各種制約がチェックされる&lt;/li&gt;
+&lt;li&gt;ものによってはコミット時まで遅延される
+
+&lt;ul&gt;
+&lt;li&gt;SET CONSTRAINTS {ALL | name} {DEFERRED | IMMEDIATE} なるものがあるらしい&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.postgresql.jp/document/9.4/html/sql-set-constraints.html&#34;&gt;https://www.postgresql.jp/document/9.4/html/sql-set-constraints.html&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;制約のチェックで引っかかった場合は、その時点でトランザクションをアボー
+トする。&lt;/p&gt;
+
+&lt;h1 id=&#34;isolation-分離性&#34;&gt;Isolation (分離性)&lt;/h1&gt;
+
+&lt;p&gt;かの有名な MVCC (MultiVersion Concurrency Control) の話。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Snapshot によるトランザクションの世代管理
+
+&lt;ul&gt;
+&lt;li&gt;XID と CommandId によるものらしい&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Snapshot とは:
+
+&lt;ul&gt;
+&lt;li&gt;トランザクションごとに生成&lt;/li&gt;
+&lt;li&gt;可視性の情報を持つ (何が見える、何が見えない)&lt;/li&gt;
+&lt;li&gt;タプルヘッダの t_xmin, t_xmax あたりが関係してそう&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Visibility はトランザクションの分離レベルによっても変わる
+
+&lt;ul&gt;
+&lt;li&gt;Read Committed, Repeatable Read, Serializable&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.postgresql.jp/document/9.4/html/transaction-iso.html&#34;&gt;https://www.postgresql.jp/document/9.4/html/transaction-iso.html&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;MVCC 「で」実現しているではなく、MVCC 「を」実現しているということらしい。
+その実現方法は Snapshot によるトランザクションの世代管理ですよ、と。&lt;/p&gt;
+
+&lt;p&gt;Snapshot のデータ構造 (SnapshotData 構造体) において重要な項目は以下:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;xmin
+
+&lt;ul&gt;
+&lt;li&gt;トランザクションが始まる時点で、ある XID 以下のトランザクションは
+終了している (Committed Or Aborted) ことが保証されている。その
+XID を持つ項目&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;xmax
+
+&lt;ul&gt;
+&lt;li&gt;トランザクションが始まる時点で、ある XID 以上のトランザクションが
+始まっていないか進行中である。これらは無視してよい。端的には、自
+身の XID 以上のトランザクションは無視してよい。&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;xip[]
+
+&lt;ul&gt;
+&lt;li&gt;xmin と xmax の間の進行中トランザクションの XID を持つ配列。なぜ
+clog を見る、ではだめなのか？&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;あるタプルが見えるかどうかの判定:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;無効なタプル (削除 XID が入っている) なら見えない&lt;/li&gt;
+&lt;li&gt;タプルの XID が自身と同じなら見える&lt;/li&gt;
+&lt;li&gt;タプルの XID が xmax 以上なら見えない&lt;/li&gt;
+&lt;li&gt;タプルの XID が xmin 以下で、CLOG を参照してトランザクションが Committed なら見える&lt;/li&gt;
+&lt;li&gt;タプルの XID が xmin &amp;lt; XID &amp;lt; xmax で、xip 内に存在するなら見えない&lt;/li&gt;
+&lt;li&gt;CLOG を参照してトランザクションが Committed なら見える&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Snapshot をとるタイミングは分離レベルによって変わる。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Read Committed
+
+&lt;ul&gt;
+&lt;li&gt;文を実行するたび&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Repeatable Read
+
+&lt;ul&gt;
+&lt;li&gt;最初の文を実行する時&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;以下の一連の文を実行する時を考える:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;1 BEGIN;
+2 INSERT INTO t1 values (1);
+3 SELECT * FROM t1;
+4 INSERT INTO t1 values (2);
+5 COMMIT;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Read Committed では 2, 3, 4 のタイミングで Snapshot をとる。Repetable
+Read では 2 のタイミングでのみ Snapshot をとる。BEGIN ではなく最初の文
+を実行するタイミングで Snapshot をとるのは、性能上の理由とのこと。&lt;/p&gt;
+
+&lt;h2 id=&#34;トランザクションの分離レベル&#34;&gt;トランザクションの分離レベル&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Read Uncommitted
+
+&lt;ul&gt;
+&lt;li&gt;他のトランザクションがコミットしていない内容が見える (Dirty Read)&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Read Committed
+
+&lt;ul&gt;
+&lt;li&gt;他のトランザクションがコミットしていない内容が見えない&lt;/li&gt;
+&lt;li&gt;他のトランザクションがコミットした変更が途中から見える (Unrepeatable Read)&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Repeatable Read
+
+&lt;ul&gt;
+&lt;li&gt;他のトランザクションがコミットしていない内容が見えない&lt;/li&gt;
+&lt;li&gt;他のトランザクションがコミットした変更が途中から見えない&lt;/li&gt;
+&lt;li&gt;他のトランザクションがコミットした追加・削除が見える (Phantom Read)
+
+&lt;ul&gt;
+&lt;li&gt;ただし PostgreSQL では発生しない、とのこと&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Serializable
+
+&lt;ul&gt;
+&lt;li&gt;他のトランザクションがコミットしていない内容が見えない&lt;/li&gt;
+&lt;li&gt;他のトランザクションがコミットした変更が途中から見えない&lt;/li&gt;
+&lt;li&gt;他のトランザクションがコミットした追加・削除が見えない&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;上に行くほど緩く、下に行くほど厳しくなる。厳しくなればなるほど、同時実
+行性能は落ちる。性能、信頼性のバランスをとって決める。&lt;/p&gt;
+
+&lt;p&gt;PostgreSQL としては、Read Uncommitted は Read Committed と同義。SQL 標
+準として、分離レベルをより厳しくする (ex: Read Uncommitted で Dirty
+Read できないようにする) ことは許可されている。&lt;/p&gt;
+
+&lt;h2 id=&#34;複数のコマンドを含むトランザクション&#34;&gt;複数のコマンドを含むトランザクション&lt;/h2&gt;
+
+&lt;p&gt;分離レベルによらず、コミットしていない内容であっても、同一のトランザク
+ション内からは参照できる。では、&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;INSERT INTO t1 SELECT * FROM t1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;これはどう動くのか。当然、INSERT 開始時点での t1 全件が、t1 に挿入され
+るという風に動作する。これを実現するには Snapshot とは別の対処が必要。
+PostgreSQL ではトランザクション内の文にコマンドID (CI) と呼ばれる連番
+を振ることで対処している。&lt;/p&gt;
+
+&lt;p&gt;文は参照しているテーブルの行の XID が自身と同じ場合、CI もチェックする:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;実行中の文の CI よりも前の番号は見える&lt;/li&gt;
+&lt;li&gt;実行中の文の CI と同じ番号は見えない&lt;/li&gt;
+&lt;li&gt;実行中の文の CI よりも後の番号は存在しない&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;これによって前掲の SELECT/INSERT は、自身が追記した行を参照することな
+く動作する。&lt;/p&gt;
+
+&lt;h1 id=&#34;durability-永続性&#34;&gt;Durability (永続性)&lt;/h1&gt;
+
+&lt;ul&gt;
+&lt;li&gt;チェックポイントでデータファイルを更新&lt;/li&gt;
+&lt;li&gt;コミットで WAL (トランザクションログ) へ同期書き込み&lt;/li&gt;
+&lt;li&gt;チェックポイント
+
+&lt;ul&gt;
+&lt;li&gt;shared_buffer 上のデータをディスクに一括して反映&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;WAL 同期書き込み
+
+&lt;ul&gt;
+&lt;li&gt;バッファリングとかしないよ、という意味かな&lt;/li&gt;
+&lt;li&gt;O_WRONLY|O_SYNC たぶんこんな感じ&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;コミットした情報は WAL に随時書き出していく。定期的に shared_buffer の
+内容をデータファイルに書き出す (永続化)。書き出す前にプロセスが落ちて
+しまい、消えてしまった shared_buffer 上のデータであっても、コミットさ
+れていれば WAL に残っているので、ここから復元できる。具体的には最後の
+チェックポイント以降の WAL からリカバリすればいい。&lt;/p&gt;
+
+&lt;h1 id=&#34;参考&#34;&gt;参考&lt;/h1&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.postgresqlinternals.org/index.php/%E3%83%88%E3%83%A9%E3%83%B3%E3%82%B6%E3%82%AF%E3%82%B7%E3%83%A7%E3%83%B3%E7%AE%A1%E7%90%86&#34;&gt;トランザクション管理&lt;/a&gt;
+
+&lt;ul&gt;
+&lt;li&gt;本コンテンツは、2014年1月30～31日に筑波大学で開講された「情報システム特別講義D」における講義「Inside PostgreSQL Kernel」の内容を再構成、加筆・修正したものです。&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.nminoru.jp/~nminoru/postgresql/pg-transaction-mvcc-snapshot.html&#34;&gt;PostgreSQL のトランザクション &amp;amp; MVCC &amp;amp; スナップショットの仕組み&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

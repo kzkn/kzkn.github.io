@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>bash と ffmpeg でハマった話</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <script>
+     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+     ga('create', 'UA-86485151-1', 'auto');
+     ga('send', 'pageview');
+    </script>
+  </head>
+
+<body>
+  <header>
+    <h1>bash と ffmpeg でハマった話</h1>
+    <time>2017-05-25</time>
+  </header>
+  <main>
+    <article>
+	  <p>とてもハマった。一応解決には至ったので、記録を残しておくことにする。</p>
+
+<hr />
+
+<p>mp4 から png を抽出するスクリプトを bash と ffmpeg を使って書いていた。処理対象のファイルは外部のコマンドから得られるので、それを <code>while read</code> で回して ffmpeg に食わせるという、しごくかんたんなもの。</p>
+
+<pre><code>#!/bin/bash
+
+print_mp4_files | while read f
+do
+  ffmpeg -loglevel error -i &quot;${f}&quot; -f image2 -vcodec png -r 1 &quot;%03d.png&quot;
+done
+</code></pre>
+
+<p>ところがこれが動作しない。一行目しか処理されないのだ。また、処理対象のファイルが変わると、壊れたファイルとして扱われたり、<code>f</code> に不正なファイル名が入ったりすることもあり、極めて不可解な挙動になる。</p>
+
+<p>結論からいうと、ffmpeg に <code>&lt;/dev/null</code> を足せば解決する。</p>
+
+<pre><code>#!/bin/bash
+
+print_mp4_files | while read f
+do
+  ffmpeg -loglevel error -i &quot;${f}&quot; -f image2 -vcodec png -r 1 &quot;%03d.png&quot; &lt;/dev/null
+done
+</code></pre>
+
+<hr />
+
+<p>なぜこんなことになるのか。<a href="https://unix.stackexchange.com/questions/36310/strange-errors-when-using-ffmpeg-in-a-loop">Stack Overflow</a> や <a href="http://mywiki.wooledge.org/BashFAQ/089">BashFAQ</a> に解説が見つかった。</p>
+
+<p>ffmpeg は stdin を読むプログラムである。実際、ffmpeg の実行中に &ldquo;q&rdquo; と入力すると、処理が中断され、プロセスも終了する。bash では、子プロセスの stdin は親プロセスの stdin を継承するようになっており、<code>read</code> で読むはずの「次のファイル」が ffmpeg によって食われてしまい、謎の挙動を生んでいる。よって <code>&lt;/dev/null</code> を足すことで、ffmpeg プロセス (子プロセス) が bash プロセス (親プロセス) の stdin を継承しないようになり、問題を回避できる。</p>
+
+<p>少し実験してみた。まず、stdin から <code>fgetc</code> して <code>printf</code> するだけのかんたんなプログラム getc.c を用意する。</p>
+
+<pre><code>#include &lt;stdio.h&gt;
+
+int main() {
+  int c = fgetc(stdin);
+  printf(&quot;getc: %c\n&quot;, c);
+  return 0;
+}
+</code></pre>
+
+<p>コンパイルする。</p>
+
+<pre><code>$ gcc -o getc getc.c
+</code></pre>
+
+<p>スクリプトを書き換える。</p>
+
+<pre><code>#!/bin/bash
+
+while read f
+do
+  echo &quot;sh: $f&quot;
+  ./getc
+done &lt;&lt;EOF
+10
+20
+30
+EOF
+</code></pre>
+
+<p>実行してみる:</p>
+
+<pre><code>$ ./stdin.sh
+sh: 10
+getc: 2
+</code></pre>
+
+<p><code>read</code> が stdin から読んだ一行目 &ldquo;10&rdquo; が <code>f</code> に入る。その後実行した getc により、stdin から次の文字 &ldquo;2&rdquo; が出力される。親プロセスと子プロセスの stdin がつながっている様子が分かる。</p>
+
+<p>残りの入力 &ldquo;0\n30\n&rdquo; がなぜ消費されないのか、謎は残る。サブプロセスが終了するタイミングで stdin を閉じてしまい、それにつられて親プロセスの stdin まで閉じてしまっているとか、そういうことだろうか。別の機会にもう少し調べてみたい。</p>
+
+<hr />
+
+<p>残った謎について調べた。結論から言うと、↑の見解は完全に間違いで、getc.c の <code>fgetc</code> によって stdin の内容が全部読み取られることで、次の <code>read</code> で EOF を検出している。</p>
+
+<p>検証用に stdin.sh を次のように改造する:</p>
+
+<pre><code>#!/bin/bash
+
+prog=&quot;$1&quot;
+while read f
+do
+  echo &quot;sh: $f&quot;
+  ./&quot;${prog}&quot;
+done &lt;&lt;EOF
+10xyz
+20xyz
+30xyz
+EOF
+</code></pre>
+
+<p><code>while</code> に食わせる入力値をちょっと派手にしたのと、起動するプログラムを外部から指定するようにしたのと、2 点の修正を加えている。</p>
+
+<p>まずは先ほどの getc.c を使って動かす。システムコールの動きが見たいので、strace に食わせる。</p>
+
+<pre><code>$ strace -f -eread,lseek ./stdin.sh getc
+read(3, &quot;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0\320\303\0\0\0\0\0\0&quot;..., 832) = 832
+read(3, &quot;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0\320\16\0\0\0\0\0\0&quot;..., 832) = 832
+read(3, &quot;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0P \2\0\0\0\0\0&quot;..., 832) = 832
+read(3, &quot;MemTotal:        7870540 kB\nMemF&quot;..., 1024) = 1024
+lseek(3, 0, SEEK_CUR)                   = 0
+read(3, &quot;#!/bin/bash\n\nprog=\&quot;$1\&quot;\nwhile rea&quot;..., 80) = 80
+lseek(3, 0, SEEK_SET)                   = 0
+lseek(255, 0, SEEK_CUR)                 = 0
+read(255, &quot;#!/bin/bash\n\nprog=\&quot;$1\&quot;\nwhile rea&quot;..., 102) = 102
+lseek(4, 0, SEEK_CUR)                   = 0
+lseek(0, 0, SEEK_CUR)                   = 0
+read(0, &quot;10xyz\n20xyz\n30xyz\n&quot;, 128)   = 18
+lseek(0, -12, SEEK_CUR)                 = 6
+sh: 10xyz
+Process 4800 attached
+[pid  4800] read(3, &quot;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0P \2\0\0\0\0\0&quot;..., 832) = 832
+[pid  4800] read(0, &quot;20xyz\n30xyz\n&quot;, 4096) = 12
+getc: 2
+[pid  4800] +++ exited with 0 +++
+--- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=4800, si_status=0, si_utime=0, si_stime=0} ---
+lseek(0, 0, SEEK_CUR)                   = 18
+read(0, &quot;&quot;, 128)                        = 0
+read(255, &quot;&quot;, 102)                      = 0
++++ exited with 0 +++
+</code></pre>
+
+<p>stdin.sh から fork した子プロセス (pid=4800, ./getc のこと) で 4096 バイトも read(2) していることが伺える。<code>fgetc</code> の戻り値は 1 文字だけだが、libc 内部にはそれ以上の内容をバッファリングするので、このような動作になっている。当然 stdin の最後まで読み込まれるので、stdin.sh における次の read(1) では読み込む内容がなく (= EOF)、プログラムは終了する。</p>
+
+<p>よく見ると親プロセス (= stdin.sh) でも</p>
+
+<pre><code>read(0, &quot;10xyz\n20xyz\n30xyz\n&quot;, 128)   = 18
+</code></pre>
+
+<p>こんなことをやっている。しかしその直後に 1 行分だけ読んだことにするための <code>lseek</code> が入っているので、<code>fgetc</code> によるバッファリングのような問題は起きない。</p>
+
+<p>では、<code>fgetc</code> ではなく read(2) を使ってみるとどうか。次のような read.c を用意する。</p>
+
+<pre><code>#include &lt;unistd.h&gt;
+#include &lt;stdio.h&gt;
+
+int main() {
+  int c;
+  read(0, &amp;c, 1);
+  printf(&quot;read: %c\n&quot;, c);
+  return 0;
+}
+</code></pre>
+
+<p>コンパイルして、まずは strace なしで動かす。</p>
+
+<pre><code>$ gcc -o read read.c
+$ ./stdin.sh read
+sh: 10xyz
+read: 2
+sh: 0xyz
+read: 3
+sh: 0xyz
+read: 
+</code></pre>
+
+<p>すべての内容が出力されるようになった。これは read(2) を直接使うことで、確実に 1 バイトしか消費しないように制御を変更したため。一応 strace の内容も確認しておく。</p>
+
+<pre><code>$ strace -f -eread,lseek ./stdin.sh read
+read(3, &quot;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0\320\303\0\0\0\0\0\0&quot;..., 832) = 832
+read(3, &quot;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0\320\16\0\0\0\0\0\0&quot;..., 832) = 832
+read(3, &quot;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0P \2\0\0\0\0\0&quot;..., 832) = 832
+read(3, &quot;MemTotal:        7870540 kB\nMemF&quot;..., 1024) = 1024
+lseek(3, 0, SEEK_CUR)                   = 0
+read(3, &quot;#!/bin/bash\n\nprog=\&quot;$1\&quot;\nwhile rea&quot;..., 80) = 80
+lseek(3, 0, SEEK_SET)                   = 0
+lseek(255, 0, SEEK_CUR)                 = 0
+read(255, &quot;#!/bin/bash\n\nprog=\&quot;$1\&quot;\nwhile rea&quot;..., 102) = 102
+lseek(4, 0, SEEK_CUR)                   = 0
+lseek(0, 0, SEEK_CUR)                   = 0
+read(0, &quot;10xyz\n20xyz\n30xyz\n&quot;, 128)   = 18
+lseek(0, -12, SEEK_CUR)                 = 6
+sh: 10xyz
+Process 4775 attached
+[pid  4775] read(3, &quot;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0P \2\0\0\0\0\0&quot;..., 832) = 832
+[pid  4775] read(0, &quot;2&quot;, 1)             = 1
+read: 2
+[pid  4775] +++ exited with 0 +++
+--- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=4775, si_status=0, si_utime=0, si_stime=0} ---
+lseek(0, 0, SEEK_CUR)                   = 7
+read(0, &quot;0xyz\n30xyz\n&quot;, 128)           = 11
+lseek(0, -6, SEEK_CUR)                  = 12
+sh: 0xyz
+Process 4776 attached
+[pid  4776] read(3, &quot;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0P \2\0\0\0\0\0&quot;..., 832) = 832
+[pid  4776] read(0, &quot;3&quot;, 1)             = 1
+read: 3
+[pid  4776] +++ exited with 0 +++
+--- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=4776, si_status=0, si_utime=0, si_stime=0} ---
+lseek(0, 0, SEEK_CUR)                   = 13
+read(0, &quot;0xyz\n&quot;, 128)                  = 5
+sh: 0xyz
+Process 4777 attached
+[pid  4777] read(3, &quot;\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0&gt;\0\1\0\0\0P \2\0\0\0\0\0&quot;..., 832) = 832
+[pid  4777] read(0, &quot;&quot;, 1)              = 0
+read: 
+[pid  4777] +++ exited with 0 +++
+--- SIGCHLD {si_signo=SIGCHLD, si_code=CLD_EXITED, si_pid=4777, si_status=0, si_utime=0, si_stime=0} ---
+lseek(0, 0, SEEK_CUR)                   = 18
+read(0, &quot;&quot;, 128)                        = 0
+read(255, &quot;&quot;, 102)                      = 0
++++ exited with 0 +++
+</code></pre>
+
+<p>思ったとおりに動いているっぽい。</p>
+
+<hr />
+
+<p><code>fgetc</code> でもバッファリングするという動作は、言われてみれば「あぁ、確かに」となるのだけど、1 文字しか返さないという関数の仕様上、考えからすっかり抜けてしまっていた。ふと strace の存在を思い出して調べてみたところ、read(2) の使われ方が思ったのと違い、バッファリングの存在を思い出したのだった。先入観はよくない。また、調査のためのツールは色々使えるようになっておくに越したことはない。strace をちゃんと使ったのは初めてだったかもしれない。</p>
+
+    </article>
+  </main>
+  <footer><a href="http://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>
+

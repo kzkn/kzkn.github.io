@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <url>
+    <loc>http://kazkn.com/post/2017/emacs-tmux-sh/</loc>
+    <lastmod>2017-12-12T00:00:00+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://kazkn.com/post/2017/use-model-attribute/</loc>
+    <lastmod>2017-09-19T21:53:03+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://kazkn.com/post/2017/the-design-of-everyday-things/</loc>
+    <lastmod>2017-06-20T23:20:04+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://kazkn.com/post/2017/query-for-tsd/</loc>
+    <lastmod>2017-06-16T00:56:29+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://kazkn.com/post/2017/bash-loop-ffmpeg/</loc>
+    <lastmod>2017-05-25T22:04:21+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://kazkn.com/post/2017/perfect-js/</loc>
+    <lastmod>2017-04-25T20:56:07+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://kazkn.com/post/2017/the-m3/</loc>
+    <lastmod>2017-04-17T23:01:24+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://kazkn.com/post/2017/spring-boot-nashorn-react-ssr/</loc>
+    <lastmod>2017-04-13T00:03:07+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://kazkn.com/post/2017/intro-spring-ioc-container/</loc>
+    <lastmod>2017-03-15T21:34:43+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://kazkn.com/post/2017/intro-spring-boot/</loc>
+    <lastmod>2017-03-11T15:44:46+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://kazkn.com/post/2017/goodbye-bind9/</loc>
+    <lastmod>2017-02-22T22:26:27+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://kazkn.com/post/2017/dns-server/</loc>
+    <lastmod>2017-02-22T22:25:29+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://kazkn.com/post/2017/postgresql-transaction/</loc>
+    <lastmod>2017-02-22T22:23:07+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://kazkn.com/post/</loc>
+    <lastmod>2017-12-12T00:00:00+09:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://kazkn.com/</loc>
+    <lastmod>2017-12-12T00:00:00+09:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+</urlset>

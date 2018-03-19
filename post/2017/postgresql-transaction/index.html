@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>PostgreSQL Transaction</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <script>
+     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+     ga('create', 'UA-86485151-1', 'auto');
+     ga('send', 'pageview');
+    </script>
+  </head>
+
+<body>
+  <header>
+    <h1>PostgreSQL Transaction</h1>
+    <time>2017-02-22</time>
+  </header>
+  <main>
+    <article>
+	  
+
+<p>PostgreSQL のトランザクションの実装について調査したときのメモ書き。</p>
+
+<h1 id="acid">ACID</h1>
+
+<ul>
+<li>Atomicity (原子性)
+
+<ul>
+<li>それ以上分解できない単位の操作</li>
+<li>ALL or NOTHING</li>
+</ul></li>
+<li>Consistency (一貫性、整合性)
+
+<ul>
+<li>予め定められたルールに則った状態である</li>
+<li>正の値しかとらない、など
+
+<ul>
+<li>よくわからん</li>
+</ul></li>
+</ul></li>
+<li>Isolation (分離性、独立性)
+
+<ul>
+<li>実行中のトランザクションが他のトランザクションに影響しない</li>
+<li>実行中のトランザクションの状態を外から参照、変更することはできない</li>
+</ul></li>
+<li>Durability (永続性)
+
+<ul>
+<li>一度コミットされたトランザクションは、何があっても残る</li>
+<li>障害が発生しても、コミットされたトランザクションの結果は残る</li>
+</ul></li>
+</ul>
+
+<p>Consistency がよくわからん。制約の話をしている？</p>
+
+<p>Durability は技術的な限界がある。変更されたデータがどのようなデバイス
+に存在するのか。例えばローカルディスクなのか、ネットワーク越しの遠い場
+所にあるのか、いずれにせよ、伝送のタイミングで消失してしまう可能性があ
+る。「何があっても残る」というのは、現実的には完全に実現することは難し
+い。</p>
+
+<h1 id="レコードの可視性">レコードの可視性</h1>
+
+<ul>
+<li>PostgreSQL のテーブルの中には、複数バージョンのタプルが存在する</li>
+<li>最初は一行、更新されるたびに行が追加されていく</li>
+<li>各タプルは、自身を「作成したトランザクション」と「削除したトランザ
+クション」の情報を持つ</li>
+</ul>
+
+<p>この仕組みにより Isolation を実現。複数のトランザクションにデータをう
+まく見せる。</p>
+
+<h1 id="atomicity-原子性">Atomicity (原子性)</h1>
+
+<p>コミット済みのデータだけを処理対象とする。コミット済みかどうかは、タプ
+ルのヘッダを見れば分かる。</p>
+
+<ul>
+<li>タプルごとの可視性情報</li>
+<li>コミットログ (clog) によるトランザクションの状態情報</li>
+</ul>
+
+<p>この辺を使う。</p>
+
+<p>前者は前述の通り。タプルの生き死にが分かる。</p>
+
+<p>後者はトランザクションの実行状態が分かる。タプルからは自身を作成したト
+ランザクションへのポインタがあるので、そのトランザクションがコミット済
+みかどうか判断できれば、タプルがコミット済みかどうかも判断できる。</p>
+
+<p>ちなみにアボートされたトランザクションの情報も残るらしい。当然、そのト
+ランザクションから作成されたタプルは処理対象外となる。</p>
+
+<h1 id="consistency-一貫性">Consistency (一貫性)</h1>
+
+<p>制約の話。</p>
+
+<ul>
+<li>ステートメント実行時に各種制約がチェックされる</li>
+<li>ものによってはコミット時まで遅延される
+
+<ul>
+<li>SET CONSTRAINTS {ALL | name} {DEFERRED | IMMEDIATE} なるものがあるらしい</li>
+<li><a href="https://www.postgresql.jp/document/9.4/html/sql-set-constraints.html">https://www.postgresql.jp/document/9.4/html/sql-set-constraints.html</a></li>
+</ul></li>
+</ul>
+
+<p>制約のチェックで引っかかった場合は、その時点でトランザクションをアボー
+トする。</p>
+
+<h1 id="isolation-分離性">Isolation (分離性)</h1>
+
+<p>かの有名な MVCC (MultiVersion Concurrency Control) の話。</p>
+
+<ul>
+<li>Snapshot によるトランザクションの世代管理
+
+<ul>
+<li>XID と CommandId によるものらしい</li>
+</ul></li>
+<li>Snapshot とは:
+
+<ul>
+<li>トランザクションごとに生成</li>
+<li>可視性の情報を持つ (何が見える、何が見えない)</li>
+<li>タプルヘッダの t_xmin, t_xmax あたりが関係してそう</li>
+</ul></li>
+<li>Visibility はトランザクションの分離レベルによっても変わる
+
+<ul>
+<li>Read Committed, Repeatable Read, Serializable</li>
+<li><a href="https://www.postgresql.jp/document/9.4/html/transaction-iso.html">https://www.postgresql.jp/document/9.4/html/transaction-iso.html</a></li>
+</ul></li>
+</ul>
+
+<p>MVCC 「で」実現しているではなく、MVCC 「を」実現しているということらしい。
+その実現方法は Snapshot によるトランザクションの世代管理ですよ、と。</p>
+
+<p>Snapshot のデータ構造 (SnapshotData 構造体) において重要な項目は以下:</p>
+
+<ol>
+<li>xmin
+
+<ul>
+<li>トランザクションが始まる時点で、ある XID 以下のトランザクションは
+終了している (Committed Or Aborted) ことが保証されている。その
+XID を持つ項目</li>
+</ul></li>
+<li>xmax
+
+<ul>
+<li>トランザクションが始まる時点で、ある XID 以上のトランザクションが
+始まっていないか進行中である。これらは無視してよい。端的には、自
+身の XID 以上のトランザクションは無視してよい。</li>
+</ul></li>
+<li>xip[]
+
+<ul>
+<li>xmin と xmax の間の進行中トランザクションの XID を持つ配列。なぜ
+clog を見る、ではだめなのか？</li>
+</ul></li>
+</ol>
+
+<p>あるタプルが見えるかどうかの判定:</p>
+
+<ol>
+<li>無効なタプル (削除 XID が入っている) なら見えない</li>
+<li>タプルの XID が自身と同じなら見える</li>
+<li>タプルの XID が xmax 以上なら見えない</li>
+<li>タプルの XID が xmin 以下で、CLOG を参照してトランザクションが Committed なら見える</li>
+<li>タプルの XID が xmin &lt; XID &lt; xmax で、xip 内に存在するなら見えない</li>
+<li>CLOG を参照してトランザクションが Committed なら見える</li>
+</ol>
+
+<p>Snapshot をとるタイミングは分離レベルによって変わる。</p>
+
+<ul>
+<li>Read Committed
+
+<ul>
+<li>文を実行するたび</li>
+</ul></li>
+<li>Repeatable Read
+
+<ul>
+<li>最初の文を実行する時</li>
+</ul></li>
+</ul>
+
+<p>以下の一連の文を実行する時を考える:</p>
+
+<pre><code>1 BEGIN;
+2 INSERT INTO t1 values (1);
+3 SELECT * FROM t1;
+4 INSERT INTO t1 values (2);
+5 COMMIT;
+</code></pre>
+
+<p>Read Committed では 2, 3, 4 のタイミングで Snapshot をとる。Repetable
+Read では 2 のタイミングでのみ Snapshot をとる。BEGIN ではなく最初の文
+を実行するタイミングで Snapshot をとるのは、性能上の理由とのこと。</p>
+
+<h2 id="トランザクションの分離レベル">トランザクションの分離レベル</h2>
+
+<ul>
+<li>Read Uncommitted
+
+<ul>
+<li>他のトランザクションがコミットしていない内容が見える (Dirty Read)</li>
+</ul></li>
+<li>Read Committed
+
+<ul>
+<li>他のトランザクションがコミットしていない内容が見えない</li>
+<li>他のトランザクションがコミットした変更が途中から見える (Unrepeatable Read)</li>
+</ul></li>
+<li>Repeatable Read
+
+<ul>
+<li>他のトランザクションがコミットしていない内容が見えない</li>
+<li>他のトランザクションがコミットした変更が途中から見えない</li>
+<li>他のトランザクションがコミットした追加・削除が見える (Phantom Read)
+
+<ul>
+<li>ただし PostgreSQL では発生しない、とのこと</li>
+</ul></li>
+</ul></li>
+<li>Serializable
+
+<ul>
+<li>他のトランザクションがコミットしていない内容が見えない</li>
+<li>他のトランザクションがコミットした変更が途中から見えない</li>
+<li>他のトランザクションがコミットした追加・削除が見えない</li>
+</ul></li>
+</ul>
+
+<p>上に行くほど緩く、下に行くほど厳しくなる。厳しくなればなるほど、同時実
+行性能は落ちる。性能、信頼性のバランスをとって決める。</p>
+
+<p>PostgreSQL としては、Read Uncommitted は Read Committed と同義。SQL 標
+準として、分離レベルをより厳しくする (ex: Read Uncommitted で Dirty
+Read できないようにする) ことは許可されている。</p>
+
+<h2 id="複数のコマンドを含むトランザクション">複数のコマンドを含むトランザクション</h2>
+
+<p>分離レベルによらず、コミットしていない内容であっても、同一のトランザク
+ション内からは参照できる。では、</p>
+
+<pre><code>INSERT INTO t1 SELECT * FROM t1
+</code></pre>
+
+<p>これはどう動くのか。当然、INSERT 開始時点での t1 全件が、t1 に挿入され
+るという風に動作する。これを実現するには Snapshot とは別の対処が必要。
+PostgreSQL ではトランザクション内の文にコマンドID (CI) と呼ばれる連番
+を振ることで対処している。</p>
+
+<p>文は参照しているテーブルの行の XID が自身と同じ場合、CI もチェックする:</p>
+
+<ol>
+<li>実行中の文の CI よりも前の番号は見える</li>
+<li>実行中の文の CI と同じ番号は見えない</li>
+<li>実行中の文の CI よりも後の番号は存在しない</li>
+</ol>
+
+<p>これによって前掲の SELECT/INSERT は、自身が追記した行を参照することな
+く動作する。</p>
+
+<h1 id="durability-永続性">Durability (永続性)</h1>
+
+<ul>
+<li>チェックポイントでデータファイルを更新</li>
+<li>コミットで WAL (トランザクションログ) へ同期書き込み</li>
+<li>チェックポイント
+
+<ul>
+<li>shared_buffer 上のデータをディスクに一括して反映</li>
+</ul></li>
+<li>WAL 同期書き込み
+
+<ul>
+<li>バッファリングとかしないよ、という意味かな</li>
+<li>O_WRONLY|O_SYNC たぶんこんな感じ</li>
+</ul></li>
+</ul>
+
+<p>コミットした情報は WAL に随時書き出していく。定期的に shared_buffer の
+内容をデータファイルに書き出す (永続化)。書き出す前にプロセスが落ちて
+しまい、消えてしまった shared_buffer 上のデータであっても、コミットさ
+れていれば WAL に残っているので、ここから復元できる。具体的には最後の
+チェックポイント以降の WAL からリカバリすればいい。</p>
+
+<h1 id="参考">参考</h1>
+
+<ul>
+<li><a href="http://www.postgresqlinternals.org/index.php/%E3%83%88%E3%83%A9%E3%83%B3%E3%82%B6%E3%82%AF%E3%82%B7%E3%83%A7%E3%83%B3%E7%AE%A1%E7%90%86">トランザクション管理</a>
+
+<ul>
+<li>本コンテンツは、2014年1月30～31日に筑波大学で開講された「情報システム特別講義D」における講義「Inside PostgreSQL Kernel」の内容を再構成、加筆・修正したものです。</li>
+</ul></li>
+<li><a href="http://www.nminoru.jp/~nminoru/postgresql/pg-transaction-mvcc-snapshot.html">PostgreSQL のトランザクション &amp; MVCC &amp; スナップショットの仕組み</a></li>
+</ul>
+
+    </article>
+  </main>
+  <footer><a href="http://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>
+

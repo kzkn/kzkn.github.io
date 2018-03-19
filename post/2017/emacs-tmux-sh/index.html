@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>tmux のキャプチャ機能を使った emacs とシェルの連携</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <script>
+     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+     ga('create', 'UA-86485151-1', 'auto');
+     ga('send', 'pageview');
+    </script>
+  </head>
+
+<body>
+  <header>
+    <h1>tmux のキャプチャ機能を使った emacs とシェルの連携</h1>
+    <time>2017-12-12</time>
+  </header>
+  <main>
+    <article>
+	  <p>この記事は <a href="https://qiita.com/advent-calendar/2017/emacs">Emacs Advent Calendar 2017</a> の 12 日目の記事です。</p>
+
+<p>Emacs とシェルを連携させたいとき主に <code>M-x shell</code> を使っていたが、最近は tmux 上で起動したシェルを使うようになった。<code>M-x shell</code> を使う主な理由は、シェルの出力を Emacs でいじりたい (主にヤンクしたい) ということ。しかしそのために微妙に操作感の違う <code>M-x shell</code> をだましだまし使い続けるのも後ろめたい。普段使いで慣れているふつうのターミナルでシェルを使いつつ Emacs と連携できるならそれに越したことはない。</p>
+
+<p>tmux のキャプチャ機能を使うことで容易にこれが達成できる。アイデアは <a href="http://emacs.rubikitch.com/zsh-fish-emacs-eshell/">こちら</a> で紹介されていたもので、それを手元で実装した。本稿はそんな小ネタ的なお話。</p>
+
+<hr />
+
+<p>流れはこんな感じ:</p>
+
+<ol>
+<li>Emacs から <code>tmux new-window</code> で <code>default-directory</code> をカレントディレクトリとしたウィンドウを起動する</li>
+<li>そのウィンドウで適当な操作を行う</li>
+<li>キャプチャしたい内容が出力された時点で <code>tmux capture-pane</code> でキャプチャしてファイルに書き出す</li>
+<li>書き出したファイルを Emacs で開く</li>
+</ol>
+
+<p>Emacs とシェルにちょろっと設定を書くだけで実現できる。</p>
+
+<pre><code class="language-lisp">(defun sh (&amp;optional arg)
+  (interactive &quot;P&quot;)
+  (let* ((start-directory (if arg
+                              (ido-read-directory-name &quot;Starting directory: &quot; default-directory)
+                            default-directory))
+         (tmux (executable-find &quot;tmux&quot;))
+         (command (format &quot;%s new-window -c %s&quot; tmux start-directory)))
+    (call-process-shell-command command)))
+</code></pre>
+
+<p><a href="https://www.emacswiki.org/emacs/InteractivelyDoThings">ido</a> を使いたくなければ <code>ido-read-directory-name</code> ではなく <code>read-directory-name</code> を使うといい。</p>
+
+<p>シェル (筆者は zsh を使っているが、他のシェルにも簡単に移植できるはず) には以下の設定を追加する。<code>alias</code> はお好みで。</p>
+
+<pre><code class="language-sh">alias e=emacsclient
+
+function _do_tmux_capture {
+  dir=&quot;$HOME/tmp/capture&quot;
+  if [ -n &quot;$1&quot; ]; then
+    out=&quot;$dir/$1&quot;
+  else
+    out=`mktemp -u --tmpdir=$dir`
+  fi
+  shift
+  mkdir -p &quot;$dir&quot;
+  tmux capture-pane &quot;$@&quot; &gt;&quot;$out&quot;
+  echo &quot;$out&quot;
+}
+
+function cap { _do_tmux_capture &quot;$1&quot; -p }
+function caph { _do_tmux_capture &quot;$1&quot; -pS -32768 }
+</code></pre>
+
+<p>こんな感じで使う:</p>
+
+<pre><code class="language-sh">$ tmux
+$ emacs -nw
+# emacs 上で M-x sh
+# 制御が新しいウィンドウに移る
+$ ls -l
+合計 92
+-rw-r--r-- 1 kzkn kzkn  8728  6月 30 18:58 #%2Ascratch%2A#191002Nn#
+-rw-r--r-- 1 kzkn kzkn  8728  6月 27 21:58 #%2Ascratch%2A#29651XUl#
+-rw-r--r-- 1 kzkn kzkn 14232  9月 22 06:41 #%2Ascratch%2A#31070eMR#
+-rw-r--r-- 1 kzkn kzkn  8728  6月 27 21:46 #%2Ascratch%2A#3308PVn#
+-rw-r--r-- 1 kzkn kzkn   176  9月 22 06:42 README.md
+drwxr-xr-x 2 kzkn kzkn  4096  2月 22  2017 archetypes
+$ e `cap`
+# tmux の &lt;prefix&gt; l (筆者の環境なら C-t l) で Emacs に戻るとキャプチャした内容が Emacs 上に開かれている
+</code></pre>
+
+<p><code>cap</code> と <code>caph</code> はキャプチャ内容を出力したファイルのパスを出力するので、これを <code>emacsclient</code> に食わせれば Emacs 上でキャプチャ内容を開いていじれるという寸法。Emacs で編集なりなんなりしたあとは、バッファを殺すなり <code>C-x #</code> なりすれば <code>emacsclient</code> が死ぬ。シェルは適当なタイミングで殺すといい。</p>
+
+<p>ここでは <code>emacs -nw</code> として非 GUI な Emacs を使っている。非 GUI な Emacs であれば <code>M-x sh</code> した時点で新しい tmux ウィンドウにフォーカスが移るので、今回紹介した連携方法においては都合がいい。GUI な Emacs を使う場合は Alt-Tab などでターミナルのウィンドウ (ここでいうウィンドウは GUI 環境のウィンドウ) に切り替えなければならず、ちょっと面倒くさい。筆者はこれのためだけに GUI な Emacs から非 GUI な Emacs に移行した。</p>
+
+    </article>
+  </main>
+  <footer><a href="http://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>
+
