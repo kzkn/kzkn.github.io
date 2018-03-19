@@ -17,7 +17,7 @@
       <guid>http://kazkn.com/post/2018/vim-like-f-in-emacs/</guid>
       <description>&lt;p&gt;小ネタ。&lt;/p&gt;
 
-&lt;p&gt;今は Emacs をメインで使っているんだけど、もともとは長いこと Vim を使っていた。Vim を使っていた頃に重宝していたのが &lt;a href=&#34;http://vim-jp.org/vimdoc-ja/usr_03.html#03.3&#34;&gt;f, t キー&lt;/a&gt;なんだけど、Emacs にはそれと同じ機能を提供するコマンドが、デフォルトにはない。C-s, C-r が近いんだけど、これらはどちらかといえば Vim の /, ? に近く、f, t とはちょっと違う。重宝していただけに、ほしいなぁと思いつつ、C-s, C-r でだましだましやっていたんだけど、先日同僚と話している際に「一文字打ったら即座に &lt;code&gt;search-forward&lt;/code&gt; する関数を作りゃいいのか」という、言ってしまえば当たり前のことに気づいて、重い腰をあげたのだった。&lt;/p&gt;
+&lt;p&gt;今は Emacs をメインで使っているんだけど、もともとは長いこと Vim を使っていた。Vim を使っていた頃に重宝していたのが &lt;a href=&#34;http://vim-jp.org/vimdoc-ja/usr_03.html#03.3&#34;&gt;f, t キー&lt;/a&gt;なんだけど、Emacs にはそれと同じ機能を提供するコマンドが、デフォルトにはない。C-s, C-r が近いんだけど、これらはどちらかといえば Vim の &lt;a href=&#34;http://vim-jp.org/vimdoc-ja/usr_03.html#03.8&#34;&gt;/, ?&lt;/a&gt; に近く、f, t とはちょっと違う。重宝していただけに、ほしいなぁと思いつつ、C-s, C-r でだましだましやっていたんだけど、先日同僚と話している際に「一文字打ったら即座に &lt;code&gt;search-forward&lt;/code&gt; する関数を作りゃいいのか」という、言ってしまえば当たり前のことに気づいて、重い腰をあげたのだった。&lt;/p&gt;
 
 &lt;p&gt;コードは以下。f, t, ; は再現したつもり。F, T はサポートしてないけど、ゴールをずらすだけなので、やろうと思えばかんたんだと思う。&lt;/p&gt;
 
