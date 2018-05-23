@@ -1,5 +1,5 @@
 #!/bin/sh
 
 mkdir -p out
-curl -L https://github.com/spf13/hugo/releases/download/v0.18.1/hugo_0.18.1_Linux-64bit.tar.gz > out/hugo.tgz
+curl -L https://github.com/gohugoio/hugo/releases/download/v0.40.3/hugo_0.40.3_Linux-64bit.tar.gz >out/hugo.tgz
 cd out && tar xvf hugo.tgz
