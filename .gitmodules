@@ -1,3 +1,3 @@
 [submodule "themes/myblank"]
 	path = themes/myblank
-	url = https://github.com/kzkn/myblank.git
+	url = git@github.com:kzkn/myblank.git
