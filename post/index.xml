@@ -2,19 +2,58 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on kazkn.com</title>
-    <link>http://kazkn.com/post/index.xml</link>
+    <link>//kazkn.com/post/index.xml</link>
     <description>Recent content in Posts on kazkn.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Mon, 19 Mar 2018 22:45:39 +0900</lastBuildDate>
-    <atom:link href="http://kazkn.com/post/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 23 May 2018 23:24:14 +0900</lastBuildDate>
+    <atom:link href="//kazkn.com/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>カスタムドメインな Github Pages を HTTPS 化 (正式サポート版)</title>
+      <link>//kazkn.com/post/2018/https-on-github-pages-with-custom-domain/</link>
+      <pubDate>Wed, 23 May 2018 23:24:14 +0900</pubDate>
+      
+      <guid>//kazkn.com/post/2018/https-on-github-pages-with-custom-domain/</guid>
+      <description>
+
+&lt;p&gt;Github Pages でカスタムドメインの HTTPS 配信が&lt;a href=&#34;https://blog.github.com/2018-05-01-github-pages-custom-domains-https/&#34;&gt;サポートされるようになった&lt;/a&gt;。早速このサイトでも適用した。ちょっと手こずったので、対処の手順を綴っておきたい。なお、言うまでもないけど、確実な方法を知りたければ&lt;a href=&#34;https://help.github.com/articles/using-a-custom-domain-with-github-pages/&#34;&gt;公式サイト&lt;/a&gt;をあたってほしい。&lt;/p&gt;
+
+&lt;h2 id=&#34;1-alias-レコードを設定する&#34;&gt;1. ALIAS レコードを設定する&lt;/h2&gt;
+
+&lt;p&gt;もともと kazkn.com ドメインには A レコードと CNAME レコードを設定していた。&lt;a href=&#34;https://help.github.com/articles/setting-up-an-apex-domain/&#34;&gt;公式の解説&lt;/a&gt;によれば example.com のような apex domain (サブドメインのついてないドメインをそう呼ぶらしい) は ALIAS, ANAME, A レコードのいずれかを設定しなければならない、ということだったので、修正にあたった。幸い使っていた DNS サーバーでは ALIAS レコードをサポートしていたので、&lt;a href=&#34;https://help.github.com/articles/setting-up-an-apex-domain/#configuring-an-alias-or-aname-record-with-your-dns-provider&#34;&gt;ALIAS レコードを設定した&lt;/a&gt;。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;ALIAS kzkn.github.io
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;A レコード、CNAME レコードの古い設定はすべて削除して、ALIAS レコードの設定だけを残した。&lt;/p&gt;
+
+&lt;h2 id=&#34;2-custom-domain-を再設定する&#34;&gt;2. Custom Domain を再設定する&lt;/h2&gt;
+
+&lt;p&gt;ここにちょっとハマった。ただ&lt;a href=&#34;https://help.github.com/articles/setting-up-an-apex-domain/#configuring-an-alias-or-aname-record-with-your-dns-provider&#34;&gt;公式の解説&lt;/a&gt;にはちゃんと記述があるので、見逃していた俺が悪い。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;If you&amp;rsquo;re updating an existing custom domain, first remove and then re-add your custom domain to your GitHub account to trigger the process of enabling HTTPS.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;リポジトリの Settings で Custom Domain の設定を一回空白にして Save, 改めて入力して Save, という手続きを踏んだ。&lt;/p&gt;
+
+&lt;h2 id=&#34;3-待つ&#34;&gt;3. 待つ&lt;/h2&gt;
+
+&lt;p&gt;ここまでやると Enforce HTTPS のチェックボックスの欄に「今 Let&amp;rsquo;s Encrypt にリクエスト投げてるからちょっと待っとけ」的なメッセージが出る。24 hours とか書いてあったと思うけど、実際にはほんの数分で終わっていた。終わると勝手に Enforce HTTPS にチェックが入った状態になっている。カスタムドメインに HTTPS でアクセスできれば成功。&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;HTTPS 化自体は公式のサポートがなくとも外部サービスを使うことで実現できたのだけど、そこまでやるメリットも感じられなかったし、放っておいたのだった。しかし HTTP に対する風当たりが強くなってる現実もあって、できるならしたい、でもコストはかけたくない、とも思っていた。というところに公式のサポートが出てきたので、飛びついたのだった。かんたんだしランニングコストがかかるわけでもないので、やっておくに越したことはないと思う。&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>Vim の f/t を Emacs で</title>
-      <link>http://kazkn.com/post/2018/vim-like-f-in-emacs/</link>
+      <link>//kazkn.com/post/2018/vim-like-f-in-emacs/</link>
       <pubDate>Mon, 19 Mar 2018 22:45:39 +0900</pubDate>
       
-      <guid>http://kazkn.com/post/2018/vim-like-f-in-emacs/</guid>
+      <guid>//kazkn.com/post/2018/vim-like-f-in-emacs/</guid>
       <description>&lt;p&gt;小ネタ。&lt;/p&gt;
 
 &lt;p&gt;今は Emacs をメインで使っているんだけど、もともとは長いこと Vim を使っていた。Vim を使っていた頃に重宝していたのが &lt;a href=&#34;http://vim-jp.org/vimdoc-ja/usr_03.html#03.3&#34;&gt;f, t キー&lt;/a&gt;なんだけど、Emacs にはそれと同じ機能を提供するコマンドが、デフォルトにはない。C-s, C-r が近いんだけど、これらはどちらかといえば Vim の &lt;a href=&#34;http://vim-jp.org/vimdoc-ja/usr_03.html#03.8&#34;&gt;/, ?&lt;/a&gt; に近く、f, t とはちょっと違う。重宝していただけに、ほしいなぁと思いつつ、C-s, C-r でだましだましやっていたんだけど、先日同僚と話している際に「一文字打ったら即座に &lt;code&gt;search-forward&lt;/code&gt; する関数を作りゃいいのか」という、言ってしまえば当たり前のことに気づいて、重い腰をあげたのだった。&lt;/p&gt;
@@ -61,10 +100,10 @@
     
     <item>
       <title>tmux のキャプチャ機能を使った Emacs とシェルの連携</title>
-      <link>http://kazkn.com/post/2017/emacs-tmux-sh/</link>
+      <link>//kazkn.com/post/2017/emacs-tmux-sh/</link>
       <pubDate>Tue, 12 Dec 2017 00:00:00 +0900</pubDate>
       
-      <guid>http://kazkn.com/post/2017/emacs-tmux-sh/</guid>
+      <guid>//kazkn.com/post/2017/emacs-tmux-sh/</guid>
       <description>&lt;p&gt;この記事は &lt;a href=&#34;https://qiita.com/advent-calendar/2017/emacs&#34;&gt;Emacs Advent Calendar 2017&lt;/a&gt; の 12 日目の記事です。&lt;/p&gt;
 
 &lt;p&gt;Emacs とシェルを連携させたいとき主に &lt;code&gt;M-x shell&lt;/code&gt; を使っていたが、最近は tmux 上で起動したシェルを使うようになった。&lt;code&gt;M-x shell&lt;/code&gt; を使う主な理由は、シェルの出力を Emacs でいじりたい (主にヤンクしたい) ということ。しかしそのために微妙に操作感の違う &lt;code&gt;M-x shell&lt;/code&gt; をだましだまし使い続けるのも後ろめたい。普段使いで慣れているふつうのターミナルでシェルを使いつつ Emacs と連携できるならそれに越したことはない。&lt;/p&gt;
@@ -143,10 +182,10 @@ $ e `cap`
     
     <item>
       <title>@ModelAttribute を使う</title>
-      <link>http://kazkn.com/post/2017/use-model-attribute/</link>
+      <link>//kazkn.com/post/2017/use-model-attribute/</link>
       <pubDate>Tue, 19 Sep 2017 21:53:03 +0900</pubDate>
       
-      <guid>http://kazkn.com/post/2017/use-model-attribute/</guid>
+      <guid>//kazkn.com/post/2017/use-model-attribute/</guid>
       <description>
 
 &lt;p&gt;Spring 関連の小ネタで、&lt;a href=&#34;https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/ModelAttribute.html&#34;&gt;@ModelAttribute&lt;/a&gt; を使おう、という話。当たり前に使われているからか、私の探し方が悪いからか、「活用しよう」という記事をあまり見た覚えがないわりに、わりと便利に使えるので紹介したい。&lt;/p&gt;
@@ -293,10 +332,10 @@ public class SearchController {
     
     <item>
       <title>積読消化 - 誰のためのデザイン</title>
-      <link>http://kazkn.com/post/2017/the-design-of-everyday-things/</link>
+      <link>//kazkn.com/post/2017/the-design-of-everyday-things/</link>
       <pubDate>Tue, 20 Jun 2017 23:20:04 +0900</pubDate>
       
-      <guid>http://kazkn.com/post/2017/the-design-of-everyday-things/</guid>
+      <guid>//kazkn.com/post/2017/the-design-of-everyday-things/</guid>
       <description>&lt;p&gt;ずいぶん昔に買った本だが、序盤を読んではやめ、序盤を読んではやめ、というのを繰り返して、結局最近になるまで全体を通して読むことはなく、積まれていた本。一応全体を通しはしたものの、かなり飛ばしながら読んだ。改めて精読するかもしれないし、しないかもしれない。&lt;/p&gt;
 
 &lt;p&gt;この本は認知科学者がモノのデザインについて切り込んだ本。使いやすさを実現してこそよい「デザイン」であると主張している。そこに見た目のよさ、美しさは関係ない。&lt;/p&gt;
@@ -313,10 +352,10 @@ public class SearchController {
     
     <item>
       <title>時系列データのための SQL クエリ</title>
-      <link>http://kazkn.com/post/2017/query-for-tsd/</link>
+      <link>//kazkn.com/post/2017/query-for-tsd/</link>
       <pubDate>Fri, 16 Jun 2017 00:56:29 +0900</pubDate>
       
-      <guid>http://kazkn.com/post/2017/query-for-tsd/</guid>
+      <guid>//kazkn.com/post/2017/query-for-tsd/</guid>
       <description>
 
 &lt;p&gt;物事を Event (E) と Resource (R) に分けてモデリングする手法を実践していると、おのずとイベントという時系列データを検索するためのクエリをたくさん書くことになる。時系列データに対するクエリは少し特徴があり、ここでひとつまとめておこうと思う。ここではいくつかの例、方法を紹介するが、よりよい解、または別の解もあると思う。このページで取り上げる SQL はすべて PostgreSQL 9.3 で動作確認している。&lt;/p&gt;
@@ -643,10 +682,10 @@ SELECT m.*, &#39;min&#39; AS typ
     
     <item>
       <title>bash と ffmpeg でハマった話</title>
-      <link>http://kazkn.com/post/2017/bash-loop-ffmpeg/</link>
+      <link>//kazkn.com/post/2017/bash-loop-ffmpeg/</link>
       <pubDate>Thu, 25 May 2017 22:04:21 +0900</pubDate>
       
-      <guid>http://kazkn.com/post/2017/bash-loop-ffmpeg/</guid>
+      <guid>//kazkn.com/post/2017/bash-loop-ffmpeg/</guid>
       <description>&lt;p&gt;とてもハマった。一応解決には至ったので、記録を残しておくことにする。&lt;/p&gt;
 
 &lt;hr /&gt;
@@ -864,10 +903,10 @@ read(255, &amp;quot;&amp;quot;, 102)                      = 0
     
     <item>
       <title>積読消化 - パーフェクト JavaScript</title>
-      <link>http://kazkn.com/post/2017/perfect-js/</link>
+      <link>//kazkn.com/post/2017/perfect-js/</link>
       <pubDate>Tue, 25 Apr 2017 20:56:07 +0900</pubDate>
       
-      <guid>http://kazkn.com/post/2017/perfect-js/</guid>
+      <guid>//kazkn.com/post/2017/perfect-js/</guid>
       <description>&lt;p&gt;積読消化、第二弾。パーフェクト JavaScript を読んだ。雰囲気で JavaScript を書いているのを、いい加減に是正したいという願いから、この本を手にしたことを覚えている。&lt;/p&gt;
 
 &lt;hr /&gt;
@@ -890,10 +929,10 @@ read(255, &amp;quot;&amp;quot;, 102)                      = 0
     
     <item>
       <title>積読消化 - 人月の神話</title>
-      <link>http://kazkn.com/post/2017/the-m3/</link>
+      <link>//kazkn.com/post/2017/the-m3/</link>
       <pubDate>Mon, 17 Apr 2017 23:01:24 +0900</pubDate>
       
-      <guid>http://kazkn.com/post/2017/the-m3/</guid>
+      <guid>//kazkn.com/post/2017/the-m3/</guid>
       <description>&lt;p&gt;これまでたくさんの技術書を買ってきて、残念ながら積みっぱなしで読んでいない本がいくつか (も) ある。今年はこれを一掃すべく、技術書を新たに買わず、書棚に並ぶ積みっぱなしの本を読むことに時間をあてようと、年の初めに誓った。と言いながらすでに 4 月に突入しており、依然として 1 冊も消化しないまま時間が過ぎていたのだが、この頃一念発起して、1 冊読んだ。表題の「人月の神話」である。&lt;/p&gt;
 
 &lt;p&gt;読むだけでもいいのだが、何かしら本を読んだことにまつわる OUTPUT を出すことで、本への理解が深まることを狙いとして、書評などという大げさなものではないが、読書感想文を書くことにした。&lt;/p&gt;
@@ -924,10 +963,10 @@ read(255, &amp;quot;&amp;quot;, 102)                      = 0
     
     <item>
       <title>Spring Boot &#43; Nashorn &#43; React &#43; SSR</title>
-      <link>http://kazkn.com/post/2017/spring-boot-nashorn-react-ssr/</link>
+      <link>//kazkn.com/post/2017/spring-boot-nashorn-react-ssr/</link>
       <pubDate>Thu, 13 Apr 2017 00:03:07 +0900</pubDate>
       
-      <guid>http://kazkn.com/post/2017/spring-boot-nashorn-react-ssr/</guid>
+      <guid>//kazkn.com/post/2017/spring-boot-nashorn-react-ssr/</guid>
       <description>
 
 &lt;p&gt;表題のようなことをやってみたという話。以下のブログ記事をおおいに参考にさせていただいている。&lt;/p&gt;
@@ -1460,10 +1499,10 @@ public static class WebConfig extends WebMvcConfigurerAdapter {
     
     <item>
       <title>はじめての Spring IoC コンテナ</title>
-      <link>http://kazkn.com/post/2017/intro-spring-ioc-container/</link>
+      <link>//kazkn.com/post/2017/intro-spring-ioc-container/</link>
       <pubDate>Wed, 15 Mar 2017 21:34:43 +0900</pubDate>
       
-      <guid>http://kazkn.com/post/2017/intro-spring-ioc-container/</guid>
+      <guid>//kazkn.com/post/2017/intro-spring-ioc-container/</guid>
       <description>
 
 &lt;p&gt;広大な Spring Framework の世界において、その中心 (というより底という表現がしっくりくるかもしれない) にあるのが IoC コンテナです。Spring Boot を使ってお気楽ご気楽にプログラミングできるのも、AOP で宣言的ほげほげできるのも、全部 IoC コンテナの下支えがあってこそ。Spring Boot を使ってアプリケーション開発する場合においても、それを支える IoC コンテナの知識があるのとないのとでは、開発、問題解決の効率が格段に変わってくるでしょう、たぶん。&lt;/p&gt;
@@ -1803,10 +1842,10 @@ public MyApiGateway myApiGateway() {
     
     <item>
       <title>はじめての Spring Boot</title>
-      <link>http://kazkn.com/post/2017/intro-spring-boot/</link>
+      <link>//kazkn.com/post/2017/intro-spring-boot/</link>
       <pubDate>Sat, 11 Mar 2017 15:44:46 +0900</pubDate>
       
-      <guid>http://kazkn.com/post/2017/intro-spring-boot/</guid>
+      <guid>//kazkn.com/post/2017/intro-spring-boot/</guid>
       <description>
 
 &lt;p&gt;最近の Spring Framework ベースのアプリケーション開発で欠かせないのが &lt;a href=&#34;https://projects.spring.io/spring-boot/&#34;&gt;Spring Boot&lt;/a&gt; である。Spring Boot とは、公式によれば:&lt;/p&gt;
@@ -2258,10 +2297,10 @@ protected ConfigurableApplicationContext createApplicationContext() {
     
     <item>
       <title>Goodbye BIND9</title>
-      <link>http://kazkn.com/post/2017/goodbye-bind9/</link>
+      <link>//kazkn.com/post/2017/goodbye-bind9/</link>
       <pubDate>Wed, 22 Feb 2017 22:26:27 +0900</pubDate>
       
-      <guid>http://kazkn.com/post/2017/goodbye-bind9/</guid>
+      <guid>//kazkn.com/post/2017/goodbye-bind9/</guid>
       <description>
 
 &lt;p&gt;&lt;a href=&#34;https://www.cvedetails.com/product/144/ISC-Bind.html?vendor_id=64&#34;&gt;BIND9 の脆弱性報告&lt;/a&gt; にもいい加減うんざりしてきた。今年 (2017 年) に入ってからも、2 月 21 日現在ですでに &lt;a href=&#34;https://www.cvedetails.com/cve/CVE-2016-9131/&#34;&gt;3 件&lt;/a&gt; の&lt;a href=&#34;https://www.cvedetails.com/cve/CVE-2016-9147/&#34;&gt;脆弱性が&lt;/a&gt; &lt;a href=&#34;https://www.cvedetails.com/cve/CVE-2016-9444/&#34;&gt;報告されている&lt;/a&gt;。&lt;/p&gt;
@@ -2472,10 +2511,10 @@ forward-zone:
     
     <item>
       <title>DNS Server etcetera</title>
-      <link>http://kazkn.com/post/2017/dns-server/</link>
+      <link>//kazkn.com/post/2017/dns-server/</link>
       <pubDate>Wed, 22 Feb 2017 22:25:29 +0900</pubDate>
       
-      <guid>http://kazkn.com/post/2017/dns-server/</guid>
+      <guid>//kazkn.com/post/2017/dns-server/</guid>
       <description>
 
 &lt;p&gt;DNS のあれこれについて。&lt;/p&gt;
@@ -2552,10 +2591,10 @@ DNS は不要である (mydns.jp が肩代わりしている)。&lt;/p&gt;
     
     <item>
       <title>PostgreSQL Transaction</title>
-      <link>http://kazkn.com/post/2017/postgresql-transaction/</link>
+      <link>//kazkn.com/post/2017/postgresql-transaction/</link>
       <pubDate>Wed, 22 Feb 2017 22:23:07 +0900</pubDate>
       
-      <guid>http://kazkn.com/post/2017/postgresql-transaction/</guid>
+      <guid>//kazkn.com/post/2017/postgresql-transaction/</guid>
       <description>
 
 &lt;p&gt;PostgreSQL のトランザクションの実装について調査したときのメモ書き。&lt;/p&gt;
