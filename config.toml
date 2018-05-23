@@ -1,6 +1,6 @@
 languageCode = "ja"
 title = "kazkn.com"
-baseurl = "//kazkn.com/"
+baseurl = "https://kazkn.com/"
 hasCJKLanguage = true
 theme = "myblank"
 
