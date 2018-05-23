@@ -2,147 +2,147 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on kazkn.com</title>
-    <link>//kazkn.com/post/</link>
+    <link>https://kazkn.com/post/</link>
     <description>Recent content in Posts on kazkn.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
     <lastBuildDate>Wed, 23 May 2018 23:24:14 +0900</lastBuildDate>
     
-	<atom:link href="//kazkn.com/post/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://kazkn.com/post/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>カスタムドメインな Github Pages を HTTPS 化 (正式サポート版)</title>
-      <link>//kazkn.com/post/2018/https-on-github-pages-with-custom-domain/</link>
+      <link>https://kazkn.com/post/2018/https-on-github-pages-with-custom-domain/</link>
       <pubDate>Wed, 23 May 2018 23:24:14 +0900</pubDate>
       
-      <guid>//kazkn.com/post/2018/https-on-github-pages-with-custom-domain/</guid>
+      <guid>https://kazkn.com/post/2018/https-on-github-pages-with-custom-domain/</guid>
       <description>Github Pages でカスタムドメインの HTTPS 配信がサポートされるようになった。早速このサイトでも適用した。ちょっと手こずったので、対処の手順を綴っておきたい。</description>
     </item>
     
     <item>
       <title>Vim の f/t を Emacs で</title>
-      <link>//kazkn.com/post/2018/vim-like-f-in-emacs/</link>
+      <link>https://kazkn.com/post/2018/vim-like-f-in-emacs/</link>
       <pubDate>Mon, 19 Mar 2018 22:45:39 +0900</pubDate>
       
-      <guid>//kazkn.com/post/2018/vim-like-f-in-emacs/</guid>
+      <guid>https://kazkn.com/post/2018/vim-like-f-in-emacs/</guid>
       <description>小ネタ。 今は Emacs をメインで使っているんだけど、もともとは長いこと Vim を使っていた。Vim を使っていた頃に重宝していたのが f, t キーなんだけど、Em</description>
     </item>
     
     <item>
       <title>tmux のキャプチャ機能を使った Emacs とシェルの連携</title>
-      <link>//kazkn.com/post/2017/emacs-tmux-sh/</link>
+      <link>https://kazkn.com/post/2017/emacs-tmux-sh/</link>
       <pubDate>Tue, 12 Dec 2017 00:00:00 +0900</pubDate>
       
-      <guid>//kazkn.com/post/2017/emacs-tmux-sh/</guid>
+      <guid>https://kazkn.com/post/2017/emacs-tmux-sh/</guid>
       <description>この記事は Emacs Advent Calendar 2017 の 12 日目の記事です。 Emacs とシェルを連携させたいとき主に M-x shell を使っていたが、最近は tmux 上で起動したシェルを使うようになった。M-</description>
     </item>
     
     <item>
       <title>@ModelAttribute を使う</title>
-      <link>//kazkn.com/post/2017/use-model-attribute/</link>
+      <link>https://kazkn.com/post/2017/use-model-attribute/</link>
       <pubDate>Tue, 19 Sep 2017 21:53:03 +0900</pubDate>
       
-      <guid>//kazkn.com/post/2017/use-model-attribute/</guid>
+      <guid>https://kazkn.com/post/2017/use-model-attribute/</guid>
       <description>Spring 関連の小ネタで、@ModelAttribute を使おう、という話。当たり前に使われているからか、私の探し方が悪いからか、「活用しよう」とい</description>
     </item>
     
     <item>
       <title>積読消化 - 誰のためのデザイン</title>
-      <link>//kazkn.com/post/2017/the-design-of-everyday-things/</link>
+      <link>https://kazkn.com/post/2017/the-design-of-everyday-things/</link>
       <pubDate>Tue, 20 Jun 2017 23:20:04 +0900</pubDate>
       
-      <guid>//kazkn.com/post/2017/the-design-of-everyday-things/</guid>
+      <guid>https://kazkn.com/post/2017/the-design-of-everyday-things/</guid>
       <description>ずいぶん昔に買った本だが、序盤を読んではやめ、序盤を読んではやめ、というのを繰り返して、結局最近になるまで全体を通して読むことはなく、積まれ</description>
     </item>
     
     <item>
       <title>時系列データのための SQL クエリ</title>
-      <link>//kazkn.com/post/2017/query-for-tsd/</link>
+      <link>https://kazkn.com/post/2017/query-for-tsd/</link>
       <pubDate>Fri, 16 Jun 2017 00:56:29 +0900</pubDate>
       
-      <guid>//kazkn.com/post/2017/query-for-tsd/</guid>
+      <guid>https://kazkn.com/post/2017/query-for-tsd/</guid>
       <description>物事を Event (E) と Resource (R) に分けてモデリングする手法を実践していると、おのずとイベントという時系列データを検索するためのクエリをたくさん書くことになる</description>
     </item>
     
     <item>
       <title>bash と ffmpeg でハマった話</title>
-      <link>//kazkn.com/post/2017/bash-loop-ffmpeg/</link>
+      <link>https://kazkn.com/post/2017/bash-loop-ffmpeg/</link>
       <pubDate>Thu, 25 May 2017 22:04:21 +0900</pubDate>
       
-      <guid>//kazkn.com/post/2017/bash-loop-ffmpeg/</guid>
+      <guid>https://kazkn.com/post/2017/bash-loop-ffmpeg/</guid>
       <description>とてもハマった。一応解決には至ったので、記録を残しておくことにする。 mp4 から png を抽出するスクリプトを bash と ffmpeg を使って書いていた。処理対象のファイ</description>
     </item>
     
     <item>
       <title>積読消化 - パーフェクト JavaScript</title>
-      <link>//kazkn.com/post/2017/perfect-js/</link>
+      <link>https://kazkn.com/post/2017/perfect-js/</link>
       <pubDate>Tue, 25 Apr 2017 20:56:07 +0900</pubDate>
       
-      <guid>//kazkn.com/post/2017/perfect-js/</guid>
+      <guid>https://kazkn.com/post/2017/perfect-js/</guid>
       <description>積読消化、第二弾。パーフェクト JavaScript を読んだ。雰囲気で JavaScript を書いているのを、いい加減に是正したいという願いから、この本を手にしたことを覚えている。</description>
     </item>
     
     <item>
       <title>積読消化 - 人月の神話</title>
-      <link>//kazkn.com/post/2017/the-m3/</link>
+      <link>https://kazkn.com/post/2017/the-m3/</link>
       <pubDate>Mon, 17 Apr 2017 23:01:24 +0900</pubDate>
       
-      <guid>//kazkn.com/post/2017/the-m3/</guid>
+      <guid>https://kazkn.com/post/2017/the-m3/</guid>
       <description>これまでたくさんの技術書を買ってきて、残念ながら積みっぱなしで読んでいない本がいくつか (も) ある。今年はこれを一掃すべく、技術書を新たに買わ</description>
     </item>
     
     <item>
       <title>Spring Boot &#43; Nashorn &#43; React &#43; SSR</title>
-      <link>//kazkn.com/post/2017/spring-boot-nashorn-react-ssr/</link>
+      <link>https://kazkn.com/post/2017/spring-boot-nashorn-react-ssr/</link>
       <pubDate>Thu, 13 Apr 2017 00:03:07 +0900</pubDate>
       
-      <guid>//kazkn.com/post/2017/spring-boot-nashorn-react-ssr/</guid>
+      <guid>https://kazkn.com/post/2017/spring-boot-nashorn-react-ssr/</guid>
       <description>表題のようなことをやってみたという話。以下のブログ記事をおおいに参考にさせていただいている。 Ruby on Rails on React on SSR on SPA ソースの構成 Maven で作ったフォルダ</description>
     </item>
     
     <item>
       <title>はじめての Spring IoC コンテナ</title>
-      <link>//kazkn.com/post/2017/intro-spring-ioc-container/</link>
+      <link>https://kazkn.com/post/2017/intro-spring-ioc-container/</link>
       <pubDate>Wed, 15 Mar 2017 21:34:43 +0900</pubDate>
       
-      <guid>//kazkn.com/post/2017/intro-spring-ioc-container/</guid>
+      <guid>https://kazkn.com/post/2017/intro-spring-ioc-container/</guid>
       <description>広大な Spring Framework の世界において、その中心 (というより底という表現がしっくりくるかもしれない) にあるのが IoC コンテナです。Spring Boot を使ってお気楽</description>
     </item>
     
     <item>
       <title>はじめての Spring Boot</title>
-      <link>//kazkn.com/post/2017/intro-spring-boot/</link>
+      <link>https://kazkn.com/post/2017/intro-spring-boot/</link>
       <pubDate>Sat, 11 Mar 2017 15:44:46 +0900</pubDate>
       
-      <guid>//kazkn.com/post/2017/intro-spring-boot/</guid>
+      <guid>https://kazkn.com/post/2017/intro-spring-boot/</guid>
       <description>最近の Spring Framework ベースのアプリケーション開発で欠かせないのが Spring Boot である。Spring Boot とは、公式によれば: Spring Boot makes it easy to create stand-alone, production-grade Spring based Applications that you can &amp;ldquo;just run&amp;rdquo;. We take an</description>
     </item>
     
     <item>
       <title>Goodbye BIND9</title>
-      <link>//kazkn.com/post/2017/goodbye-bind9/</link>
+      <link>https://kazkn.com/post/2017/goodbye-bind9/</link>
       <pubDate>Wed, 22 Feb 2017 22:26:27 +0900</pubDate>
       
-      <guid>//kazkn.com/post/2017/goodbye-bind9/</guid>
+      <guid>https://kazkn.com/post/2017/goodbye-bind9/</guid>
       <description>BIND9 の脆弱性報告 にもいい加減うんざりしてきた。今年 (2017 年) に入ってからも、2 月 21 日現在ですでに 3 件 の脆弱性が 報告されている。 そこで BIND9 からの卒業を</description>
     </item>
     
     <item>
       <title>DNS Server etcetera</title>
-      <link>//kazkn.com/post/2017/dns-server/</link>
+      <link>https://kazkn.com/post/2017/dns-server/</link>
       <pubDate>Wed, 22 Feb 2017 22:25:29 +0900</pubDate>
       
-      <guid>//kazkn.com/post/2017/dns-server/</guid>
+      <guid>https://kazkn.com/post/2017/dns-server/</guid>
       <description>DNS のあれこれについて。 権威サーバーとキャッシュサーバー DNS といっても、大きく 2 つの機能に分かれている。それが権威サーバーと キャッシュサーバー。</description>
     </item>
     
     <item>
       <title>PostgreSQL Transaction</title>
-      <link>//kazkn.com/post/2017/postgresql-transaction/</link>
+      <link>https://kazkn.com/post/2017/postgresql-transaction/</link>
       <pubDate>Wed, 22 Feb 2017 22:23:07 +0900</pubDate>
       
-      <guid>//kazkn.com/post/2017/postgresql-transaction/</guid>
+      <guid>https://kazkn.com/post/2017/postgresql-transaction/</guid>
       <description>PostgreSQL のトランザクションの実装について調査したときのメモ書き。 ACID Atomicity (原子性) それ以上分解できない単位の操作 ALL or NOTHING Consistency (一貫性、整合性) 予め定められ</description>
     </item>
     
