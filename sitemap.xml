@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
     <loc>//kazkn.com/post/2018/https-on-github-pages-with-custom-domain/</loc>
@@ -77,8 +78,18 @@
   </url>
   
   <url>
+    <loc>//kazkn.com/categories/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>//kazkn.com/post/</loc>
     <lastmod>2018-05-23T23:24:14+09:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>//kazkn.com/tags/</loc>
     <priority>0</priority>
   </url>
   
