@@ -6,10 +6,19 @@
     <description>Recent content in Posts on kazkn.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Wed, 23 May 2018 23:24:14 +0900</lastBuildDate>
+    <lastBuildDate>Sat, 06 Oct 2018 11:43:55 +0900</lastBuildDate>
     
 	<atom:link href="https://kazkn.com/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>ThinkPad X1 Carbon 第6世代の BIOS をアップデートする</title>
+      <link>https://kazkn.com/post/2018/update-x1c6-bios/</link>
+      <pubDate>Sat, 06 Oct 2018 11:43:55 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2018/update-x1c6-bios/</guid>
+      <description>X1 Carbon 6th gen about 50% slower on Linux という記事を Twitter のタイムラインで流れているのを見つけた。記事によれば、「ThinkPad X1 Carbon 第6世代 (以下 X1C6) で Linux を走らせてい</description>
+    </item>
     
     <item>
       <title>カスタムドメインな Github Pages を HTTPS 化 (正式サポート版)</title>
