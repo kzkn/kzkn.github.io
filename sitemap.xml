@@ -83,22 +83,6 @@
   </url>
   
   <url>
-    <loc>https://kazkn.com/categories/</loc>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://kazkn.com/post/</loc>
-    <lastmod>2018-10-06T11:43:55+09:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://kazkn.com/tags/</loc>
-    <priority>0</priority>
-  </url>
-  
-  <url>
     <loc>https://kazkn.com/</loc>
     <lastmod>2018-10-06T11:43:55+09:00</lastmod>
     <priority>0</priority>
