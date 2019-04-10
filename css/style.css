@@ -1,5 +1,49 @@
 body {
-    font-family: serif;
-    line-height: 1.4em;
-    font-size: 1.1em;
+    line-height: 1.7rem;
+    font-size: 1.1rem;
+    max-width: 800px;
+    margin: 0 auto;
+    color: #333;
+    padding: 0 1rem;
+}
+
+h1 {
+    line-height: 3rem;
+}
+
+main {
+    margin-bottom: 50px;
+}
+
+footer {
+    margin-bottom: 50px;
+}
+
+blockquote {
+    margin-left: 0;
+    border-left: 10px solid #ddd;
+    padding-left: 40px;
+}
+
+pre {
+    background-color: #eee;
+    font-size: 0.9rem;
+    line-height: 1.3rem;
+    padding: 12px 18px;
+    border-radius: 6px;
+    overflow-x: auto;
+}
+
+code {
+    background-color: #eee;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+pre code {
+    padding: 0;
+}
+
+hr {
+    border-color: #ddd;
 }
