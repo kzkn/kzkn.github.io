@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>webpacker が吐く webpack の設定を眺める</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <link rel="alternate" type="application/rss+xml" href="/index.xml">
+    <script>
+     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+     ga('create', 'UA-86485151-1', 'auto');
+     ga('send', 'pageview');
+    </script>
+  </head>
+
+<body>
+  <header>
+    <h1>webpacker が吐く webpack の設定を眺める</h1>
+    <time>2020-04-12</time>
+  </header>
+  <main>
+    <article>
+	  <p>基本的には webpacker がデフォルトで用意する設定だけでやりくりするけど、たまに webpacker が吐く webpack 設定をいじりたくなるときがある。webpacker は webpack に薄い皮をかぶせているという特性上、webpacker の先にある webpack のことを想像しながらいじらないといけなくて、webpack を直接触る場合よりフラストレーションがたまる。webpacker が吐く webpack の設定を眺めながらいじれると、フラストレーションが少し緩和される。</p>
+<p>node のワンライナーで、以下を叩くと webpacker が吐く webpack が出力される:</p>
+<pre><code>node -e 'console.dir((new (require(&quot;@rails/webpacker&quot;)).Environment).toWebpackConfig(), { depth: null })'
+</code></pre><p><code>console.dir</code> の第二引数がポイント。これがないと 2 階層目ぐらいまでしか出力されず、肝心のところが見えなかったりする。</p>
+<p><a href="https://nodejs.org/api/console.html#console_console_dir_obj_options">https://nodejs.org/api/console.html#console_console_dir_obj_options</a></p>
+
+    </article>
+  </main>
+  <footer><a href="https://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>
+

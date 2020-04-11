@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>webpacker で dart-sass を使う</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <link rel="alternate" type="application/rss+xml" href="/index.xml">
+    <script>
+     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+     ga('create', 'UA-86485151-1', 'auto');
+     ga('send', 'pageview');
+    </script>
+  </head>
+
+<body>
+  <header>
+    <h1>webpacker で dart-sass を使う</h1>
+    <time>2020-04-12</time>
+  </header>
+  <main>
+    <article>
+	  <p>webpacker はデフォルトの状態だと dart-sass ではなく node-sass を使う。一方で <code>@use</code> などの新しい構文は dart-sass にしか実装されておらず、node-sass (libsass) での実装予定はない様子 (?)。
+sass-loader の README などを参考にしつつ、webpacker で使えるようにしてみた。</p>
+<p>何はともあれ dart-sass をインストールする。fibers というパッケージも入れておくと<a href="https://github.com/sass/dart-sass/tree/bf35513a4cdb5b0d4e86309211735bdbddd938a0#javascript-api">パフォーマンス上のメリットがあるらしい</a>のでおとなしく従っておく。</p>
+<pre><code>yarn add sass fibers
+</code></pre><p><code>assets:precompile</code> では dependencies だけがインストールされるので <code>yarn add -D</code> ではなく <code>yarn add</code> なのが注意点。</p>
+<p>webpacker の設定を変える。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-js" data-lang="js"><span style="color:#75715e">// config/webpack/environment.js
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">environment</span> } <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;@rails/webpacker&#39;</span>)
+
+<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">sassLoader</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">environment</span>.<span style="color:#a6e22e">loaders</span>.<span style="color:#a6e22e">get</span>(<span style="color:#e6db74">&#39;sass&#39;</span>)[<span style="color:#e6db74">&#39;use&#39;</span>].<span style="color:#a6e22e">find</span>(<span style="color:#a6e22e">rule</span> =&gt; <span style="color:#a6e22e">rule</span>[<span style="color:#e6db74">&#39;loader&#39;</span>] <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;sass-loader&#39;</span>)
+<span style="color:#a6e22e">sassLoader</span>.<span style="color:#a6e22e">options</span> <span style="color:#f92672">=</span> {
+  ...<span style="color:#a6e22e">sassLoader</span>.<span style="color:#a6e22e">options</span>,
+  <span style="color:#a6e22e">implementation</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;sass&#39;</span>),
+}
+
+<span style="color:#a6e22e">module</span>.<span style="color:#a6e22e">exports</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">environment</span>
+</code></pre></div><p>要は sass-loader の設定の <code>options</code> を書き換えて、<code>implementation</code> に <code>require('sass')</code> を入れるようにしている。<a href="https://github.com/webpack-contrib/sass-loader/tree/3ad529157d1bcff1905be19dd18d0192bc89f29a#implementation">sass-loader の README</a> に従っている感じ。もっとうまい書き方がありそうな気もする。</p>
+<p>fiber に関しては <a href="https://github.com/webpack-contrib/sass-loader/blob/master/CHANGELOG.md#800-2019-08-29">sass-loader が勝手に解決する</a>ようになっていて、(おそらく) インストールだけしておけば設定なしにうまいこと使ってくれる。</p>
+<p>これらを設定したあと sass ファイルで <code>@use</code> を使ってみるとうまく動いたので、ちゃんと動いてそうな雰囲気。</p>
+
+    </article>
+  </main>
+  <footer><a href="https://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>
+
