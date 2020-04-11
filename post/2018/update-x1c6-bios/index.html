@@ -24,33 +24,25 @@
   <main>
     <article>
 	  <p><a href="https://200ok.ch/posts/2018-09-26_X1_carbon_6th_gen_about_50_percent_slower_on_Linux.html">X1 Carbon 6th gen about 50% slower on Linux</a> という記事を Twitter のタイムラインで流れているのを見つけた。記事によれば、「ThinkPad X1 Carbon 第6世代 (以下 X1C6) で Linux を走らせているなら、BIOS を最新化するだけで倍速くなる」ということらしい。</p>
-
 <p>どういうことやねん？と思ってもう少し詳しく記事を読むと、温度の上限設定があがったことで CPU の周波数が抑制されにくくなったとのこと。CPU ヘビーな処理なら、それだけ速くなるよってことらしい。<a href="https://fwupd.org/lvfs/component/1023/all">BIOS の更新履歴</a> にはそんなこと書いてないんだけどなぁ。他にも S3 Suspend がサポートされたとかいう更新もある。というわけで BIOS を更新してみたよ、という話。</p>
-
 <p>更新は結構かんたんにできた。以下は Arch Linux での操作記録だけど、他のディストリでも同じような手順でできるんじゃないかと思う。</p>
-
 <ol>
 <li><a href="https://wiki.archlinux.jp/index.php/Fwupd">fwupd</a> をインストールする</li>
 <li><a href="https://github.com/fiji-flo/x1carbon2018s3#via-lvfs">ここ</a> に従って <code>fwupdmgr update</code> する</li>
 <li>マシンを再起動</li>
 <li>Boot Menu から「Linux Firmware Updater」を選択
-
 <ul>
 <li>BIOS 更新が適用される</li>
-</ul></li>
+</ul>
+</li>
 <li><code>fwupdmgr get-devices</code> で更新されたかどうか確認する</li>
 </ol>
-
 <p>手元の環境では 0.1.12 が 0.1.30 になった。ずいぶんたまってたらしい。</p>
-
 <p>さらに Linux 向けに最適化された Suspend (S3 Suspend のこと？よく分かってない) を有効するために、BIOS の設定を変える。<a href="https://github.com/fiji-flo/x1carbon2018s3#discontinued-fixed-by-lenovo-in-new-firmware-release">ここ</a> の手順に従えば OK.</p>
-
 <blockquote>
 <p>After flashing you will need to enable it under Setup → Config → Power then select Linux</p>
 </blockquote>
-
 <p>正確には Power の「Sleep State」を Linux に選択する感じ。手元の環境では「Windows 10」になっていたのを「Linux」に変更した。</p>
-
 <p>PC を閉じてしばらく放っておいたところ、バッテリーの持ちがかなり改善されてることを確認できた。32 時間ほどで 11% ほどの消費。もともとは数時間しか持たなかったことを考えると、すごい改善。X1C 初代では困ってなかったんだけど、X1C6 にしてからというもの、PC を閉じた状態でも結構バッテリーを食ってたのが気になっていた。改善して何より。</p>
 
     </article>

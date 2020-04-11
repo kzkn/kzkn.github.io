@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>kazkn.com</title>
@@ -6,10 +5,19 @@
     <description>Recent content on kazkn.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Sat, 06 Oct 2018 11:43:55 +0900</lastBuildDate>
+    <lastBuildDate>Sun, 12 Apr 2020 00:04:38 +0900</lastBuildDate>
     
         <atom:link href="https://kazkn.com/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>xmonad --recompile でエラーが出るようになったら</title>
+      <link>https://kazkn.com/post/2020/xmonad-recompile-error/</link>
+      <pubDate>Sun, 12 Apr 2020 00:04:38 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2020/xmonad-recompile-error/</guid>
+      <description>毎週末恒例の yay を実施したところ、これまた恒例の yay 直後に実施する xmonad --recompile でエラーを吐くようになってしまった。ghc が更新されていたのでそれ関係だと</description>
+    </item>
     
     <item>
       <title>ThinkPad X1 Carbon 第6世代の BIOS をアップデートする</title>

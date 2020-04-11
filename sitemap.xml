@@ -1,6 +1,16 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <url>
+    <loc>https://kazkn.com/</loc>
+    <lastmod>2020-04-12T00:04:38+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://kazkn.com/post/2020/xmonad-recompile-error/</loc>
+    <lastmod>2020-04-12T00:04:38+09:00</lastmod>
+  </url>
   
   <url>
     <loc>https://kazkn.com/post/2018/update-x1c6-bios/</loc>
@@ -80,12 +90,6 @@
   <url>
     <loc>https://kazkn.com/post/2017/postgresql-transaction/</loc>
     <lastmod>2017-02-22T22:23:07+09:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://kazkn.com/</loc>
-    <lastmod>2018-10-06T11:43:55+09:00</lastmod>
-    <priority>0</priority>
   </url>
   
 </urlset>

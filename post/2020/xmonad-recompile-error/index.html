@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>xmonad --recompile でエラーが出るようになったら</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <link rel="alternate" type="application/rss+xml" href="/index.xml">
+    <script>
+     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+     ga('create', 'UA-86485151-1', 'auto');
+     ga('send', 'pageview');
+    </script>
+  </head>
+
+<body>
+  <header>
+    <h1>xmonad --recompile でエラーが出るようになったら</h1>
+    <time>2020-04-12</time>
+  </header>
+  <main>
+    <article>
+	  <p>毎週末恒例の <code>yay</code> を実施したところ、これまた恒例の <code>yay</code> 直後に実施する <code>xmonad --recompile</code> でエラーを吐くようになってしまった。ghc が更新されていたのでそれ関係だとは思うが、結局根本原因は分からず、ひとまずは（これまた恒例の）<code>yay</code> 後のマシン再起動はやめておいた。xmonad が起動しないので。</p>
+<p>困ったなと思いつつ、ふと Twitter を xmonad で検索してみたら、以下のような投稿が。</p>
+<p><a href="https://twitter.com/wat_aro/status/1248888372635922438">https://twitter.com/wat_aro/status/1248888372635922438</a></p>
+<p>手元の環境では <code>sudo</code> が必要で、<code>sudo ghc-pkg recache</code> したところ <code>xmonad --recompile</code> も通るようになった。ちゃんちゃん。</p>
+
+    </article>
+  </main>
+  <footer><a href="https://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>
+

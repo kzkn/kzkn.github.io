@@ -23,146 +23,109 @@
   </header>
   <main>
     <article>
-	  
-
-<p>Spring 関連の小ネタで、<a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/ModelAttribute.html">@ModelAttribute</a> を使おう、という話。当たり前に使われているからか、私の探し方が悪いからか、「活用しよう」という記事をあまり見た覚えがないわりに、わりと便利に使えるので紹介したい。</p>
-
-<hr />
-
-<h1 id="modelattribute-の動き">@ModelAttribute の動き</h1>
-
+	  <p>Spring 関連の小ネタで、<a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/ModelAttribute.html">@ModelAttribute</a> を使おう、という話。当たり前に使われているからか、私の探し方が悪いからか、「活用しよう」という記事をあまり見た覚えがないわりに、わりと便利に使えるので紹介したい。</p>
+<hr>
+<h1 id="modelattribute-の動き-">@ModelAttribute の動き</h1>
 <p><code>@ModelAttribute</code> アノテーションは、コントローラのメソッドか引数につけて使う。いずれの場合も、ハンドラメソッドが動く前にアノテーションが検出され、メソッドについているか、引数についているかに応じて、Spring によって処理される。</p>
-
 <p>メソッドについている場合、Spring がハンドラメソッドを呼ぶ前に、<code>@ModelAttribute</code> つきのメソッドを呼び出す。Spring は、その戻り値を <a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/ui/Model.html">Model</a> に詰める。<code>Model</code> に詰める際のキー (名前) は、<code>@ModelAttribute.name</code> で指定する。未指定の場合は戻り値のオブジェクトのクラス名から自動生成されたものになる。</p>
-
 <p>引数についている場合、Spring がハンドラメソッドを呼ぶ前に、その引数につけられた <code>@ModelAttribute.name</code> に対応するオブジェクトを <code>Model</code> から探す。<code>Model</code> に該当するオブジェクトがなければ、そのタイミングで <code>new</code> する。引数のオブジェクトが用意できたら、Spring はそのオブジェクトに対してリクエストボディのバインディングを行う。そうして用意されたオブジェクトが、ハンドラメソッドのオブジェクトとして渡される。バインディングを行いたくない場合は <code>@ModelAttribute.binding</code> に <code>false</code> を設定する。</p>
-
-<h1 id="modelattribute-の用途">@ModelAttribute の用途</h1>
-
+<h1 id="modelattribute-の用途-">@ModelAttribute の用途</h1>
 <p>かんたんな動きを抑えたところで、<code>@ModelAttribute</code> の具体的な使い方をいくつか介したい。</p>
-
-<h2 id="リクエストボディの内容を受け取る">リクエストボディの内容を受け取る</h2>
-
+<h2 id="リクエストボディの内容を受け取る-">リクエストボディの内容を受け取る</h2>
 <p>ど定番の使い方。POST で送られてくるリクエストボディの内容を、オブジェクトにバインディングするというもの。ハンドラメソッドの引数に <code>@ModelAttribute</code> をつける。特に説明する点はない。</p>
-
-<h2 id="全ハンドラメソッドに共通するオブジェクトを作る">全ハンドラメソッドに共通するオブジェクトを作る</h2>
-
+<h2 id="全ハンドラメソッドに共通するオブジェクトを作る-">全ハンドラメソッドに共通するオブジェクトを作る</h2>
 <p>例えばこんなコントローラがあったとする:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@Controller</span>
+<span style="color:#a6e22e">@RequestMapping</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/&#34;</span><span style="color:#f92672">)</span>
+<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">HomeController</span> <span style="color:#f92672">{</span>
 
-<pre><code class="language-java">@Controller
-@RequestMapping(&quot;/&quot;)
-public class HomeController {
-
-  @GetMapping
-  public String index(Model model) {
-    model.addAttribute(&quot;menu&quot;, findMenuForCurrentUser());
-    return &quot;top&quot;;
-  }
+  <span style="color:#a6e22e">@GetMapping</span>
+  <span style="color:#66d9ef">public</span> String <span style="color:#a6e22e">index</span><span style="color:#f92672">(</span>Model model<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    model<span style="color:#f92672">.</span><span style="color:#a6e22e">addAttribute</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;menu&#34;</span><span style="color:#f92672">,</span> findMenuForCurrentUser<span style="color:#f92672">());</span>
+    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;top&#34;</span><span style="color:#f92672">;</span>
+  <span style="color:#f92672">}</span>
   
-  @GetMapping
-  public String sitemap(Model model) {
-    model.addAttribute(&quot;menu&quot;, findMenuForCurrentUser());
-    return &quot;sitemap&quot;;
-  }
-}
-</code></pre>
+  <span style="color:#a6e22e">@GetMapping</span>
+  <span style="color:#66d9ef">public</span> String <span style="color:#a6e22e">sitemap</span><span style="color:#f92672">(</span>Model model<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    model<span style="color:#f92672">.</span><span style="color:#a6e22e">addAttribute</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;menu&#34;</span><span style="color:#f92672">,</span> findMenuForCurrentUser<span style="color:#f92672">());</span>
+    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;sitemap&#34;</span><span style="color:#f92672">;</span>
+  <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+</code></pre></div><p>このコントローラでは全ハンドラメソッド (といっても 2 つしかないが) で <code>&quot;menu&quot;</code> という Attribute を詰めている。<code>@ModelAttribute</code> を使えば、これを DRY にできる。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@ModelAttribute</span>
+<span style="color:#66d9ef">public</span> Menu <span style="color:#a6e22e">getMenu</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+  <span style="color:#66d9ef">return</span> findMenuForCurrentUser<span style="color:#f92672">();</span>
+<span style="color:#f92672">}</span>
 
-<p>このコントローラでは全ハンドラメソッド (といっても 2 つしかないが) で <code>&quot;menu&quot;</code> という Attribute を詰めている。<code>@ModelAttribute</code> を使えば、これを DRY にできる。</p>
+<span style="color:#a6e22e">@GetMapping</span>
+<span style="color:#66d9ef">public</span> String <span style="color:#a6e22e">index</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+  <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;top&#34;</span><span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span>
 
-<pre><code class="language-java">@ModelAttribute
-public Menu getMenu() {
-  return findMenuForCurrentUser();
-}
-
-@GetMapping
-public String index() {
-  return &quot;top&quot;;
-}
-
-@GetMapping
-public String sitemap() {
-  return &quot;sitemap&quot;;
-}
-</code></pre>
-
-<p><code>findMenuForCurrentUser</code> の結果を <code>Model</code> に突っ込む処理が、<code>@ModelAttribute</code> を使うことで <code>getMenu</code> に集約されている。</p>
-
-<h2 id="全ハンドラメソッドに共通するオブジェクトを作る-その-2">全ハンドラメソッドに共通するオブジェクトを作る - その 2</h2>
-
+<span style="color:#a6e22e">@GetMapping</span>
+<span style="color:#66d9ef">public</span> String <span style="color:#a6e22e">sitemap</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+  <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;sitemap&#34;</span><span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span>
+</code></pre></div><p><code>findMenuForCurrentUser</code> の結果を <code>Model</code> に突っ込む処理が、<code>@ModelAttribute</code> を使うことで <code>getMenu</code> に集約されている。</p>
+<h2 id="全ハンドラメソッドに共通するオブジェクトを作る---その-2-">全ハンドラメソッドに共通するオブジェクトを作る - その 2</h2>
 <p>URL の一部をエンティティの ID とし、URL 内の ID から対象となるエンティティを検索して処理をする。なんていう設計は、よくあると思う。<code>@ModelAttribute</code> を使うと、これも DRY にできる。</p>
-
-<pre><code class="language-java">@Controller
-@RequestMapping(&quot;/posts/{id}&quot;)
-public class PostController {
-  @ModelAttribute
-  public Post getPost(@PathVariable long id) {
-    return findPostById(id);
-  }
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@Controller</span>
+<span style="color:#a6e22e">@RequestMapping</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/posts/{id}&#34;</span><span style="color:#f92672">)</span>
+<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">PostController</span> <span style="color:#f92672">{</span>
+  <span style="color:#a6e22e">@ModelAttribute</span>
+  <span style="color:#66d9ef">public</span> Post <span style="color:#a6e22e">getPost</span><span style="color:#f92672">(</span><span style="color:#a6e22e">@PathVariable</span> <span style="color:#66d9ef">long</span> id<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">return</span> findPostById<span style="color:#f92672">(</span>id<span style="color:#f92672">);</span>
+  <span style="color:#f92672">}</span>
   
-  @GetMapping
-  public String show() {
-    return &quot;show&quot;;
-  }
+  <span style="color:#a6e22e">@GetMapping</span>
+  <span style="color:#66d9ef">public</span> String <span style="color:#a6e22e">show</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;show&#34;</span><span style="color:#f92672">;</span>
+  <span style="color:#f92672">}</span>
   
-  @GetMapping(&quot;/edit&quot;)
-  public String edit() {
-    return &quot;edit&quot;;
-  }
+  <span style="color:#a6e22e">@GetMapping</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/edit&#34;</span><span style="color:#f92672">)</span>
+  <span style="color:#66d9ef">public</span> String <span style="color:#a6e22e">edit</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;edit&#34;</span><span style="color:#f92672">;</span>
+  <span style="color:#f92672">}</span>
   
-  @PutMapping
-  public String update(@ModelAttribute Post post, BindingResult results) {
-    // ...
-    return &quot;redirect:/posts/&quot; + post.id;
-  }
-}
-</code></pre>
-
-<p>ここでは URL 内の ID から Post というエンティティを探してくる処理を <code>@ModelAttribute</code> つきのメソッドで実装した。<code>@ModelAttribute</code> つきのメソッドでは、ハンドラメソッドと同じような引数を受け取ることができるので、<code>@PathVariable</code> をメソッドの引数につけることができる。</p>
-
+  <span style="color:#a6e22e">@PutMapping</span>
+  <span style="color:#66d9ef">public</span> String <span style="color:#a6e22e">update</span><span style="color:#f92672">(</span><span style="color:#a6e22e">@ModelAttribute</span> Post post<span style="color:#f92672">,</span> BindingResult results<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    <span style="color:#75715e">// ...
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;redirect:/posts/&#34;</span> <span style="color:#f92672">+</span> post<span style="color:#f92672">.</span><span style="color:#a6e22e">id</span><span style="color:#f92672">;</span>
+  <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+</code></pre></div><p>ここでは URL 内の ID から Post というエンティティを探してくる処理を <code>@ModelAttribute</code> つきのメソッドで実装した。<code>@ModelAttribute</code> つきのメソッドでは、ハンドラメソッドと同じような引数を受け取ることができるので、<code>@PathVariable</code> をメソッドの引数につけることができる。</p>
 <p>ハンドラメソッド <code>update</code> では引数にも <code>@ModelAttribute</code> をつけているので、バインディングが行われる。このときバインディングする対象となるのは、<code>getPost</code> の戻り値のオブジェクトとなる (引数のオブジェクトを <code>Model</code> から探すから)。</p>
-
-<h2 id="存在チェック">存在チェック</h2>
-
+<h2 id="存在チェック-">存在チェック</h2>
 <p>URL の一部をエンティティの ID とし、URL 内の ID から対象となるエンティティを検索して処理をする。エンティティが見つからない場合は 404 とする。なんていう設計は、よくあると思う。<code>@ModelAttribute</code> を使うと、これも DRY にできる。先の例の <code>getPost</code> を修正する。</p>
-
-<pre><code class="language-java">@ModelAttribute
-public Post getPost(@PathVariable long id) {
-  return findPostById(id).orElseThrow(NotFoundException::new);
-}
-</code></pre>
-
-<p>ここでは Post が見つからなければ <code>NotFoundException</code> (という例外が Spring に用意されているわけではない) を投げるようにした。<code>@ModelAttribute</code> つきのメソッドは常にハンドラメソッドより前に呼び出されるので、Post が見つからなければハンドラメソッドに入る前に例外が飛ぶので、リクエストをエラーとすることができる。<code>NotFoundException</code> を 404 にひもづける実装は <a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/ExceptionHandler.html">@ExceptionHandler</a> や <a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/ResponseStatus.html">@ResponseStatus</a> で行うとよい。</p>
-
-<h2 id="パラメータの前処理">パラメータの前処理</h2>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@ModelAttribute</span>
+<span style="color:#66d9ef">public</span> Post <span style="color:#a6e22e">getPost</span><span style="color:#f92672">(</span><span style="color:#a6e22e">@PathVariable</span> <span style="color:#66d9ef">long</span> id<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+  <span style="color:#66d9ef">return</span> findPostById<span style="color:#f92672">(</span>id<span style="color:#f92672">).</span><span style="color:#a6e22e">orElseThrow</span><span style="color:#f92672">(</span>NotFoundException<span style="color:#f92672">::</span><span style="color:#66d9ef">new</span><span style="color:#f92672">);</span>
+<span style="color:#f92672">}</span>
+</code></pre></div><p>ここでは Post が見つからなければ <code>NotFoundException</code> (という例外が Spring に用意されているわけではない) を投げるようにした。<code>@ModelAttribute</code> つきのメソッドは常にハンドラメソッドより前に呼び出されるので、Post が見つからなければハンドラメソッドに入る前に例外が飛ぶので、リクエストをエラーとすることができる。<code>NotFoundException</code> を 404 にひもづける実装は <a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/ExceptionHandler.html">@ExceptionHandler</a> や <a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/bind/annotation/ResponseStatus.html">@ResponseStatus</a> で行うとよい。</p>
+<h2 id="パラメータの前処理-">パラメータの前処理</h2>
 <p>例えば送られてくるクエリパラメータを正規化するとか。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@Controller</span>
+<span style="color:#a6e22e">@RequestMapping</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/search&#34;</span><span style="color:#f92672">)</span>
+<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">SearchController</span> <span style="color:#f92672">{</span>
+  <span style="color:#a6e22e">@ModelAttribute</span><span style="color:#f92672">(</span>name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;query&#34;</span><span style="color:#f92672">)</span>
+  <span style="color:#66d9ef">public</span> String <span style="color:#a6e22e">normalize</span><span style="color:#f92672">(</span><span style="color:#a6e22e">@RequestParam</span> String q<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">return</span> Normalizer<span style="color:#f92672">.</span><span style="color:#a6e22e">normalize</span><span style="color:#f92672">(</span>q<span style="color:#f92672">,</span> Normalizer<span style="color:#f92672">.</span><span style="color:#a6e22e">Form</span><span style="color:#f92672">.</span><span style="color:#a6e22e">NFKC</span><span style="color:#f92672">);</span>
+  <span style="color:#f92672">}</span>
 
-<pre><code class="language-java">@Controller
-@RequestMapping(&quot;/search&quot;)
-public class SearchController {
-  @ModelAttribute(name = &quot;query&quot;)
-  public String normalize(@RequestParam String q) {
-    return Normalizer.normalize(q, Normalizer.Form.NFKC);
-  }
-
-  @GetMapping(&quot;/users&quot;)
-  public String searchUsers(@ModelAttribute(name = &quot;query&quot;, binding = false) String query, Model model) {
-    model.addAttribute(&quot;users&quot;, searchUsersByQuery(query));
-    return &quot;searchUsers&quot;;
-  }
+  <span style="color:#a6e22e">@GetMapping</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/users&#34;</span><span style="color:#f92672">)</span>
+  <span style="color:#66d9ef">public</span> String <span style="color:#a6e22e">searchUsers</span><span style="color:#f92672">(</span><span style="color:#a6e22e">@ModelAttribute</span><span style="color:#f92672">(</span>name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;query&#34;</span><span style="color:#f92672">,</span> binding <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">)</span> String query<span style="color:#f92672">,</span> Model model<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    model<span style="color:#f92672">.</span><span style="color:#a6e22e">addAttribute</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;users&#34;</span><span style="color:#f92672">,</span> searchUsersByQuery<span style="color:#f92672">(</span>query<span style="color:#f92672">));</span>
+    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;searchUsers&#34;</span><span style="color:#f92672">;</span>
+  <span style="color:#f92672">}</span>
   
-  @GetMapping(&quot;/posts&quot;)
-  public String searchPosts(@ModelAttribute(name = &quot;query&quot;, binding = false) String query, Model model) {
-    model.addAttribute(&quot;posts&quot;, searchPostsByQuery(query));
-    return &quot;searchPosts&quot;;
-  }
-}
-</code></pre>
-
-<p>基本的な原理はこれまで解説してきた通り。<code>@ModelAttribute.binding</code> を使うことで、リクエストボディのバインディングを行わないよう Spring に伝えている。今回は扱っているオブジェクトが <code>String</code> なので特に問題はないが、独自の (mutable な) クラスで、かつバインディング不要な引数に <code>binding=false</code> を付け忘れると、予期しないバインディングが行われた結果、バグを作りこむかもしれない。バインディングが不要なら、指定が必須 (= 指定しなきゃ動かない) かどうかにかかわらず、おとなしく <code>binding=false</code> をつけておくのが無難だと思う。</p>
-
-<hr />
-
+  <span style="color:#a6e22e">@GetMapping</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/posts&#34;</span><span style="color:#f92672">)</span>
+  <span style="color:#66d9ef">public</span> String <span style="color:#a6e22e">searchPosts</span><span style="color:#f92672">(</span><span style="color:#a6e22e">@ModelAttribute</span><span style="color:#f92672">(</span>name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;query&#34;</span><span style="color:#f92672">,</span> binding <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">)</span> String query<span style="color:#f92672">,</span> Model model<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    model<span style="color:#f92672">.</span><span style="color:#a6e22e">addAttribute</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;posts&#34;</span><span style="color:#f92672">,</span> searchPostsByQuery<span style="color:#f92672">(</span>query<span style="color:#f92672">));</span>
+    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;searchPosts&#34;</span><span style="color:#f92672">;</span>
+  <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+</code></pre></div><p>基本的な原理はこれまで解説してきた通り。<code>@ModelAttribute.binding</code> を使うことで、リクエストボディのバインディングを行わないよう Spring に伝えている。今回は扱っているオブジェクトが <code>String</code> なので特に問題はないが、独自の (mutable な) クラスで、かつバインディング不要な引数に <code>binding=false</code> を付け忘れると、予期しないバインディングが行われた結果、バグを作りこむかもしれない。バインディングが不要なら、指定が必須 (= 指定しなきゃ動かない) かどうかにかかわらず、おとなしく <code>binding=false</code> をつけておくのが無難だと思う。</p>
+<hr>
 <p>とまぁ、色々便利といったわりには例が少なくなってしまったのだけど、POST のボディをバインディングする以外にも使い道があるよ、というお話でした。</p>
 
     </article>

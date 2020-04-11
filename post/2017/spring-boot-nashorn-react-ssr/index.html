@@ -23,16 +23,10 @@
   </header>
   <main>
     <article>
-	  
-
-<p>表題のようなことをやってみたという話。以下のブログ記事をおおいに参考にさせていただいている。</p>
-
+	  <p>表題のようなことをやってみたという話。以下のブログ記事をおおいに参考にさせていただいている。</p>
 <p><a href="http://r7kamura.hatenablog.com/entry/2016/10/10/173610">Ruby on Rails on React on SSR on SPA</a></p>
-
-<h1 id="ソースの構成">ソースの構成</h1>
-
+<h1 id="ソースの構成-">ソースの構成</h1>
 <p>Maven で作ったフォルダ構成に、フロントエンド用のソースを置く場所をつくっている。</p>
-
 <pre><code>$ tree .
 tree .
 .
@@ -73,18 +67,11 @@ tree .
                 └── server.bundle.js
 
 18 directories, 17 files
-</code></pre>
-
-<h1 id="java-のビルド">java のビルド</h1>
-
+</code></pre><h1 id="java-のビルド-">java のビルド</h1>
 <p><code>mvn eclipse:eclipse</code> とか m2e とかで Eclipse にプロジェクトを読み込んで開発する。特に変わったところはない。</p>
-
-<h1 id="js-のビルド">js のビルド</h1>
-
+<h1 id="js-のビルド-">js のビルド</h1>
 <p>npm を使う。個別にインストールしてもいいし、<a href="https://github.com/eirslett/frontend-maven-plugin">frontend-maven-plugin</a> のような maven に統合する仕組みもある。今回は独自にインストールした npm を使った。frontend-maven-plugin を使うと node や npm が target 配下に自動的にインストールされる。多少は導入が楽になると思う。</p>
-
 <p>ビルドは <code>npm run watch</code> を裏で走らせるようにした。webpack のファイル監視機能を使って、ファイルが修正されたら自動的にビルドする。package.json はこんな感じ:</p>
-
 <pre><code>{
   &quot;name&quot;: &quot;ssrpoc-frontend&quot;,
   &quot;version&quot;: &quot;1.0.0&quot;,
@@ -109,10 +96,7 @@ tree .
     &quot;webpack&quot;: &quot;^2.3.3&quot;
   }
 }
-</code></pre>
-
-<p>出力先をクラスパスの通った target/classes 配下にすることで、Eclipse で起動した java プログラムからも、自動的にその修正内容が見えるようになっている。出力先の設定は webpack.config.js に書く。webpack.config.js はこんな感じ:</p>
-
+</code></pre><p>出力先をクラスパスの通った target/classes 配下にすることで、Eclipse で起動した java プログラムからも、自動的にその修正内容が見えるようになっている。出力先の設定は webpack.config.js に書く。webpack.config.js はこんな感じ:</p>
 <pre><code>var path = require('path');
 
 module.exports = {
@@ -139,14 +123,9 @@ module.exports = {
     ]
   }
 };
-</code></pre>
-
-<h1 id="js-の構成">js の構成</h1>
-
+</code></pre><h1 id="js-の構成-">js の構成</h1>
 <p>js のエントリポイントは client.js と server.js のふたつを用意した。それぞれ、client.js はブラウザから、server.js はサーバーで SSR するときに読まれるスクリプトとしている。内容はほとんど一緒で、react-dom の render を使う (client.js) か、react-dom/server の renderToString を使う (server.js) かの差ぐらいしかない。</p>
-
 <p>以下は server.js の中身 (原文ママ):</p>
-
 <pre><code>import React from 'react';
 import { renderToString } from 'react-dom/server';
 import Router from './Router';
@@ -167,31 +146,19 @@ window.render = (component, props) =&gt; {
     throw &quot;No available component: &quot; + component;
   }
 };
-</code></pre>
-
-<p>SSR するときには <code>window.render</code> を呼び出す。レンダリングしたいコンポーネントの名前と props を渡す。</p>
-
+</code></pre><p>SSR するときには <code>window.render</code> を呼び出す。レンダリングしたいコンポーネントの名前と props を渡す。</p>
 <p>http.js は XHR を使ってサーバーを叩く処理を書いたもの。特に変わったところはないので紹介は省く。</p>
-
 <p>あと JS ファイルは React のコンポーネントを定義している。Router や Link は、<a href="http://r7kamura.hatenablog.com/entry/2016/10/10/173610">参考ページ</a> にあるそれと似たような方針で作っている。</p>
-
-<h1 id="spring-の設定">Spring の設定</h1>
-
+<h1 id="spring-の設定--">Spring の設定 </h1>
 <p>ここが一番苦労した。Spring で</p>
-
 <ul>
 <li>一発目は SSR</li>
 <li>以後は JSON だけをやり取りして CSR</li>
 </ul>
-
 <p>というのを透過的にやりたい場合、ある程度の道具を自分で用意する必要がある。またそれを Spring にうまく統合する必要がある。</p>
-
-<h2 id="viewresolver">ViewResolver</h2>
-
+<h2 id="viewresolver-">ViewResolver</h2>
 <p>一発目は html, 二発目以降は json という要望に答えるためには、クライアントサイドの協力が必要になる。二度目以降で json を求める際には、Accept ヘッダに application/json と設定するようにする。サーバーはこのヘッダを見て、返す内容を切り替えるようにする。</p>
-
 <p>Spring の ContentNegotiatingViewResolver がこの要求を満たすのにちょうどよかった。ContentNegotiatingViewResolver を以下のように設定した:</p>
-
 <pre><code>@Bean
 public ContentNegotiatingViewResolver viewResolver(
         ThymeleafViewResolver thymeleafViewResolver,
@@ -200,10 +167,7 @@ public ContentNegotiatingViewResolver viewResolver(
     resolver.setViewResolvers(Arrays.asList(thymeleafViewResolver, jsonViewResolver));
     return resolver;
 }
-</code></pre>
-
-<p>html 向けには ThymeleafViewResolver が提供する View を、json 向けには JsonViewResolver が提供する View を使うようになる。JsonViewResolver は独自に定義した ViewResolver で、以下のように定義している:</p>
-
+</code></pre><p>html 向けには ThymeleafViewResolver が提供する View を、json 向けには JsonViewResolver が提供する View を使うようになる。JsonViewResolver は独自に定義した ViewResolver で、以下のように定義している:</p>
 <pre><code>public static class JsonViewResolver extends AbstractCachingViewResolver {
     private final ObjectMapper mapper;
 
@@ -218,29 +182,18 @@ public ContentNegotiatingViewResolver viewResolver(
         return view;
     }
 }
-</code></pre>
-
-<p>ContentNegotiatingViewResolver に MappingJackson2JsonView が application/json 向けの View であることを知らせるため、必ず <code>setContentType</code> するようにしている。</p>
-
-<h2 id="javascript-engine-nashorn">JavaScript Engine (Nashorn)</h2>
-
+</code></pre><p>ContentNegotiatingViewResolver に MappingJackson2JsonView が application/json 向けの View であることを知らせるため、必ず <code>setContentType</code> するようにしている。</p>
+<h2 id="javascript-engine-nashorn-">JavaScript Engine (Nashorn)</h2>
 <p>SSR では (当然) サーバーサイドで JavaScript のコードを走らせる必要がある。Java から使いやすいのは JRE に組み込まれている Nashorn なので、これを使う。</p>
-
 <p>ScriptEngine の初期化、server.js の読み込みにはそれなりに時間がかかるので、インスタンスは使いまわしたい。しかし Nashorn はスレッドセーフではないので、スレッドをまたいでのインスタンスの共有は避けたいので、ThreadLocal に持ちたい。</p>
-
 <p>また、ScriptEngine に読ませる server.js は、開発中はどんどん書き換えられる。かといって server.js を毎回読むのは遅すぎて辛い。なので、読み込んだときの server.js のタイムスタンプを覚えておき、更新された場合には自動的にリロードする仕組みを用意すると、開発が楽になる。</p>
-
 <p>この辺を踏まえて、</p>
-
 <ul>
 <li>Reload の仕組みを持つ ScriptEngine のラッパー</li>
 <li>↑を ThreadLocal に持つ Bean</li>
 </ul>
-
 <p>を定義した。View は上記の Bean から取得したラッパーを通じて ScriptEngine を得る。この際、必要に応じて読み込み済みスクリプトのリロードを行う。</p>
-
 <p>まずは前者の抜粋:</p>
-
 <pre><code>public static class RelodableScriptEngine {
     // 一部省略
 
@@ -266,12 +219,8 @@ public ContentNegotiatingViewResolver viewResolver(
         return this;
     }
 }
-</code></pre>
-
-<p>View で render する直前に reload して、以後は get だけの reload なしで ScriptEngine を取得するようにして使っている。reload が必要最低限に抑えられる。</p>
-
+</code></pre><p>View で render する直前に reload して、以後は get だけの reload なしで ScriptEngine を取得するようにして使っている。reload が必要最低限に抑えられる。</p>
 <p>次に後者の抜粋:</p>
-
 <pre><code>public static class ReloadableScriptEngineFactory implements ApplicationContextAware {
 
     private final ThreadLocal&lt;RelodableScriptEngine&gt; engines = new ThreadLocal&lt;&gt;();
@@ -291,10 +240,7 @@ public ContentNegotiatingViewResolver viewResolver(
         return e;
     }
 }
-</code></pre>
-
-<p>RelodableScriptEngine を ThreadLocal で保持るだけの、なんの変哲もないクラスである。自身が持つスクリプトファイルのリストを RelodableScriptEngine に受け渡し、ロードした上でインスタンスを返す。Bean の定義は以下のようにしている:</p>
-
+</code></pre><p>RelodableScriptEngine を ThreadLocal で保持るだけの、なんの変哲もないクラスである。自身が持つスクリプトファイルのリストを RelodableScriptEngine に受け渡し、ロードした上でインスタンスを返す。Bean の定義は以下のようにしている:</p>
 <pre><code>@Bean
 public ReloadableScriptEngineFactory reloadableScriptEngineFactory() {
     ReloadableScriptEngineFactory factory = new ReloadableScriptEngineFactory();
@@ -302,43 +248,27 @@ public ReloadableScriptEngineFactory reloadableScriptEngineFactory() {
     factory.addScript(&quot;classpath:/static/js/server.bundle.js&quot;);
     return factory;
 }
-</code></pre>
-
-<p>polyfill.js は Nashorn にない JavaScript のオブジェクトを定義する短いスクリプトである。ググると色々バリエーションが見つかるので、紹介はそちらに譲りたい。server.bundle.js は server.js を webpack したスクリプトである。</p>
-
+</code></pre><p>polyfill.js は Nashorn にない JavaScript のオブジェクトを定義する短いスクリプトである。ググると色々バリエーションが見つかるので、紹介はそちらに譲りたい。server.bundle.js は server.js を webpack したスクリプトである。</p>
 <p>サーバーサイドで JS コードを実行する箇所のすべてでこの仕組みを使っている。</p>
-
 <p>なお、Nashorn がスレッドセーフでないことは、以下から確認できる:</p>
-
 <pre><code>ScriptEngineManager sem = new ScriptEngineManager();
 Optional&lt;ScriptEngineFactory&gt; factory = sem.getEngineFactories().stream()
         .filter(f -&gt; f.getEngineName().equals(&quot;Oracle Nashorn&quot;))
         .findFirst();
 factory.ifPresent(f -&gt; System.out.printf(&quot;nashorn threading: %s%n&quot;, f.getParameter(&quot;THREADING&quot;)));
-</code></pre>
-
-<p>実行すると <code>nashorn threading: null</code> と出力される。<a href="http://docs.oracle.com/javase/8/docs/api/javax/script/ScriptEngineFactory.html#getParameter-java.lang.String-">Javadoc</a> によれば、<code>getParameter(&quot;THREADING&quot;)</code> で null が返ってくる場合は</p>
-
+</code></pre><p>実行すると <code>nashorn threading: null</code> と出力される。<a href="http://docs.oracle.com/javase/8/docs/api/javax/script/ScriptEngineFactory.html#getParameter-java.lang.String-">Javadoc</a> によれば、<code>getParameter(&quot;THREADING&quot;)</code> で null が返ってくる場合は</p>
 <blockquote>
 <p>The engine implementation is not thread safe, and cannot be used to execute scripts concurrently on multiple threads.</p>
 </blockquote>
-
 <p>であるとのことなので、Nashorn は (現時点では) スレッドセーフではない。</p>
-
-<h2 id="thymeleaf-テンプレートからサーバーサイド-js-を叩く">Thymeleaf テンプレートからサーバーサイド JS を叩く</h2>
-
+<h2 id="thymeleaf-テンプレートからサーバーサイド-js-を叩く-">Thymeleaf テンプレートからサーバーサイド JS を叩く</h2>
 <p>Helmet などを使うにあたって、Thymeleaf のテンプレートから JS を叩けるようにしておくと便利なのであった。Thymeleaf にはそんな仕組みがないので、自前で用意する。Thymeleaf にはテンプレートエンジンを拡張するための仕組みが<a href="http://www.thymeleaf.org/doc/tutorials/3.0/extendingthymeleaf.html">用意されている</a>ので、これを使う。</p>
-
 <p>まず、どのように使うかを考える。こんな感じで使えるものを用意する:</p>
-
 <pre><code>&lt;head&gt;
   &lt;title serverjs:replace=&quot;window.helmetTitle&quot;&gt;Server Side Rendering - Proof of Concept&lt;/title&gt;
   &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot; /&gt;
 &lt;/head&gt;
-</code></pre>
-
-<p>title 要素の <code>serverjs:replace</code> の部分が、用意したい部品である。JS 式を属性の値に渡して、その評価結果を要素としてまるごと置き換える。</p>
-
+</code></pre><p>title 要素の <code>serverjs:replace</code> の部分が、用意したい部品である。JS 式を属性の値に渡して、その評価結果を要素としてまるごと置き換える。</p>
 <pre><code>public static class ServerJsReplaceAttrProcessor extends AbstractAttributeTagProcessor {
     private static final String ATTR_NAME = &quot;replace&quot;;
     private static final int PRECEDENCE = 10000;
@@ -371,12 +301,8 @@ factory.ifPresent(f -&gt; System.out.printf(&quot;nashorn threading: %s%n&quot;,
         }
     }
 }
-</code></pre>
-
-<p>Thymeleaf のチュートリアルのコピペっぽいところはご容赦いただきたい。事前に準備しておいた RelodableScriptEngine を使って属性値を評価し、要素をまるごと置き換えている。今回はまるごと置き換える用途でしか使うことがなかったのでこれだけだが、テキスト要素だけを設定するようにするとか、他にも IProcessor 実装のバリエーションはいくつか考えられる。</p>
-
+</code></pre><p>Thymeleaf のチュートリアルのコピペっぽいところはご容赦いただきたい。事前に準備しておいた RelodableScriptEngine を使って属性値を評価し、要素をまるごと置き換えている。今回はまるごと置き換える用途でしか使うことがなかったのでこれだけだが、テキスト要素だけを設定するようにするとか、他にも IProcessor 実装のバリエーションはいくつか考えられる。</p>
 <p>この ServerJsReplaceAttrProcessor を使えるようにするため、Dialect を用意する。</p>
-
 <pre><code>public static class ServerJsDialect extends AbstractProcessorDialect {
     private ReloadableScriptEngineFactory engineFactory;
 
@@ -392,16 +318,10 @@ factory.ifPresent(f -&gt; System.out.printf(&quot;nashorn threading: %s%n&quot;,
         return procs;
     }
 }
-</code></pre>
-
-<p>特に疑問点はない。あとはこれを Bean 定義すれば、Thymeleaf の autoconfigure によって自動的にテンプレートエンジンへ登録される。</p>
-
-<h2 id="ssr-の実行とテンプレートへの埋め込み">SSR の実行とテンプレートへの埋め込み</h2>
-
+</code></pre><p>特に疑問点はない。あとはこれを Bean 定義すれば、Thymeleaf の autoconfigure によって自動的にテンプレートエンジンへ登録される。</p>
+<h2 id="ssr-の実行とテンプレートへの埋め込み-">SSR の実行とテンプレートへの埋め込み</h2>
 <p>ServerJsDialect によって Thymeleaf テンプレート内で JS 式を評価できるようになった。しかし、例えば Helmet を使ってタイトルを得るには、React によるレンダリングを行ったあとで式を評価しなければならない。なので、事前に React を実行しておいて、それを埋め込むのはテンプレートへの引数などを利用しつつ、そのエンジンの状態は <code>serverjs:replace</code> の実行まで保持するようにしたい。また、次のレンダリング実行時には、エンジンはある程度まっさらな状態に戻したい。しかし server.js を読み込みなおすのはパフォーマンスへの影響が大きいので、これを考慮する必要もある。</p>
-
 <p>といったちょっと込み入った要望に答えるため、以下のような実装とした。ThymeleafView を拡張し、render 前に SSR を実行、model にレンダリング結果を保持する。テンプレート側のどこかで <code>th:utext=&quot;${react_component}&quot;</code> を埋め込めば、レンダリング結果を展開することができる。</p>
-
 <pre><code>public static class ServerJsThymeleafView extends ThymeleafView {
     public static final String KEY_PROPS = &quot;props&quot;;
     public static final String KEY_REACT_COMPONENT = &quot;react_component&quot;;
@@ -434,10 +354,7 @@ public static class ReactComponent {
         return String.valueOf(html);
     }
 }
-</code></pre>
-
-<p>エンジンの状態を (ある程度) リセットするために、ReloadableScriptEngine に newBindings というメソッドを用意している。ReloadableScriptEngine.reload したときに使った Bindings のコピーを作って ScriptEngine に設定するというメソッドである。SSR の実行ではこの Bindings を使うことで、scripts の読み込み結果以外の状態を、まっさらに戻すことができる。</p>
-
+</code></pre><p>エンジンの状態を (ある程度) リセットするために、ReloadableScriptEngine に newBindings というメソッドを用意している。ReloadableScriptEngine.reload したときに使った Bindings のコピーを作って ScriptEngine に設定するというメソッドである。SSR の実行ではこの Bindings を使うことで、scripts の読み込み結果以外の状態を、まっさらに戻すことができる。</p>
 <pre><code>public static class RelodableScriptEngine {
     // 一部省略
     public RelodableScriptEngine newBindings() {
@@ -445,10 +362,7 @@ public static class ReactComponent {
         return this;
     }
 }
-</code></pre>
-
-<p>Thymeleaf のテンプレート (layout.html) は、結局こうなった:</p>
-
+</code></pre><p>Thymeleaf のテンプレート (layout.html) は、結局こうなった:</p>
 <pre><code>&lt;!DOCTYPE html&gt;
 &lt;html xmlns:th=&quot;http://www.thymeleaf.org&quot;&gt;
   &lt;head&gt;
@@ -467,12 +381,8 @@ public static class ReactComponent {
     &lt;/script&gt;
   &lt;/body&gt;
 &lt;/html&gt;
-</code></pre>
-
-<h2 id="router-による-routing-の判断材料を用意する">Router による Routing の判断材料を用意する</h2>
-
+</code></pre><h2 id="router-による-routing-の判断材料を用意する-">Router による Routing の判断材料を用意する</h2>
 <p><a href="http://r7kamura.hatenablog.com/entry/2016/10/10/173610">くだんの記事</a> では <code>actionPath</code> と呼ばれているものを用意する。はじめは View の名前を使えばいいんじゃないかと思ったが、View (Thymeleaf テンプレート) はほぼ同じものを共通して使うことになりそうなので、具合が悪い。記事にならって actionPath に相当する文字列を用意することにした。</p>
-
 <pre><code>public static class ReactAttrsInterceptor extends HandlerInterceptorAdapter {
     private ObjectMapper mapper;
 
@@ -521,14 +431,9 @@ public static class ReactComponent {
             return false;
     }
 }
-</code></pre>
-
-<p>ハンドラのクラスが <code>IndexController</code>、メソッドが <code>show</code> なら <code>Index#show</code> にする、といった適当な実装である。とりあえずこれでも動く、というレベル。</p>
-
+</code></pre><p>ハンドラのクラスが <code>IndexController</code>、メソッドが <code>show</code> なら <code>Index#show</code> にする、といった適当な実装である。とりあえずこれでも動く、というレベル。</p>
 <p>なお、この実装では他にも作り込みがある。html が求められている (<code>Accept: application/json</code> ではない) 場合には、モデルの内容を JSON 化した文字列を <code>props</code> としてモデルに追加している。これは SSR で React に食わせる props となる。JSON が求められている場合にはモデルをそのまま JSON 化してしまえば同じものが得られるので必要ない。</p>
-
 <p>このインターセプタを Spring MVC に認識させるよう設定する:</p>
-
 <pre><code>@Configuration
 public static class WebConfig extends WebMvcConfigurerAdapter {
     @Autowired
@@ -539,16 +444,10 @@ public static class WebConfig extends WebMvcConfigurerAdapter {
         registry.addInterceptor(new ReactAttrsInterceptor(mapper));
     }
 }
-</code></pre>
-
-<h2 id="残りのタスク-ソース">残りのタスク、ソース</h2>
-
+</code></pre><h2 id="残りのタスクソース-">残りのタスク、ソース</h2>
 <p>あとはコントローラを書いたり main メソッドを書いたりする程度のことやれば、どうにかこうにか動く状態になる。</p>
-
 <p>すでにこのページでほぼ全体のソースを挙げているが、一部は省略していたりする。省略のないソース全体は <a href="https://github.com/kzkn/spring-ssr-poc">Github</a> にアップしている。</p>
-
-<h1 id="まとめ">まとめ</h1>
-
+<h1 id="まとめ-">まとめ</h1>
 <p>サーバーサイドである程度の苦労が必要だった。そしてそのわりにはあまり満足の行くパフォーマンスは得られず、個人的には、これを実用するのは難しいと感じている。とはいうものの SSR 自体の価値がないわけではない。Node を使うなどの、別の方法を模索したい。</p>
 
     </article>

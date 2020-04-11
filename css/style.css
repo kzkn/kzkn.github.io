@@ -42,6 +42,7 @@ code {
 
 pre code {
     padding: 0;
+    background-color: inherit;
 }
 
 hr {

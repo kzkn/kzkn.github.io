@@ -24,11 +24,8 @@
   <main>
     <article>
 	  <p>小ネタ。</p>
-
 <p>今は Emacs をメインで使っているんだけど、もともとは長いこと Vim を使っていた。Vim を使っていた頃に重宝していたのが <a href="http://vim-jp.org/vimdoc-ja/usr_03.html#03.3">f, t キー</a>なんだけど、Emacs にはそれと同じ機能を提供するコマンドが、デフォルトにはない。C-s, C-r が近いんだけど、これらはどちらかといえば Vim の <a href="http://vim-jp.org/vimdoc-ja/usr_03.html#03.8">/, ?</a> に近く、f, t とはちょっと違う。重宝していただけに、ほしいなぁと思いつつ、C-s, C-r でだましだましやっていたんだけど、先日同僚と話している際に「一文字打ったら即座に <code>search-forward</code> する関数を作りゃいいのか」という、言ってしまえば当たり前のことに気づいて、重い腰をあげたのだった。</p>
-
 <p>コードは以下。f, t, ; は再現したつもり。F, T はサポートしてないけど、ゴールをずらすだけなので、やろうと思えばかんたんだと思う。</p>
-
 <pre><code>(defvar *vim-ft-last-char*)
 
 (defun %vim-ft (char f-or-t)
@@ -59,10 +56,7 @@
 
 (global-set-key (kbd &quot;M-s&quot;) 'vim-f)
 (global-set-key (kbd &quot;M-r&quot;) 'vim-t)
-</code></pre>
-
-<p><code>M-s</code> して何か文字を入力すると、同行内の次の「入力した文字」の位置にカーソルが移る。そのまま <code>M-s</code> を続けると、文字入力なしに同行内の次の「入力した文字」の位置にカーソルが移る。<code>vim-f</code> が f, ; を再現していて、<code>vim-t</code> が t, ; を再現している。</p>
-
+</code></pre><p><code>M-s</code> して何か文字を入力すると、同行内の次の「入力した文字」の位置にカーソルが移る。そのまま <code>M-s</code> を続けると、文字入力なしに同行内の次の「入力した文字」の位置にカーソルが移る。<code>vim-f</code> が f, ; を再現していて、<code>vim-t</code> が t, ; を再現している。</p>
 <p>たぶん探せば同じようなことを実現するコード片なりパッケージなりがあるんだろうけど、Emacs Lisp の練習台にちょうどいい大きさのタスクだったので自前で実装した。</p>
 
     </article>

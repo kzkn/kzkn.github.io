@@ -23,35 +23,20 @@
   </header>
   <main>
     <article>
-	  
-
-<p>Github Pages でカスタムドメインの HTTPS 配信が<a href="https://blog.github.com/2018-05-01-github-pages-custom-domains-https/">サポートされるようになった</a>。早速このサイトでも適用した。ちょっと手こずったので、対処の手順を綴っておきたい。なお、言うまでもないけど、確実な方法を知りたければ<a href="https://help.github.com/articles/using-a-custom-domain-with-github-pages/">公式サイト</a>をあたってほしい。</p>
-
-<h2 id="1-alias-レコードを設定する">1. ALIAS レコードを設定する</h2>
-
+	  <p>Github Pages でカスタムドメインの HTTPS 配信が<a href="https://blog.github.com/2018-05-01-github-pages-custom-domains-https/">サポートされるようになった</a>。早速このサイトでも適用した。ちょっと手こずったので、対処の手順を綴っておきたい。なお、言うまでもないけど、確実な方法を知りたければ<a href="https://help.github.com/articles/using-a-custom-domain-with-github-pages/">公式サイト</a>をあたってほしい。</p>
+<h2 id="1-alias-レコードを設定する-">1. ALIAS レコードを設定する</h2>
 <p>もともと kazkn.com ドメインには A レコードと CNAME レコードを設定していた。<a href="https://help.github.com/articles/setting-up-an-apex-domain/">公式の解説</a>によれば example.com のような apex domain (サブドメインのついてないドメインをそう呼ぶらしい) は ALIAS, ANAME, A レコードのいずれかを設定しなければならない、ということだったので、修正にあたった。幸い使っていた DNS サーバーでは ALIAS レコードをサポートしていたので、<a href="https://help.github.com/articles/setting-up-an-apex-domain/#configuring-an-alias-or-aname-record-with-your-dns-provider">ALIAS レコードを設定した</a>。</p>
-
 <pre><code>ALIAS kzkn.github.io
-</code></pre>
-
-<p>A レコード、CNAME レコードの古い設定はすべて削除して、ALIAS レコードの設定だけを残した。</p>
-
-<h2 id="2-custom-domain-を再設定する">2. Custom Domain を再設定する</h2>
-
+</code></pre><p>A レコード、CNAME レコードの古い設定はすべて削除して、ALIAS レコードの設定だけを残した。</p>
+<h2 id="2-custom-domain-を再設定する-">2. Custom Domain を再設定する</h2>
 <p>ここにちょっとハマった。ただ<a href="https://help.github.com/articles/setting-up-an-apex-domain/#configuring-an-alias-or-aname-record-with-your-dns-provider">公式の解説</a>にはちゃんと記述があるので、見逃していた俺が悪い。</p>
-
 <blockquote>
 <p>If you&rsquo;re updating an existing custom domain, first remove and then re-add your custom domain to your GitHub account to trigger the process of enabling HTTPS.</p>
 </blockquote>
-
 <p>リポジトリの Settings で Custom Domain の設定を一回空白にして Save, 改めて入力して Save, という手続きを踏んだ。</p>
-
-<h2 id="3-待つ">3. 待つ</h2>
-
+<h2 id="3-待つ-">3. 待つ</h2>
 <p>ここまでやると Enforce HTTPS のチェックボックスの欄に「今 Let&rsquo;s Encrypt にリクエスト投げてるからちょっと待っとけ」的なメッセージが出る。24 hours とか書いてあったと思うけど、実際にはほんの数分で終わっていた。終わると勝手に Enforce HTTPS にチェックが入った状態になっている。カスタムドメインに HTTPS でアクセスできれば成功。</p>
-
-<hr />
-
+<hr>
 <p>HTTPS 化自体は公式のサポートがなくとも外部サービスを使うことで実現できたのだけど、そこまでやるメリットも感じられなかったし、放っておいたのだった。しかし HTTP に対する風当たりが強くなってる現実もあって、できるならしたい、でもコストはかけたくない、とも思っていた。というところに公式のサポートが出てきたので、飛びついたのだった。かんたんだしランニングコストがかかるわけでもないので、やっておくに越したことはないと思う。</p>
 
     </article>
