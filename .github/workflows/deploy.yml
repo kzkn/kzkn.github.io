@@ -15,7 +15,7 @@ jobs:
       run: hugo
 
     - name: Commit
-      working-directory: public
+      working_directory: public
       run: |
         git config --local user.email "kz.nishikawa@gmail.com"
         git config --local user.name "Kazuki Nishikawa"
@@ -25,4 +25,4 @@ jobs:
       uses: ad-m/github-push-action@master
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-      working-directory: public
+      working_directory: public
