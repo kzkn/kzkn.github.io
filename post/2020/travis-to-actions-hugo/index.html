@@ -38,7 +38,7 @@
     <span style="color:#66d9ef">steps</span>:
     - <span style="color:#66d9ef">uses</span>: actions/checkout@v2
       <span style="color:#66d9ef">with</span>:
-        <span style="color:#66d9ef">ref</span>: hugo
+        <span style="color:#66d9ef">submodules</span>: <span style="color:#66d9ef">true</span>
 
     - <span style="color:#66d9ef">uses</span>: actions/checkout@v2
       <span style="color:#66d9ef">with</span>:
@@ -51,13 +51,15 @@
         <span style="color:#66d9ef">hugo-version</span>: <span style="color:#e6db74">&#39;0.69.2&#39;</span>
 
     - <span style="color:#66d9ef">name</span>: Build
-      <span style="color:#66d9ef">run</span>: hugo
+      <span style="color:#66d9ef">run</span>: <span style="color:#e6db74">|
+</span><span style="color:#e6db74">        hugo</span>
 
     - <span style="color:#66d9ef">name</span>: Commit
       <span style="color:#66d9ef">run</span>: <span style="color:#e6db74">|
 </span><span style="color:#e6db74">        git config --local user.email &#34;kz.nishikawa@gmail.com&#34;</span>
         git config --local user.name <span style="color:#e6db74">&#34;Kazuki Nishikawa&#34;</span>
-        git commit -am <span style="color:#e6db74">&#34;actions build&#34;</span>
+        git add .
+        git commit -m <span style="color:#e6db74">&#34;actions build&#34;</span>
       <span style="color:#66d9ef">working-directory</span>: public
 
     - <span style="color:#66d9ef">name</span>: Push
@@ -65,12 +67,11 @@
       <span style="color:#66d9ef">with</span>:
         <span style="color:#66d9ef">github_token</span>: ${{ secrets.GITHUB_TOKEN }}
         <span style="color:#66d9ef">directory</span>: public
-</code></pre></div><p>Hugo のコードは hugo ブランチ入れてるので、ビルド対象は hugo ブランチだけにした。
-ビルド結果（＝公開サイトのコンテンツ）は master ブランチに入れているので、ビルドの出力ディレクトリに master ブランチを clone しておく。</p>
-<p>あとは hugo をインストールして、hugo 叩いて、master ブランチにコミット &amp; push する。</p>
+</code></pre></div><p>Hugo のコードは hugo ブランチ入れてるので、ビルド対象は hugo ブランチだけにした。テーマは themes 配下に submodule として配置してるので、<code>submodule: true</code> している。</p>
+<p>ビルド結果（＝公開サイトのコンテンツ）は master ブランチに入れているので、ビルドするより前に、ビルドの出力ディレクトリに master ブランチを clone しておく。</p>
 <p>hugo のインストールは <a href="https://github.com/peaceiris/actions-hugo">peaceiris/actions-hugo</a> を使った。自前で curl を使ってインストールするでもよかったんだけど、今回はありものを使ってみた。</p>
 <p>git push には <a href="https://github.com/ad-m/github-push-action">ad-m/github-push-action</a> を使った。<code>secrets.GITHUB_TOKEN</code> は<a href="https://help.github.com/ja/actions/configuring-and-managing-workflows/authenticating-with-the-github_token">自動的に設定されるもの</a>らしく、これといってリポジトリに追加の設定をする必要はなかった。</p>
-<p>このサイトは github.io で運用してるので、push すれば終わり。</p>
+<p>ビルドは hugo コマンドの実行。このサイトは github.io で運用してるので、push すればデプロイ完了。</p>
 <p>ちょろっと使った感じ、Travis CI より速く動いてると思う。</p>
 <p>ちなみに Travis CI の設定はこんな感じだった。</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#75715e">### .travis.yml</span>
