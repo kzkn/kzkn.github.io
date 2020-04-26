@@ -28,6 +28,7 @@ jobs:
 
     - name: Commit
       run: |
+        PAGER=cat git log -p -1
         echo foo
         pwd
         git status
