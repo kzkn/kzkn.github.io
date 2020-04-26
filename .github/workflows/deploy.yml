@@ -28,10 +28,14 @@ jobs:
 
     - name: Commit
       run: |
+        echo foo
+        pwd
         git status
         git config --local user.email "kz.nishikawa@gmail.com"
         git config --local user.name "Kazuki Nishikawa"
         git add .
+        echo bar
+        git status
         git commit -m "actions build"
       working-directory: public
 
