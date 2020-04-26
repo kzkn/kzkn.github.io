@@ -24,11 +24,13 @@ jobs:
         hugo-version: '0.69.1'
 
     - name: Build
-      run: hugo
+      run: |
+        hugo
+        pwd
+        find . -type f
 
     - name: Commit
       run: |
-        PAGER=cat git log -p -1
         echo foo
         pwd
         git status
