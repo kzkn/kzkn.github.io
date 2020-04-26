@@ -30,7 +30,8 @@ jobs:
       run: |
         git config --local user.email "kz.nishikawa@gmail.com"
         git config --local user.name "Kazuki Nishikawa"
-        git commit -am "actions build"
+        git add .
+        git commit -m "actions build"
       working-directory: public
 
     - name: Push
