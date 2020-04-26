@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Travis CI to GitHub Actions (Ruby on Rails)</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <link rel="alternate" type="application/rss+xml" href="/index.xml">
+    <script>
+     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+     ga('create', 'UA-86485151-1', 'auto');
+     ga('send', 'pageview');
+    </script>
+  </head>
+
+<body>
+  <header>
+    <h1>Travis CI to GitHub Actions (Ruby on Rails)</h1>
+    <time>2020-04-26</time>
+  </header>
+  <main>
+    <article>
+	  <p>Travis CI でやっていた Rails 製サイトの RSpec 実行を、GitHub Actions に移行した。前からぼんやり「移行しなきゃな〜」とは思っていたのだけど、最近 Travis CI を使おうと思ったときにメンテナンスの時間帯にあたってしまうというのが続いてしまったのもあって、一念発起して移行した。</p>
+<p>GitHub Actions の設定はこんな感じ。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">name</span>: test
+
+<span style="color:#66d9ef">on</span>:
+  <span style="color:#66d9ef">push</span>:
+    <span style="color:#66d9ef">branches</span>: [ master ]
+  <span style="color:#66d9ef">pull_request</span>:
+    <span style="color:#66d9ef">branches</span>: [ master ]
+
+<span style="color:#66d9ef">jobs</span>:
+  <span style="color:#66d9ef">build</span>:
+
+    <span style="color:#66d9ef">runs-on</span>: ubuntu-latest
+
+    <span style="color:#66d9ef">services</span>:
+      <span style="color:#66d9ef">postgres</span>:
+        <span style="color:#66d9ef">image</span>: postgres:<span style="color:#ae81ff">12</span>
+        <span style="color:#66d9ef">ports</span>:
+          - <span style="color:#ae81ff">5432</span>:<span style="color:#ae81ff">5432</span>
+        <span style="color:#66d9ef">env</span>:
+          <span style="color:#66d9ef">POSTGRES_USER</span>: pguser
+          <span style="color:#66d9ef">POSTGRES_PASSWORD</span>: password
+
+    <span style="color:#66d9ef">steps</span>:
+    - <span style="color:#66d9ef">uses</span>: actions/checkout@v2
+
+    - <span style="color:#66d9ef">name</span>: Set up Ruby <span style="color:#ae81ff">2.7</span>
+      <span style="color:#66d9ef">uses</span>: actions/setup-ruby@v1
+      <span style="color:#66d9ef">with</span>:
+        <span style="color:#66d9ef">ruby-version</span>: <span style="color:#ae81ff">2.7</span>
+
+    - <span style="color:#66d9ef">name</span>: Get yarn cache directory path
+      <span style="color:#66d9ef">id</span>: yarn-cache-dir-path
+      <span style="color:#66d9ef">run</span>: echo <span style="color:#e6db74">&#34;::set-output name=dir::$(yarn cache dir)&#34;</span>
+
+    - <span style="color:#66d9ef">uses</span>: actions/cache@v1
+      <span style="color:#66d9ef">id</span>: yarn-cache <span style="color:#75715e"># use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != &#39;true&#39;`)</span>
+      <span style="color:#66d9ef">with</span>:
+        <span style="color:#66d9ef">path</span>: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+        <span style="color:#66d9ef">key</span>: ${{ runner.os }}-yarn-${{ hashFiles(<span style="color:#e6db74">&#39;**/yarn.lock&#39;</span>) }}
+        <span style="color:#66d9ef">restore-keys</span>: <span style="color:#e6db74">|
+</span><span style="color:#e6db74">          ${{ runner.os }}-yarn-</span>
+
+    - <span style="color:#66d9ef">uses</span>: actions/cache@v1
+      <span style="color:#66d9ef">with</span>:
+        <span style="color:#66d9ef">path</span>: vendor/bundle
+        <span style="color:#66d9ef">key</span>: ${{ runner.os }}-gems-${{ hashFiles(<span style="color:#e6db74">&#39;**/Gemfile.lock&#39;</span>) }}
+        <span style="color:#66d9ef">restore-keys</span>: <span style="color:#e6db74">|
+</span><span style="color:#e6db74">          ${{ runner.os }}-gems-</span>
+
+    - <span style="color:#66d9ef">name</span>: Install dependencies
+      <span style="color:#66d9ef">run</span>: <span style="color:#e6db74">|
+</span><span style="color:#e6db74">        gem install bundler</span>
+        bundle config path vendor/bundle
+        bundle install --jobs <span style="color:#ae81ff">4</span> --retry <span style="color:#ae81ff">3</span>
+        yarn
+
+    - <span style="color:#66d9ef">name</span>: Setup database
+      <span style="color:#66d9ef">run</span>: <span style="color:#e6db74">|
+</span><span style="color:#e6db74">        cp config/database.yml.actions config/database.yml</span>
+        RAILS_ENV=test bundle exec rails db:create db:migrate
+
+    - <span style="color:#66d9ef">name</span>: Run test
+      <span style="color:#66d9ef">run</span>: <span style="color:#e6db74">|
+</span><span style="color:#e6db74">        TZ=Asia/Tokyo RAILS_ENV=test bundle exec rspec</span>
+</code></pre></div><p>PostgreSQL は<a href="https://help.github.com/ja/actions/configuring-and-managing-workflows/about-service-containers">サービスコンテナ</a>として起動してる。ここに繋ぐための設定を config/database.yml.actions としてあらかじめ定義しておき、データベースのセットアップ前に config/database.yml に上書きしている。config/database.yml.actions はこんな感じ。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">test</span>:
+  <span style="color:#66d9ef">adapter</span>: postgresql
+  <span style="color:#66d9ef">database</span>: actions_test
+  <span style="color:#66d9ef">host</span>: localhost
+  <span style="color:#66d9ef">user</span>: pguser
+  <span style="color:#66d9ef">password</span>: password
+</code></pre></div><p>yarn と bundle をキャッシュするようにしてる。この辺の設定は <a href="https://github.com/actions/cache">actions/cache</a> にあった設定例を丸っと拝借している。</p>
+<p>Headless Chrome を使った System Spec もあるプロジェクトなんだけど、<a href="https://github.com/actions/virtual-environments/blob/master/images/linux/Ubuntu1804-README.md">Chrome は実行環境にあらかじめインストールされている</a>ので、Chrome をインストールするためのコードは不要。</p>
+<p>より本格的には、System Spec で失敗したときに自動取得されるスクリーンショットを保存したり、SimpleCov 走らせてカバレッジの計測結果レポートを保存したり、みたいなことをやりたくなると思う。今回は元の Travis CI でもやってなかったので、そこまではがんばらなかった。軽く調べた感じだと <a href="https://circleci.com/docs/ja/2.0/artifacts/">Circle CI の Artifacts</a> 風な<a href="https://help.github.com/ja/actions/configuring-and-managing-workflows/persisting-workflow-data-using-artifacts">機能があるよう</a>なんだけど、楽に設定できるのかな。</p>
+<p>キャッシュもちゃんと効いてるし、実行スピードも特に不満はなく、今のところは目立ったデメリットを感じてない。</p>
+<p>ちなみに Travis CI の設定はこんな感じだった。キャッシュの設定は腐ってると思う。ビルドの動きを見てた感じ、たぶん効いてなかった。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">language</span>: ruby
+
+<span style="color:#66d9ef">services</span>:
+  - postgresql
+
+<span style="color:#66d9ef">cache</span>:
+  <span style="color:#66d9ef">bundler</span>: <span style="color:#66d9ef">true</span>
+  <span style="color:#66d9ef">directories</span>:
+    - node_modules
+  <span style="color:#66d9ef">yarn</span>: <span style="color:#66d9ef">true</span>
+
+<span style="color:#66d9ef">before_install</span>:
+  - sudo apt-get update
+  - sudo apt-get install -y libappindicator3<span style="color:#ae81ff">-1</span>
+  - curl -L -o google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+  - sudo dpkg -i google-chrome.deb
+
+<span style="color:#66d9ef">install</span>:
+  - bundle install --jobs=<span style="color:#ae81ff">3</span> --retry=<span style="color:#ae81ff">3</span>
+  - nvm install <span style="color:#ae81ff">10</span>
+  - node -v
+  - npm i -g yarn
+  - yarn
+
+<span style="color:#66d9ef">before_script</span>:
+  - export TZ=Asia/Tokyo
+  - cp config/database.yml.travisci config/database.yml
+  - RAILS_ENV=test bundle exec rails db:create db:migrate
+
+<span style="color:#66d9ef">script</span>:
+  - bundle exec rspec
+
+<span style="color:#66d9ef">notifications</span>:
+  <span style="color:#66d9ef">email</span>: <span style="color:#66d9ef">false</span>
+</code></pre></div>
+    </article>
+  </main>
+  <footer><a href="https://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>
+

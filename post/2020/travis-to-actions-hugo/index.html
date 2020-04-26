@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Travis CI to GitHub Actions (Hugo)</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <link rel="alternate" type="application/rss+xml" href="/index.xml">
+    <script>
+     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+     ga('create', 'UA-86485151-1', 'auto');
+     ga('send', 'pageview');
+    </script>
+  </head>
+
+<body>
+  <header>
+    <h1>Travis CI to GitHub Actions (Hugo)</h1>
+    <time>2020-04-26</time>
+  </header>
+  <main>
+    <article>
+	  <p>Travis CI でやっていた <a href="https://kazkn.com/">Hugo で作ってるサイト</a>のビルドとデプロイを、GitHub Actions に移行した。前からぼんやり「移行しなきゃな〜」とは思っていたのだけど、最近 Travis CI を使おうと思ったときにメンテナンスの時間帯にあたってしまうというのが続いてしまったのもあって、一念発起して移行した。</p>
+<p>GitHub Actions の設定はこんな感じ。雑に準備、ビルド、デプロイ（git push）まで 1 つのジョブにまとめてる。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">name</span>: deploy
+
+<span style="color:#66d9ef">on</span>:
+  <span style="color:#66d9ef">push</span>:
+    <span style="color:#66d9ef">branches</span>: [ hugo ]
+
+<span style="color:#66d9ef">jobs</span>:
+  <span style="color:#66d9ef">deploy</span>:
+    <span style="color:#66d9ef">runs-on</span>: ubuntu-latest
+
+    <span style="color:#66d9ef">steps</span>:
+    - <span style="color:#66d9ef">uses</span>: actions/checkout@v2
+      <span style="color:#66d9ef">with</span>:
+        <span style="color:#66d9ef">ref</span>: hugo
+
+    - <span style="color:#66d9ef">uses</span>: actions/checkout@v2
+      <span style="color:#66d9ef">with</span>:
+        <span style="color:#66d9ef">ref</span>: master
+        <span style="color:#66d9ef">path</span>: public
+
+    - <span style="color:#66d9ef">name</span>: Install hugo
+      <span style="color:#66d9ef">uses</span>: peaceiris/actions-hugo@v2
+      <span style="color:#66d9ef">with</span>:
+        <span style="color:#66d9ef">hugo-version</span>: <span style="color:#e6db74">&#39;0.69.2&#39;</span>
+
+    - <span style="color:#66d9ef">name</span>: Build
+      <span style="color:#66d9ef">run</span>: hugo
+
+    - <span style="color:#66d9ef">name</span>: Commit
+      <span style="color:#66d9ef">run</span>: <span style="color:#e6db74">|
+</span><span style="color:#e6db74">        git config --local user.email &#34;kz.nishikawa@gmail.com&#34;</span>
+        git config --local user.name <span style="color:#e6db74">&#34;Kazuki Nishikawa&#34;</span>
+        git commit -am <span style="color:#e6db74">&#34;actions build&#34;</span>
+      <span style="color:#66d9ef">working-directory</span>: public
+
+    - <span style="color:#66d9ef">name</span>: Push
+      <span style="color:#66d9ef">uses</span>: ad-m/github-push-action@master
+      <span style="color:#66d9ef">with</span>:
+        <span style="color:#66d9ef">github_token</span>: ${{ secrets.GITHUB_TOKEN }}
+        <span style="color:#66d9ef">directory</span>: public
+</code></pre></div><p>Hugo のコードは hugo ブランチ入れてるので、ビルド対象は hugo ブランチだけにした。
+ビルド結果（＝公開サイトのコンテンツ）は master ブランチに入れているので、ビルドの出力ディレクトリに master ブランチを clone しておく。</p>
+<p>あとは hugo をインストールして、hugo 叩いて、master ブランチにコミット &amp; push する。</p>
+<p>hugo のインストールは <a href="https://github.com/peaceiris/actions-hugo">peaceiris/actions-hugo</a> を使った。自前で curl を使ってインストールするでもよかったんだけど、今回はありものを使ってみた。</p>
+<p>git push には <a href="https://github.com/ad-m/github-push-action">ad-m/github-push-action</a> を使った。<code>secrets.GITHUB_TOKEN</code> は<a href="https://help.github.com/ja/actions/configuring-and-managing-workflows/authenticating-with-the-github_token">自動的に設定されるもの</a>らしく、これといってリポジトリに追加の設定をする必要はなかった。</p>
+<p>このサイトは github.io で運用してるので、push すれば終わり。</p>
+<p>ちょろっと使った感じ、Travis CI より速く動いてると思う。</p>
+<p>ちなみに Travis CI の設定はこんな感じだった。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#75715e">### .travis.yml</span>
+
+<span style="color:#66d9ef">language</span>: minimal
+<span style="color:#66d9ef">before_install</span>: travis/fetch.sh
+<span style="color:#66d9ef">install</span>: travis/install.sh
+<span style="color:#66d9ef">script</span>: travis/build.sh
+<span style="color:#66d9ef">after_success</span>: travis/deploy.sh
+<span style="color:#66d9ef">env</span>:
+  <span style="color:#66d9ef">global</span>:
+    <span style="color:#66d9ef">secure</span>: blahblahblah
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#75715e">### travis/fetch.sh</span>
+<span style="color:#75715e">#!/bin/sh</span>
+git clone https://<span style="color:#e6db74">${</span>GH_TOKEN<span style="color:#e6db74">}</span>@github.com/kzkn/kzkn.github.io public
+
+
+<span style="color:#75715e">### travis/install.sh</span>
+<span style="color:#75715e">#!/bin/sh</span>
+mkdir -p out
+curl -L https://github.com/gohugoio/hugo/releases/download/v0.69.0/hugo_0.69.0_Linux-64bit.tar.gz &gt;out/hugo.tgz
+cd out <span style="color:#f92672">&amp;&amp;</span> tar xvf hugo.tgz
+
+
+<span style="color:#75715e">### travis/build.sh</span>
+<span style="color:#75715e">#!/bin/sh</span>
+./out/hugo
+echo $PWD
+ls
+
+
+<span style="color:#75715e">### travis/deploy.sh</span>
+<span style="color:#75715e">#!/bin/sh</span>
+cd public
+
+git config user.email <span style="color:#e6db74">&#34;kz.nishikawa@gmail.com&#34;</span>
+git config user.name <span style="color:#e6db74">&#34;Kazuki Nishikawa&#34;</span>
+
+git add .
+git commit -m <span style="color:#e6db74">&#34;Travis build: </span>$TRAVIS_BUILD_NUMBER<span style="color:#e6db74">&#34;</span>
+git push origin master
+</code></pre></div>
+    </article>
+  </main>
+  <footer><a href="https://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>
+
