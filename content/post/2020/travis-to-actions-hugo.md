@@ -22,7 +22,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        ref: hugo
+        submodules: true
 
     - uses: actions/checkout@v2
       with:
@@ -35,13 +35,15 @@ jobs:
         hugo-version: '0.69.2'
 
     - name: Build
-      run: hugo
+      run: |
+        hugo
 
     - name: Commit
       run: |
         git config --local user.email "kz.nishikawa@gmail.com"
         git config --local user.name "Kazuki Nishikawa"
-        git commit -am "actions build"
+        git add .
+        git commit -m "actions build"
       working-directory: public
 
     - name: Push
@@ -51,16 +53,15 @@ jobs:
         directory: public
 ```
 
-Hugo のコードは hugo ブランチ入れてるので、ビルド対象は hugo ブランチだけにした。
-ビルド結果（＝公開サイトのコンテンツ）は master ブランチに入れているので、ビルドの出力ディレクトリに master ブランチを clone しておく。
+Hugo のコードは hugo ブランチ入れてるので、ビルド対象は hugo ブランチだけにした。テーマは themes 配下に submodule として配置してるので、`submodule: true` している。
 
-あとは hugo をインストールして、hugo 叩いて、master ブランチにコミット & push する。
+ビルド結果（＝公開サイトのコンテンツ）は master ブランチに入れているので、ビルドするより前に、ビルドの出力ディレクトリに master ブランチを clone しておく。
 
 hugo のインストールは [peaceiris/actions-hugo](https://github.com/peaceiris/actions-hugo) を使った。自前で curl を使ってインストールするでもよかったんだけど、今回はありものを使ってみた。
 
 git push には [ad-m/github-push-action](https://github.com/ad-m/github-push-action) を使った。`secrets.GITHUB_TOKEN` は[自動的に設定されるもの](https://help.github.com/ja/actions/configuring-and-managing-workflows/authenticating-with-the-github_token)らしく、これといってリポジトリに追加の設定をする必要はなかった。
 
-このサイトは github.io で運用してるので、push すれば終わり。
+ビルドは hugo コマンドの実行。このサイトは github.io で運用してるので、push すればデプロイ完了。
 
 ちょろっと使った感じ、Travis CI より速く動いてると思う。
 
