@@ -11,16 +11,16 @@ GitHub Actions の設定はこんな感じ。
 ```yaml
 name: test
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [push]
 
 jobs:
   build:
 
     runs-on: ubuntu-latest
+
+    env:
+      RAILS_ENV: test
+      TZ: Asia/Tokyo
 
     services:
       postgres:
@@ -68,11 +68,25 @@ jobs:
     - name: Setup database
       run: |
         cp config/database.yml.actions config/database.yml
-        RAILS_ENV=test bundle exec rails db:create db:migrate
+        bundle exec rails db:create db:migrate
 
     - name: Run test
       run: |
-        TZ=Asia/Tokyo RAILS_ENV=test bundle exec rspec
+        COVERAGE=1 bundle exec rspec
+
+    - name: Upload coverage report
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: coverage
+        path: coverage
+
+    - name: Upload screenshots
+      if: failure()
+      uses: actions/upload-artifact@v2
+      with:
+        name: screenshots
+        path: tmp/screenshots
 ```
 
 PostgreSQL は[サービスコンテナ](https://help.github.com/ja/actions/configuring-and-managing-workflows/about-service-containers)として起動してる。ここに繋ぐための設定を config/database.yml.actions としてあらかじめ定義しておき、データベースのセットアップ前に config/database.yml に上書きしている。config/database.yml.actions はこんな感じ。
@@ -90,7 +104,7 @@ yarn と bundle をキャッシュするようにしてる。この辺の設定�
 
 Headless Chrome を使った System Spec もあるプロジェクトなんだけど、[Chrome は実行環境にあらかじめインストールされている](https://github.com/actions/virtual-environments/blob/master/images/linux/Ubuntu1804-README.md)ので、Chrome をインストールするためのコードは不要。
 
-より本格的には、System Spec で失敗したときに自動取得されるスクリーンショットを保存したり、SimpleCov 走らせてカバレッジの計測結果レポートを保存したり、みたいなことをやりたくなると思う。今回は元の Travis CI でもやってなかったので、そこまではがんばらなかった。軽く調べた感じだと [Circle CI の Artifacts](https://circleci.com/docs/ja/2.0/artifacts/) 風な[機能があるよう](https://help.github.com/ja/actions/configuring-and-managing-workflows/persisting-workflow-data-using-artifacts)なんだけど、楽に設定できるのかな。
+テスト実行による副産物を Artifact として保存するようにしている。simplecov が出力するカバレッジレポートと、System Spec (Headless Chrome) が失敗したときに自動取得されるスクリーンショット。Zip にアーカイブされて、ダウンロードできるようになる。カバレッジレポートはテストが失敗しても取得するように、スクショはテストが失敗したときだけ取得するようにしている。
 
 キャッシュもちゃんと効いてるし、実行スピードも特に不満はなく、今のところは目立ったデメリットを感じてない。
 
