@@ -27,16 +27,16 @@
 <p>GitHub Actions の設定はこんな感じ。</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">name</span>: test
 
-<span style="color:#66d9ef">on</span>:
-  <span style="color:#66d9ef">push</span>:
-    <span style="color:#66d9ef">branches</span>: [ master ]
-  <span style="color:#66d9ef">pull_request</span>:
-    <span style="color:#66d9ef">branches</span>: [ master ]
+<span style="color:#66d9ef">on</span>: [push]
 
 <span style="color:#66d9ef">jobs</span>:
   <span style="color:#66d9ef">build</span>:
 
     <span style="color:#66d9ef">runs-on</span>: ubuntu-latest
+
+    <span style="color:#66d9ef">env</span>:
+      <span style="color:#66d9ef">RAILS_ENV</span>: test
+      <span style="color:#66d9ef">TZ</span>: Asia/Tokyo
 
     <span style="color:#66d9ef">services</span>:
       <span style="color:#66d9ef">postgres</span>:
@@ -84,11 +84,25 @@
     - <span style="color:#66d9ef">name</span>: Setup database
       <span style="color:#66d9ef">run</span>: <span style="color:#e6db74">|
 </span><span style="color:#e6db74">        cp config/database.yml.actions config/database.yml</span>
-        RAILS_ENV=test bundle exec rails db:create db:migrate
+        bundle exec rails db:create db:migrate
 
     - <span style="color:#66d9ef">name</span>: Run test
       <span style="color:#66d9ef">run</span>: <span style="color:#e6db74">|
-</span><span style="color:#e6db74">        TZ=Asia/Tokyo RAILS_ENV=test bundle exec rspec</span>
+</span><span style="color:#e6db74">        COVERAGE=1 bundle exec rspec</span>
+
+    - <span style="color:#66d9ef">name</span>: Upload coverage report
+      <span style="color:#66d9ef">if</span>: always()
+      <span style="color:#66d9ef">uses</span>: actions/upload-artifact@v2
+      <span style="color:#66d9ef">with</span>:
+        <span style="color:#66d9ef">name</span>: coverage
+        <span style="color:#66d9ef">path</span>: coverage
+
+    - <span style="color:#66d9ef">name</span>: Upload screenshots
+      <span style="color:#66d9ef">if</span>: failure()
+      <span style="color:#66d9ef">uses</span>: actions/upload-artifact@v2
+      <span style="color:#66d9ef">with</span>:
+        <span style="color:#66d9ef">name</span>: screenshots
+        <span style="color:#66d9ef">path</span>: tmp/screenshots
 </code></pre></div><p>PostgreSQL は<a href="https://help.github.com/ja/actions/configuring-and-managing-workflows/about-service-containers">サービスコンテナ</a>として起動してる。ここに繋ぐための設定を config/database.yml.actions としてあらかじめ定義しておき、データベースのセットアップ前に config/database.yml に上書きしている。config/database.yml.actions はこんな感じ。</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">test</span>:
   <span style="color:#66d9ef">adapter</span>: postgresql
@@ -98,7 +112,7 @@
   <span style="color:#66d9ef">password</span>: password
 </code></pre></div><p>yarn と bundle をキャッシュするようにしてる。この辺の設定は <a href="https://github.com/actions/cache">actions/cache</a> にあった設定例を丸っと拝借している。</p>
 <p>Headless Chrome を使った System Spec もあるプロジェクトなんだけど、<a href="https://github.com/actions/virtual-environments/blob/master/images/linux/Ubuntu1804-README.md">Chrome は実行環境にあらかじめインストールされている</a>ので、Chrome をインストールするためのコードは不要。</p>
-<p>より本格的には、System Spec で失敗したときに自動取得されるスクリーンショットを保存したり、SimpleCov 走らせてカバレッジの計測結果レポートを保存したり、みたいなことをやりたくなると思う。今回は元の Travis CI でもやってなかったので、そこまではがんばらなかった。軽く調べた感じだと <a href="https://circleci.com/docs/ja/2.0/artifacts/">Circle CI の Artifacts</a> 風な<a href="https://help.github.com/ja/actions/configuring-and-managing-workflows/persisting-workflow-data-using-artifacts">機能があるよう</a>なんだけど、楽に設定できるのかな。</p>
+<p>テスト実行による副産物を Artifact として保存するようにしている。simplecov が出力するカバレッジレポートと、System Spec (Headless Chrome) が失敗したときに自動取得されるスクリーンショット。Zip にアーカイブされて、ダウンロードできるようになる。カバレッジレポートはテストが失敗しても取得するように、スクショはテストが失敗したときだけ取得するようにしている。</p>
 <p>キャッシュもちゃんと効いてるし、実行スピードも特に不満はなく、今のところは目立ったデメリットを感じてない。</p>
 <p>ちなみに Travis CI の設定はこんな感じだった。キャッシュの設定は腐ってると思う。ビルドの動きを見てた感じ、たぶん効いてなかった。</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">language</span>: ruby
