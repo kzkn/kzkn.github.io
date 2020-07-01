@@ -18,10 +18,11 @@ PostgreSQL 11 の改善点として、[ALTER TABLE で NOT NULL DEFAULT 'blah' �
 
 | バージョン | 時間 (ms) |
 |------------|-----------|
-| 10.4 | 653.094 |
-| 11.8 | 5.971 |
+| PostgreSQL 10 (10.4) | 653.094 |
+| PostgreSQL 11 (11.8) | 5.971 |
 
-素晴らしい。なぜ速くなるかは[先の記事](https://brandur.org/postgres-default#under-the-hood)が詳しいのでここでは割愛。
+素晴らしい。条件が変われば多少の違いは出るだろうが、ここまで違えば決定的に速いと言えるのでは。
+なぜ速くなるかは[先の記事](https://brandur.org/postgres-default#under-the-hood)が詳しいのでここでは割愛。
 
 以下、計測作業時のログ:
 
