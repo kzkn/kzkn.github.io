@@ -5,10 +5,19 @@
     <description>Recent content on kazkn.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Sun, 26 Apr 2020 14:54:01 +0900</lastBuildDate>
+    <lastBuildDate>Wed, 01 Jul 2020 22:57:27 +0900</lastBuildDate>
     
         <atom:link href="https://kazkn.com/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>PostgreSQL 11 でパフォーマンス改善された ALTER TABLE を試す</title>
+      <link>https://kazkn.com/post/2020/postgresql-11-alter-table-performance/</link>
+      <pubDate>Wed, 01 Jul 2020 22:57:27 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2020/postgresql-11-alter-table-performance/</guid>
+      <description>PostgreSQL 11 の改善点として、ALTER TABLE で NOT NULL DEFAULT &amp;lsquo;blah&amp;rsquo; な ADD COLUMN したときのパフォーマンスが改善されているということを知った。大きめのテーブルに列を追加すると</description>
+    </item>
     
     <item>
       <title>Travis CI to GitHub Actions (Ruby on Rails)</title>

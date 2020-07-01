@@ -48,3 +48,22 @@ pre code {
 hr {
     border-color: #ddd;
 }
+
+table {
+  border-collapse: collapse;
+}
+
+td, th {
+  border-width: 0 0 1px 0;
+  border-color: #ddd;
+  border-style: solid;
+  padding: 0.75rem 1rem;
+}
+
+thead th {
+  border-bottom-width: 3px;
+}
+
+tbody tr:last-child td {
+  border-bottom-width: 0;
+}

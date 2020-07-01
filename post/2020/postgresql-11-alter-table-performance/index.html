@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>PostgreSQL 11 でパフォーマンス改善された ALTER TABLE を試す</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <link rel="alternate" type="application/rss+xml" href="/index.xml">
+    <script>
+     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+     ga('create', 'UA-86485151-1', 'auto');
+     ga('send', 'pageview');
+    </script>
+  </head>
+
+<body>
+  <header>
+    <h1>PostgreSQL 11 でパフォーマンス改善された ALTER TABLE を試す</h1>
+    <time>2020-07-01</time>
+  </header>
+  <main>
+    <article>
+	  <p>PostgreSQL 11 の改善点として、<a href="https://brandur.org/postgres-default">ALTER TABLE で NOT NULL DEFAULT &lsquo;blah&rsquo; な ADD COLUMN したときのパフォーマンスが改善されている</a>ということを知った。大きめのテーブルに列を追加するときは結構死活問題で、地道なワークアラウンドを強要されていた。これで解決するならとても嬉しいということで、一つ試してみることにした。</p>
+<p>手順はこんな感じ:</p>
+<ol>
+<li>PostgreSQL 10 と 11 の環境をローカルに用意</li>
+<li>それぞれに <code>x integer not null</code> な列を持つ <code>table1</code> を定義</li>
+<li><code>table1</code> に 100 万レコード追加</li>
+<li><code>table1</code> に <code>ADD COLUMN y integer not null default 1</code> な <code>ALTER TABLE</code> を発行
+<ul>
+<li>これを計測</li>
+</ul>
+</li>
+</ol>
+<p>結果は以下:</p>
+<table>
+<thead>
+<tr>
+<th>バージョン</th>
+<th>時間 (ms)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PostgreSQL 10 (10.4)</td>
+<td>653.094</td>
+</tr>
+<tr>
+<td>PostgreSQL 11 (11.8)</td>
+<td>5.971</td>
+</tr>
+</tbody>
+</table>
+<p>素晴らしい。条件が変われば多少の違いは出るだろうが、ここまで違えば決定的に速いと言えるのでは。
+なぜ速くなるかは<a href="https://brandur.org/postgres-default#under-the-hood">先の記事</a>が詳しいのでここでは割愛。</p>
+<p>以下、計測作業時のログ:</p>
+<h2 id="ver-104">Ver 10.4</h2>
+<pre><code>postgres=# \d table1
+               Table &quot;public.table1&quot;
+ Column |  Type   | Collation | Nullable | Default
+--------+---------+-----------+----------+---------
+ x      | integer |           | not null |
+
+postgres=# select count(*) from table1;
+  count
+---------
+ 1000000
+(1 row)
+
+postgres=# \timing
+Timing is on.
+
+postgres=# alter table table1 add column y integer not null default 1;
+ALTER TABLE
+Time: 653.094 ms
+</code></pre><h2 id="ver-118">Ver 11.8</h2>
+<pre><code>postgres=# \d table1
+               Table &quot;public.table1&quot;
+ Column |  Type   | Collation | Nullable | Default 
+--------+---------+-----------+----------+---------
+ x      | integer |           | not null | 
+
+postgres=# select count(*) from table1;
+  count  
+---------
+ 1000000
+(1 row)
+
+postgres=# \timing
+Timing is on.
+
+postgres=# alter table table1 add column y integer not null default 1;
+ALTER TABLE
+Time: 5.971 ms
+</code></pre>
+    </article>
+  </main>
+  <footer><a href="https://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>
+
