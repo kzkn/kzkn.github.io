@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>私の Arch Linux の運用方法 - システムアップデート編</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <link rel="alternate" type="application/rss+xml" href="/index.xml">
+    <script>
+     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+     ga('create', 'UA-86485151-1', 'auto');
+     ga('send', 'pageview');
+    </script>
+  </head>
+
+<body>
+  <header>
+    <h1>私の Arch Linux の運用方法 - システムアップデート編</h1>
+    <time>2020-11-03</time>
+  </header>
+  <main>
+    <article>
+	  <p>Arch Linux をメイン機として使いはじめて 2 年ほど経った。敬けんな Arch Linux ユーザーよろしく最新追従生活を送っているが、今のところ大きなトラブルなく運用できている。</p>
+<p>ここいらでひとつ、私が日常的に行っている Arch Linux の運用について書いて残しておきたい。今回はシステムアップデート編ということで、システムアップデートにまつわる事柄を書く。システムアップデート編以外を書くかどうかは分からない。</p>
+<p>基本的には <a href="https://wiki.archlinux.jp/index.php/Arch_Linux_%E3%81%AE%E5%AE%89%E5%AE%9A%E5%8C%96#Arch_.E3.81.AE.E3.83.A1.E3.83.B3.E3.83.86.E3.83.8A.E3.83.B3.E3.82.B9">Arch Wiki</a> に従っている。</p>
+<h2 id="システムアップデート前にやること">システムアップデート前にやること</h2>
+<p><a href="https://www.archlinux.jp/">archlinux.jp</a> を見て、手動での操作が必要にならないかを確認する。事後に確認することもできるのだけど、前もって知っておくと驚きが減るので、事前に確認するようにしている。たまに jp が落ちていることもあるので、そういうときは落ち着いて <a href="https://www.archlinux.org/">org</a> を見に行く。</p>
+<h2 id="システムアップデート中にやること">システムアップデート中にやること</h2>
+<p>pacman (私はそのラッパーの <a href="https://github.com/Jguer/yay">yay</a> を使っている) はそれ自体が <code>/var/log</code> 配下にログを残すようになっているが、念には念を入れて、自前でログを残すようにしている。具体的には以下のようなラッパースクリプトを実行するようにしている。</p>
+<pre><code>#!/bin/sh
+
+mkdir -p $HOME/sysupd
+logfile=$HOME/sysupd/`date &quot;+%Y%m%d%H%M%S&quot;`.log
+script $logfile -c 'yay'
+xmonad --recompile
+</code></pre><p><code>yay</code> を <code>script</code> コマンドでラップして、実行時の出力を <code>$HOME/sysupd</code> 配下にログとして残すようにしている。</p>
+<h2 id="システムアップデート後にやること">システムアップデート後にやること</h2>
+<p>上記のラッパースクリプトの末尾で行っている通り、xmonad の再コンパイルをやる。Haskell 系パッケージに更新が入るときなど、xmonad の再コンパイルが必要になるケースがあるから。再コンパイル自体には特にデメリットがないので、要不要に関わらず、常に実行するようにしている。</p>
+<p><code>pacdiff</code> を確認する。これは前述の Arch Wiki にある通り。まずは <code>pacdiff</code> で実行し、サッと差分を眺める。pacnew で上書きしたいものがあれば、<code>sudo pacdiff</code> して、差分を見ながら編集し、overwrite している。</p>
+<p>たまに一般ユーザーには read permission すらついていないファイルの pacnew が作られ、<code>pacdiff</code> では差分が出ない（というか何も出ない）場合がある。<code>/etc/shadow</code> に pacnew ができたときにそうなった（そして事故った）。なんかおかしいと思ったら <code>sudo pacdiff</code> してみるといいかもしれない。</p>
+<p><code>/etc/pacman.d/mirrorslist</code> に更新がある場合は、pacnew で上書きして、<code>rankmirrors</code> をかけ直している。Worldwide, Japan, South Korea のミラーをコメントアウトして実行するようにしている。</p>
+<p>xmonad を再起動する。標準のキーバインドと同じく <code>Mod-q</code> で再起動できるようにしている。xmonad が起動しなくなるのは困るので、このタイミングで確認する。</p>
+<p>xmonad を終了してログインし直す。これも標準のキーバインドと同じく <code>Mod-Shift-q</code> でやる。理由は同じ。問題があると困るところは、先に小さく動作確認していく。このタイミングで、ブラウザや rxvt などの重要なアプリケーションが動作することをかんたんに確認する。</p>
+<p>最後にマシンを再起動する。なんとなく DM (lightdm) のメニューから実行している。カーネルや systemd が更新されている場合は、これで新しいバージョンが動作するようになる（と理解している）。</p>
+<h2 id="まとめ">まとめ</h2>
+<p>大きな方針としては、</p>
+<ul>
+<li>前もって確認できることは前もって確認する</li>
+<li>用心深く記録を残す</li>
+<li>事後は小さく動作確認していく</li>
+</ul>
+<p>という感じ。</p>
+<p>ただ色々書いたけど大事なことはだいたい Arch Wiki に書いてあるので、<a href="https://wiki.archlinux.jp/index.php/Arch_Linux_%E3%81%AE%E5%AE%89%E5%AE%9A%E5%8C%96">Arch Wiki</a> を読みましょう。</p>
+
+    </article>
+  </main>
+  <footer><a href="https://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>
+
