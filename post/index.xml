@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on kazkn.com</title>
@@ -6,10 +6,73 @@
     <description>Recent content in Posts on kazkn.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Sat, 06 Oct 2018 11:43:55 +0900</lastBuildDate>
+    <lastBuildDate>Tue, 03 Nov 2020 10:57:27 +0900</lastBuildDate>
     
 	<atom:link href="https://kazkn.com/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>私の Arch Linux の運用方法 - システムアップデート編</title>
+      <link>https://kazkn.com/post/2020/my-archlinux-op-sysupd/</link>
+      <pubDate>Tue, 03 Nov 2020 10:57:27 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2020/my-archlinux-op-sysupd/</guid>
+      <description>Arch Linux をメイン機として使いはじめて 2 年ほど経った。敬けんな Arch Linux ユーザーよろしく最新追従生活を送っているが、今のところ大きなトラブルなく運用でき</description>
+    </item>
+    
+    <item>
+      <title>PostgreSQL 11 でパフォーマンス改善された ALTER TABLE を試す</title>
+      <link>https://kazkn.com/post/2020/postgresql-11-alter-table-performance/</link>
+      <pubDate>Wed, 01 Jul 2020 22:57:27 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2020/postgresql-11-alter-table-performance/</guid>
+      <description>PostgreSQL 11 の改善点として、ALTER TABLE で NOT NULL DEFAULT &amp;lsquo;blah&amp;rsquo; な ADD COLUMN したときのパフォーマンスが改善されているということを知った。大きめのテーブルに列を追加すると</description>
+    </item>
+    
+    <item>
+      <title>Travis CI to GitHub Actions (Ruby on Rails)</title>
+      <link>https://kazkn.com/post/2020/travis-to-actions-rails/</link>
+      <pubDate>Sun, 26 Apr 2020 14:54:01 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2020/travis-to-actions-rails/</guid>
+      <description>Travis CI でやっていた Rails 製サイトの RSpec 実行を、GitHub Actions に移行した。前からぼんやり「移行しなきゃな〜」とは思っていたのだけど、最近 Travis CI を使おうと</description>
+    </item>
+    
+    <item>
+      <title>Travis CI to GitHub Actions (Hugo)</title>
+      <link>https://kazkn.com/post/2020/travis-to-actions-hugo/</link>
+      <pubDate>Sun, 26 Apr 2020 14:34:04 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2020/travis-to-actions-hugo/</guid>
+      <description>Travis CI でやっていた Hugo で作ってるサイトのビルドとデプロイを、GitHub Actions に移行した。前からぼんやり「移行しなきゃな〜」とは思っていたのだけど、</description>
+    </item>
+    
+    <item>
+      <title>webpacker で dart-sass を使う</title>
+      <link>https://kazkn.com/post/2020/use-dart-sass-with-webpacker/</link>
+      <pubDate>Sun, 12 Apr 2020 01:54:22 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2020/use-dart-sass-with-webpacker/</guid>
+      <description>webpacker はデフォルトの状態だと dart-sass ではなく node-sass を使う。一方で @use などの新しい構文は dart-sass にしか実装されておらず、node-sass (libsass) での実装予定はない様子 (</description>
+    </item>
+    
+    <item>
+      <title>webpacker が吐く webpack の設定を眺める</title>
+      <link>https://kazkn.com/post/2020/debug-webpack-config-with-webpacker/</link>
+      <pubDate>Sun, 12 Apr 2020 01:48:02 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2020/debug-webpack-config-with-webpacker/</guid>
+      <description>基本的には webpacker がデフォルトで用意する設定だけでやりくりするけど、たまに webpacker が吐く webpack 設定をいじりたくなるときがある。webpacker は webpack に薄い皮</description>
+    </item>
+    
+    <item>
+      <title>xmonad --recompile でエラーが出るようになったら</title>
+      <link>https://kazkn.com/post/2020/xmonad-recompile-error/</link>
+      <pubDate>Sun, 12 Apr 2020 00:04:38 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2020/xmonad-recompile-error/</guid>
+      <description>毎週末恒例の yay を実施したところ、これまた恒例の yay 直後に実施する xmonad --recompile でエラーを吐くようになってしまった。ghc が更新されていたのでそれ関係だと</description>
+    </item>
     
     <item>
       <title>ThinkPad X1 Carbon 第6世代の BIOS をアップデートする</title>
