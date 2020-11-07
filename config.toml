@@ -3,7 +3,7 @@ title = "kazkn.com"
 baseurl = "https://kazkn.com/"
 hasCJKLanguage = true
 theme = "myblank"
-disableKinds = ["taxonomy", "taxonomyTerm", "section"]
+disableKinds = ["taxonomy", "taxonomyTerm"]
 
 [params]
 author = "Kazuki Nishikawa"
