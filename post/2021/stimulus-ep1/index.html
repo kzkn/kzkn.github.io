@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Stimulus と Rails UJS を組み合わせて簡易版 Hotwire</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <link rel="alternate" type="application/rss+xml" href="/index.xml">
+    <script>
+     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+     ga('create', 'UA-86485151-1', 'auto');
+     ga('send', 'pageview');
+    </script>
+  </head>
+
+<body>
+  <header>
+    <h1>Stimulus と Rails UJS を組み合わせて簡易版 Hotwire</h1>
+    <time>2021-02-23</time>
+  </header>
+  <main>
+    <article>
+	  <p><a href="https://hotwire.dev/">Hotwire</a> の登場により下火になることが約束されていると言っても過言ではない (要出典) <a href="https://github.com/rails/rails/tree/main/actionview/app/assets/javascripts">Rails UJS</a> ですが、Hotwire (の Turbo) が beta 版な現状においては、Rails UJS を使って <code>&lt;%= link_to hoge, remote: true %&gt;</code> なコードを書く機会は、まだまだあるんじゃないかと思います。</p>
+<p>Rails UJS の remote 機能は画面遷移なしにリクエスト飛ばす方法として極めて気軽に使えます。個人的にとても気に入っています。その応答で画面に変化をつけるには Server Generated JavaScript Response (SJR) を使うのが、一般的な方法の一つです。しかし SJR はテンプレートエンジンを使って動的に JavaScript を生成するという仕組みから、コードが難解になりやすく、新しいコードではできるだけ避けたい手法ではないでしょうか。</p>
+<p>かといってサーバーから JSON を返して JavaScript でハンドリングするのは面倒くさいし、remote 機能の手軽さは捨てたくない。そこで使えるのが <a href="https://stimulus.hotwire.dev/">Stimulus</a> です。前置きが長くなった。</p>
+<p>ざっくりこんな感じ:</p>
+<ul>
+<li>remote リクエストの応答に HTML を返す</li>
+<li>返ってきた HTML で画面を部分更新</li>
+</ul>
+<p>これだけです。発想は Hotwire のそれに近い。というかほぼ同じで、Turbo を使うか、Rails UJS と Stimulus で自前実装するかの違いってぐらいです。もちろん Turbo のほうが高機能だけど。</p>
+<p>実装はこんな感じ:</p>
+<pre><code># app/controllers/greetings_controller.rb
+class GreetingsController &lt; ApplicationController
+  def show
+    render layout: nil
+  end
+end
+</code></pre><pre><code>&lt;div id=&quot;replace-here&quot;&gt;&lt;/div&gt;
+&lt;%= link_to 'click here', '/greeting', remote: true, data: { controller: 'remote', remote_target_value: '#replace-here', action: 'ajax:success-&gt;remote#replace' }
+%&gt;
+</code></pre><pre><code>&lt;%# greetings/show.html.erb %&gt;
+&lt;div&gt;Hello!&lt;/div&gt;
+</code></pre><pre><code>// remote_controller.js
+export default class extends Controller {
+  static values = { target: String }
+
+  replace(event) {
+    const { detail: [, , xhr] } = event
+    this.targetElement.outerHTML = xhr.responseText
+  }
+  
+  get targetElement() {
+    return document.querySelector(this.targetValue)
+  }
+}
+</code></pre><p><code>data: { ... }</code> のところが長ったらしくてダサいのがちょっとネック。けど Rails UJS を使える点、SJR を避けられる点など、得られるメリットを考えると、まぁ目を瞑ってやれるんじゃないでしょうか。私は瞑れます。</p>
+<p>サーバーから返ってくる HTML の処理方法としては <code>replace</code> 以外にも <code>append</code>, <code>prepend</code>, <code>remove</code> とかのバリエーションがあってもいいですね。今回は <code>link_to</code> で使ったけど Rails UJS のイベントが拾えるなら使えます。<code>form_with</code> とか。あとは <code>data-remote-target-value</code> を必須にしてるけど、これを任意にして、未設定なら <code>this.element</code> を <code>targetElement</code> の戻り値にするなんていうバリエーションがあってもよさそうです。</p>
+<p>データを変更するエンドポイントに対する要求への応答には、「登録しました」みたいな通知メッセージを出したくなるんじゃないでしょうか。それにも使えます。応答の中に通知メッセージを含む <code>&lt;template&gt;</code> を埋めておいて、<code>&lt;template&gt;</code> 経由でメッセージを表示する感じです。</p>
+<p>例えば <a href="https://www.npmjs.com/package/toastr">toastr</a> を使う場合だとこんな感じ:</p>
+<pre><code>class GreetingsController &lt; ApplicationController
+  def create
+    render layout: nil
+  end
+end
+</code></pre><pre><code>&lt;div id=&quot;replace-here&quot;&gt;&lt;/div&gt;
+&lt;%= link_to 'click here', '/greeting', remote: true, method: :post, data: { controller: 'remote', remote_target_value: '#replace-here', action: 'ajax:success-&gt;remote#replace' } %&gt;
+</code></pre><pre><code>&lt;%# greetings/create.html.erb %&gt;
+&lt;div&gt;Created&lt;/div&gt;
+&lt;template data-controller=&quot;notice&quot;&gt;
+  Succeeded!
+&lt;/template&gt;
+</code></pre><pre><code>// notice_controller.js
+export default class extends Controller {
+  connect() {
+    toastr.success(this.element.textContent)
+  }
+}
+</code></pre><p><code>create.html.erb</code> の内容で <code>#replace-here</code> が置き換えられます。そのタイミングで <code>&lt;template&gt;</code> が DOM ツリーにアタッチされ、notice コントローラの <code>connect</code> が発火します。で、<code>toastr.success</code> が呼ばれて無事にメッセージが表示される。<code>&lt;template&gt;</code> 自体は画面に見えないので、こういうテクニックが使えます。</p>
+<p>画面の複数ヶ所に変化をつけたい場合も、<code>&lt;template&gt;</code> と Stimulus を工夫して使えば実現することができます。Turbo だと Turbo Stream でやってるようなやつを、簡易的に自前実装する感じ。</p>
+<p>今回紹介した Rails UJS の remote 機能と Stimulus の連携は <a href="https://www.npmjs.com/package/stimulus-remote">stimulus-remote</a> としてパッケージ化されています。こちらを使うでもいいですね。</p>
+<p>あまり脚光を浴びることのない Stimulus だけど、十分役に立つよということで、ささやかながら1つの例を紹介しました。</p>
+
+    </article>
+  </main>
+  <footer><a href="https://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>

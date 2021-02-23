@@ -5,10 +5,19 @@
     <description>Recent content on kazkn.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Tue, 03 Nov 2020 10:57:27 +0900</lastBuildDate>
+    <lastBuildDate>Tue, 23 Feb 2021 14:53:28 +0900</lastBuildDate>
     
         <atom:link href="https://kazkn.com/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Stimulus と Rails UJS を組み合わせて簡易版 Hotwire</title>
+      <link>https://kazkn.com/post/2021/stimulus-ep1/</link>
+      <pubDate>Tue, 23 Feb 2021 14:53:28 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2021/stimulus-ep1/</guid>
+      <description>Hotwire の登場により下火になることが約束されていると言っても過言ではない (要出典) Rails UJS ですが、Hotwire (の Turbo) が beta 版な現状においては、Rail</description>
+    </item>
     
     <item>
       <title>私の Arch Linux の運用方法 - システムアップデート編</title>
