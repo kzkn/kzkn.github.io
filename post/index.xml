@@ -6,10 +6,19 @@
     <description>Recent content in Posts on kazkn.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Sat, 27 Feb 2021 15:44:40 +0900</lastBuildDate>
+    <lastBuildDate>Sat, 27 Feb 2021 16:08:38 +0900</lastBuildDate>
     
 	<atom:link href="https://kazkn.com/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>添付ファイルだけ先にアップロードして、あとで関連付ける</title>
+      <link>https://kazkn.com/post/2021/create-blob-ahead/</link>
+      <pubDate>Sat, 27 Feb 2021 16:08:38 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2021/create-blob-ahead/</guid>
+      <description>ということをやりたくなることはありませんか？私はたまにあります。 コメントに画像を添付できるようなフォームがあったとして、画像を添付したら即サ</description>
+    </item>
     
     <item>
       <title>最初にぼやけた画像を表示して、あとできれいな画像を表示するやつ</title>

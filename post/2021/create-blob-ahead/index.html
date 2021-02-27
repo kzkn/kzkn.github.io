@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>添付ファイルだけ先にアップロードして、あとで関連付ける</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <link rel="alternate" type="application/rss+xml" href="/index.xml">
+    <script>
+     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+     ga('create', 'UA-86485151-1', 'auto');
+     ga('send', 'pageview');
+    </script>
+  </head>
+
+<body>
+  <header>
+    <h1>添付ファイルだけ先にアップロードして、あとで関連付ける</h1>
+    <time>2021-02-27</time>
+  </header>
+  <main>
+    <article>
+	  <p>ということをやりたくなることはありませんか？私はたまにあります。</p>
+<p>コメントに画像を添付できるようなフォームがあったとして、画像を添付したら即サムネイルを表示したいとか。コメントを投稿する前に本文含めてプレビューを出したいとか。サーバーサイドで HTML を生成するアーキテクチャの場合、ファイルを先行してアップロードしておいて、サムネイルやプレビューをサーバーサイドで生成する形にすると、全体としてスッキリ作ることができます。</p>
+<p>Rails の ActiveStorage はファイルの本体 (Blob) とその関連付け (Attachment) とが分かれて定義されていて、このタスクをこなすのにうってつけの構造だったりします。ActiveStorage を使わない場合は、これらに相当するモデルを自前で定義するのがいいんじゃないかな。</p>
+<p>やり方としてはこんな感じ:</p>
+<ol>
+<li>Blob だけ作るエンドポイントを用意</li>
+<li><code>&lt;input type=file&gt;</code> の変更を検知して、ファイルを単独でアップロード、Blob を生成</li>
+<li>Blob の signed_id を hidden field に埋める</li>
+</ol>
+<p>ActiveStorage には Direct Upload という仕組みがあって、それに近い動きではあります。一点違うのは、バックエンドのストレージに誰がアップロードするかという点。Direct Upload は js がストレージへのアップロードを担います。今回紹介するコードでは、サーバーサイドがストレージへのアップロードを担います。</p>
+<p>こんなモデルがあったとして、</p>
+<pre><code>class Comment &lt; ApplicationRecord
+  has_one_attached :image
+end
+</code></pre><p>Blob 用のコントローラを用意して、</p>
+<pre><code>class BlobsController &lt; ApplicationController
+  def create
+    file = params[:file]
+    blob = ActiveStorage::Blob.create_and_upload!(io: file, filename: file.original_filename)
+    render json: { signed_id: blob.signed_id, url: url_for(blob) }
+  end
+end
+</code></pre><p>view に <code>&lt;input type=file&gt;</code> を用意して、</p>
+<pre><code>&lt;%= form_with(model: comment) do |form| %&gt;
+  &lt;div class=&quot;field&quot;&gt;
+    &lt;input type=&quot;file&quot; class=&quot;js-image-upload&quot;&gt;
+  &lt;/div&gt;
+&lt;% end %&gt;
+</code></pre><p>js でゴニョる:</p>
+<pre><code>const input = document.querySelector('.js-image-upload')
+let img
+input.addEventListener('change', () =&gt; {
+  const [file] = input.files
+  const csrfToken = Rails.csrfToken()
+
+  const xhr = new XMLHttpRequest()
+  xhr.open(&quot;POST&quot;, '/blobs', true)
+  xhr.responseType = &quot;json&quot;
+  xhr.setRequestHeader(&quot;X-CSRF-Token&quot;, csrfToken)
+
+  xhr.addEventListener(&quot;load&quot;, event =&gt; requestDidLoad(event))
+  xhr.addEventListener(&quot;error&quot;, event =&gt; requestDidError(event))
+
+  const formdata = new FormData()
+  formdata.append('file', file)
+  xhr.send(formdata)
+
+  function requestDidLoad(event) {
+    const status = xhr.status
+    if (status &gt;= 200 &amp;&amp; status &lt; 300) {
+      const { response } = xhr
+      const { signed_id, url } = response
+      setSignedId(signed_id)
+      showImage(url)
+    } else {
+      requestDidError(event)
+    }
+  }
+
+  function requestDidError(event) {
+    console.error('request did error', event)
+  }
+
+  function setSignedId(signedId) {
+    const hidden = document.createElement('input')
+    hidden.type = 'hidden'
+    hidden.name = 'comment[image]'
+    hidden.value = signedId
+    input.insertAdjacentElement('beforebegin', hidden)
+  }
+
+  function showImage(url) {
+    if (!img) {
+      img = document.createElement('img')
+      img.width = '100'
+      img.height = '100'
+      input.insertAdjacentElement('beforebegin', img)
+    }
+    img.src = url
+  }
+})
+</code></pre><p>js はちょっと冗長だけど、ライブラリをうまく使えばもっと短く書けると思います。エッセンスとしてはそんなに多くないはず。
+<code>input.insertAdjacentElement('beforebegin', hidden)</code> してるのがミソで、これで複数回ファイルを選んでも最後に選んだファイルが有効になります。</p>
+<p>あとオマケでアップロードしたファイルをサムネ表示しています（<code>showImage</code> のところ）。</p>
+<p>ActiveStorage を使う場合はあらかじめ用意されているモデルを使うだけで済むので、かなり少ないコードで実現できてるんじゃないかと思います。</p>
+
+    </article>
+  </main>
+  <footer><a href="https://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>
