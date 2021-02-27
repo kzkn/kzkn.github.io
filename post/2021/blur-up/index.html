@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>最初にぼやけた画像を表示して、あとできれいな画像を表示するやつ</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <link rel="alternate" type="application/rss+xml" href="/index.xml">
+    <script>
+     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+     ga('create', 'UA-86485151-1', 'auto');
+     ga('send', 'pageview');
+    </script>
+  </head>
+
+<body>
+  <header>
+    <h1>最初にぼやけた画像を表示して、あとできれいな画像を表示するやつ</h1>
+    <time>2021-02-27</time>
+  </header>
+  <main>
+    <article>
+	  <p>画像の読み込みが遅いのをごまかすテクニックの紹介。こんな動きをするやつです:</p>
+<ol>
+<li>解像度の低いもやっとした軽量版の画像をあらかじめ表示</li>
+<li>解像度の高いきれいな画像をロードできたタイミングで置き換え</li>
+</ol>
+<p>私の初見は <a href="https://medium.com/">medium.com</a> でした。今は他のサイトでも使われてるのを見ます。</p>
+<p>ちゃんと名前があって、<a href="https://css-tricks.com/the-blur-up-technique-for-loading-background-images/">&ldquo;Blur Up&rdquo;</a> というそうです。知りませんでした。</p>
+<p>複数の画像を用意しなきゃいけないけれど、Rails の ActiveStorage なんかを使えば、そこはわりとかんたんにクリアできます。js 側も、作ってみると結構かんたんでした（こだわらなければ）。</p>
+<p>こんなモデルがあったとして、</p>
+<pre><code>class Comment &lt; ApplicationRecord
+  has_one_attached :image
+end
+</code></pre><p>こんなヘルパーを用意して、</p>
+<pre><code>def blur_up_image_tag(comment, width:, height:)
+  image_tag low_quality_image(comment), data: { high_src: url_for(high_quality_image(comment)) },
+    class: 'js-blur-up', width: width, height: height
+end
+
+def low_quality_image(comment)
+  comment.image.variant(resize_to_limit: [100, 100], saver: { quality: 10 })
+end
+
+def high_quality_image(comment)
+  comment.image.variant(resize_to_limit: [800, 800], saver: { quality: 90 })
+end
+</code></pre><p>erb からヘルパーを叩いて、</p>
+<pre><code>&lt;%= blur_up_image_tag(@comment, width: 500, height: 320) %&gt;
+</code></pre><p>js でゴニョります。</p>
+<pre><code>for (const img of document.querySelectorAll('.js-blur-up')) {
+  img.style.filter = 'blur(20px)'
+
+  const high = new Image()
+  high.onload = () =&gt; {
+    img.style.filter = 'none'
+    img.style.transition = 'filter .1s ease-out'
+    img.src = high.src
+  }
+
+  high.src = img.dataset.highSrc
+}
+</code></pre><p><code>low_quality_image</code> は画像のサイズも小さければ、JPEG の品質も低めに設定しています。画像にもよるけど、試しに使ってたものだと 3kb 弱でした。これなら一瞬でロードできそうですよね。引き伸ばしてそのまま表示すると、まともに見れたものではありません。そこで CSS の <code>filter</code> でぼやかしてやります。</p>
+<p><code>high_quality_image</code> はサイズも品質も高めに設定しています。この画像をロードしたタイミングで、画面上の画像を置き換えつつ、ぼやかし用の <code>filter</code> を解除してやります。解除時にちょっとアニメーションを入れてやることで、かっこよくなります。このへんは好みということで。</p>
+
+    </article>
+  </main>
+  <footer><a href="https://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>

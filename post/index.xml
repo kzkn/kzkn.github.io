@@ -6,10 +6,19 @@
     <description>Recent content in Posts on kazkn.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Tue, 23 Feb 2021 14:53:28 +0900</lastBuildDate>
+    <lastBuildDate>Sat, 27 Feb 2021 15:44:40 +0900</lastBuildDate>
     
 	<atom:link href="https://kazkn.com/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>最初にぼやけた画像を表示して、あとできれいな画像を表示するやつ</title>
+      <link>https://kazkn.com/post/2021/blur-up/</link>
+      <pubDate>Sat, 27 Feb 2021 15:44:40 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2021/blur-up/</guid>
+      <description>画像の読み込みが遅いのをごまかすテクニックの紹介。こんな動きをするやつです: 解像度の低いもやっとした軽量版の画像をあらかじめ表示 解像度の高い</description>
+    </item>
     
     <item>
       <title>Stimulus と Rails UJS を組み合わせて簡易版 Hotwire</title>
