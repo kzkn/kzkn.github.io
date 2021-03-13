@@ -5,10 +5,19 @@
     <description>Recent content on kazkn.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Wed, 10 Mar 2021 09:43:18 +0900</lastBuildDate>
+    <lastBuildDate>Sat, 13 Mar 2021 13:14:17 +0900</lastBuildDate>
     
         <atom:link href="https://kazkn.com/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>bundle open を Emacs の中でやる</title>
+      <link>https://kazkn.com/post/2021/bundler-open-in-emacs/</link>
+      <pubDate>Sat, 13 Mar 2021 13:14:17 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2021/bundler-open-in-emacs/</guid>
+      <description>最近書いた Emacs の小物の紹介です。 bundle open というコマンドがあります。引数に gem の名前を渡すと、環境変数 BUNDLER_EDITOR で gem のディレクトリを開いてくれるコマンドです。</description>
+    </item>
     
     <item>
       <title>読書メモ: 10代から知っておきたい あなたを閉じ込める「ずるい言葉」</title>

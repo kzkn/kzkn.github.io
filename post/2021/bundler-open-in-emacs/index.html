@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>bundle open を Emacs の中でやる</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <link rel="alternate" type="application/rss+xml" href="/index.xml">
+    <script>
+     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+     ga('create', 'UA-86485151-1', 'auto');
+     ga('send', 'pageview');
+    </script>
+  </head>
+
+<body>
+  <header>
+    <h1>bundle open を Emacs の中でやる</h1>
+    <time>2021-03-13</time>
+  </header>
+  <main>
+    <article>
+	  <p>最近書いた Emacs の小物の紹介です。</p>
+<p><code>bundle open</code> というコマンドがあります。引数に gem の名前を渡すと、環境変数 <code>BUNDLER_EDITOR</code> で gem のディレクトリを開いてくれるコマンドです。gem の中に潜っていくときに役立ちます。</p>
+<p>はじめは <code>BUNDLER_EDITOR</code> に <code>emacsclient -nw</code> を設定して使っていたんだけど、Emacs の中で完結したいってことで、一つ関数をこさえました。</p>
+<pre><code>(defun bundle-open (gem-name)
+  (interactive
+   (let* ((gems (shell-command-to-string &quot;bundle list --name-only&quot;))
+          (candidates (split-string gems &quot;\n&quot; t)))
+     (list (ido-completing-read &quot;Gem: &quot; candidates))))
+  (find-file (s-chomp (shell-command-to-string (concat &quot;bundle info &quot; gem-name &quot; --path&quot;)))))
+</code></pre><p><code>bundle list --name-only</code> で現在のプロジェクトの Gemfile.lock にある gem を列挙してくれます。それをリスト化して、<code>ido-completing-read</code> で補完しつつ選択します。
+gem のディレクトリパスは <code>bundler info GEMNAME --path</code> で拾ってくることができます。あとはこれを <code>find-file</code> に渡してしまえば終わり。</p>
+<p>私は今のところ困っていませんが、Gemfile.lock にない gem も指定できるようにするオプションがあってもいいかもしれませんね。</p>
+
+    </article>
+  </main>
+  <footer><a href="https://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>

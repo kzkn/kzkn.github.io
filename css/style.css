@@ -1,5 +1,5 @@
 body {
-  line-height: 1.7rem;
+  line-height: 1.8;
   font-size: 1.1rem;
   max-width: 800px;
   margin: 0 auto;
@@ -36,7 +36,7 @@ pre {
 
 code {
   background-color: #eee;
-  padding: 4px 8px;
+  padding: 0 8px;
   border-radius: 6px;
 }
 
