@@ -5,10 +5,19 @@
     <description>Recent content on kazkn.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Sat, 13 Mar 2021 13:14:17 +0900</lastBuildDate>
+    <lastBuildDate>Wed, 24 Mar 2021 09:35:59 +0900</lastBuildDate>
     
         <atom:link href="https://kazkn.com/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>習慣になったこと、習慣にならなかったこと</title>
+      <link>https://kazkn.com/post/2021/habit/</link>
+      <pubDate>Wed, 24 Mar 2021 09:35:59 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2021/habit/</guid>
+      <description>ここ一年ほどで習慣になったこと、習慣にしたかったけどならなかったことを挙げてみる。 習慣になったこと 毎朝仕事を始める前にストレッチと筋トレをや</description>
+    </item>
     
     <item>
       <title>bundle open を Emacs の中でやる</title>
