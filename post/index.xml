@@ -6,10 +6,19 @@
     <description>Recent content in Posts on kazkn.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Wed, 24 Mar 2021 09:35:59 +0900</lastBuildDate>
+    <lastBuildDate>Wed, 03 Nov 2021 15:26:46 +0900</lastBuildDate>
     
 	<atom:link href="https://kazkn.com/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Re: JavaScript Test Code Coverage in Rails</title>
+      <link>https://kazkn.com/post/2021/jscov/</link>
+      <pubDate>Wed, 03 Nov 2021 15:26:46 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2021/jscov/</guid>
+      <description>JavaScript Test Code Coverage in Rails への一方的な返信記事です。 jscov を使うといいよ。 だけじゃアレなのでもう少し詳しく。 くだんの記事は、タイトルの通り Rails のテストで JavaScript コード</description>
+    </item>
     
     <item>
       <title>習慣になったこと、習慣にならなかったこと</title>

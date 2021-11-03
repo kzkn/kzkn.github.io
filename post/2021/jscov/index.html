@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Re: JavaScript Test Code Coverage in Rails</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <link rel="alternate" type="application/rss+xml" href="/index.xml">
+    <script>
+     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+     ga('create', 'UA-86485151-1', 'auto');
+     ga('send', 'pageview');
+    </script>
+  </head>
+
+<body>
+  <header>
+    <h1>Re: JavaScript Test Code Coverage in Rails</h1>
+    <time>2021-11-03</time>
+  </header>
+  <main>
+    <article>
+	  <p><a href="https://www.fastruby.io/blog/rails/javascript/code-coverage/js-code-coverage-in-rails.html">JavaScript Test Code Coverage in Rails</a> への一方的な返信記事です。</p>
+<p><a href="https://github.com/kzkn/jscov">jscov</a> を使うといいよ。</p>
+<hr>
+<p>だけじゃアレなのでもう少し詳しく。</p>
+<p>くだんの記事は、タイトルの通り Rails のテストで JavaScript コードのカバレッジもとろうぜという内容です。JavaScript のカバレッジ計測には <a href="https://github.com/istanbuljs/nyc">istanbul</a> を使っていて、それと rspec, capybara, selenium などと組み合わせることによるカバレッジの収集方法を紹介しています。無事にカバレッジの収集に至り、サンプルプロジェクトも<a href="https://github.com/fastruby/js-coverage-sample-app">公開</a>されています。素晴らしい。</p>
+<p>無事にできたね、チャンチャン、といきたいところなんだけど、ひとつ大きな落とし穴があります。一つのテストの中で複数回の <code>visit</code> や <code>click_link</code> などによるページ遷移を行うと、カバレッジデータが消えてしまうのです。istanbul は <code>window.__coverage__</code> にカバレッジデータを収集する仕組みなので、ページロードが挟まると当然ながらデータはクリアされてしまいます。</p>
+<p>この問題に対する包括的な解決策は、記事内では触れられていません。曰く、エッジケースが多すぎるとのこと。まぁそうかもね。</p>
+<hr>
+<p>で、冒頭で触れた <a href="https://github.com/kzkn/jscov">jscov</a> という gem です。この gem を使うとページ遷移にまつわる問題を解決できます。</p>
+<p>jscov は <a href="https://github.com/kzkn/jscov/blob/babf18e900d06cb832e5b778464d010af196f8c2/lib/jscov/rack_middleware.rb">Rack Middleware</a> を内包しています。jscov の Rack Middleware を使うと、unload 時に <code>window.__coverage__</code> を <code>console.log</code> に出力するという <a href="https://github.com/kzkn/jscov/blob/babf18e900d06cb832e5b778464d010af196f8c2/lib/jscov/bless.rb#L56">JavaScript コード</a>をレスポンスの HTML に<a href="https://github.com/kzkn/jscov/blob/babf18e900d06cb832e5b778464d010af196f8c2/lib/jscov/bless.rb#L43">ねじ込みます</a>。
+selenium では <code>console.log</code> の取得を明示的に行わない限りログをためていってくれます。なので、rspec の after などでページ遷移ごとに出力された <code>console.log</code> の内容を<a href="https://github.com/kzkn/jscov/blob/master/lib/jscov.rb#L24">収集して保存</a>します。保存したカバレッジデータからのレポート出力には <a href="(https://github.com/istanbuljs/nyc)">nyc</a> を使います。</p>
+<p>セットアップは<a href="https://github.com/kzkn/jscov/blob/master/README.md">面倒くさい</a>ですが、JavaScript コードのカバレッジも集めたいんだって向きには役立つツールになってるんじゃないかと思います。</p>
+
+    </article>
+  </main>
+  <footer><a href="https://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>
