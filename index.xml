@@ -5,10 +5,19 @@
     <description>Recent content on kazkn.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Wed, 03 Nov 2021 15:26:46 +0900</lastBuildDate>
+    <lastBuildDate>Sat, 11 Dec 2021 16:21:15 +0900</lastBuildDate>
     
         <atom:link href="https://kazkn.com/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>gretel の開発の話</title>
+      <link>https://kazkn.com/post/2021/gretel/</link>
+      <pubDate>Sat, 11 Dec 2021 16:21:15 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2021/gretel/</guid>
+      <description>2020年8月ごろに gretel という gem のメンテナーを引き継ぎました。お気に入りの gem だったんだけど、開発が終わろうとしていたのを見てメンテの引き継ぎを</description>
+    </item>
     
     <item>
       <title>Re: JavaScript Test Code Coverage in Rails</title>

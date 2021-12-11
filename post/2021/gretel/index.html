@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>gretel の開発の話</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <link rel="alternate" type="application/rss+xml" href="/index.xml">
+    <script>
+     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+     ga('create', 'UA-86485151-1', 'auto');
+     ga('send', 'pageview');
+    </script>
+  </head>
+
+<body>
+  <header>
+    <h1>gretel の開発の話</h1>
+    <time>2021-12-11</time>
+  </header>
+  <main>
+    <article>
+	  <p>2020年8月ごろに <a href="https://github.com/kzkn/gretel">gretel</a> という gem のメンテナーを引き継ぎました。お気に入りの gem だったんだけど、開発が<a href="https://github.com/kzkn/gretel/commit/0fc531bc30ecb3e23f273be36fae8c4d8393f2b1#diff-b335630551682c19a781afebcf4d07bf978fb1f8ac04c6bf87428ed5106870f5">終わろうとしていた</a>のを見てメンテの引き継ぎを名乗り出てみたのでした。</p>
+<p>今のところ活発に機能追加をしていくつもりはなく、Ruby や Rails のバージョン追従をしていくのを主軸にしています。安定的に使い続けられることを目的としています。CI を Travis CI から <a href="https://github.com/kzkn/gretel/blob/9b7de7b7f7f5dd82c3975984d7fbee6d7102b5c2/.github/workflows/ci.yml">GitHub Actions</a> に<a href="https://github.com/kzkn/gretel/commit/cb6a0240732d453f26aa1e3bbb3870f9f274352f">移行したり</a>とかもやりました。</p>
+<p>とはいえちょっとずつ機能追加もしてます。<a href="https://github.com/kzkn/gretel/blob/master/CHANGELOG.md#version-400">Bootstrap 4</a>の対応、<a href="https://github.com/kzkn/gretel/blob/master/CHANGELOG.md#version-401">schema.org のマークアップへの対応</a>、<a href="https://github.com/kzkn/gretel/blob/master/CHANGELOG.md#version-420">JSON-LD出力へのの対応</a>とかとか。</p>
+<p>で、今日もちょっと開発したので、そのメモ書き。</p>
+<p><code>link_class</code> オプションを<a href="https://github.com/kzkn/gretel/pull/32">追加した</a>。これは<a href="https://github.com/lassebunk/gretel">オリジナルリポジトリ</a>時代から issue としてあがっていた <a href="https://github.com/kzkn/gretel/issues/10">#10</a> への対応です。<code>pretext_class</code>, <code>posttext_class</code> とかはあるので、まぁリンクへのオプションがあってもよいなと判断して実装しました。</p>
+<p>renderer.rb の実装を<a href="https://github.com/kzkn/gretel/pull/33">リファクタした</a>。オプションが増えたり schema.org マークアップへの対応が入ったりでなかなかのカオスっぷりだったのが前から気になっていたので、気合を入れて作りを整理しました。</p>
+<p>セマンティックなマークアップを生成する実装と、そうでないマークアップを生成する実装のクラスを分割。共通するマークアップは親クラスでレンダリングするように、という感じ。前よりは多少見通しがよくなった、と思う。</p>
+<p>gretel のコードカバレッジは 100% をキープしてます。メンテを引き継いだあとで <a href="https://github.com/kzkn/gretel/blob/9b7de7b7f7f5dd82c3975984d7fbee6d7102b5c2/coverage/coverage.txt">100% にしました</a>。メンテを引き継いだ当時からカバレッジはかなり高くて、最後の数%を俺が詰めたという感じ。その後はカバレッジが100%でないとテストが<a href="https://github.com/kzkn/gretel/blob/9b7de7b7f7f5dd82c3975984d7fbee6d7102b5c2/spec/rails_helper.rb#L12">コケるように設定</a>しています。これがあるおかげで、リファクタはかなりやりやすいし、安心感があります。月並みですが、テストコードは大事だなと思う次第です。</p>
+<p>特にオチとか結論はない、近況報告でした。</p>
+
+    </article>
+  </main>
+  <footer><a href="https://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>

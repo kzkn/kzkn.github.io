@@ -33,7 +33,7 @@
 <hr>
 <p>で、冒頭で触れた <a href="https://github.com/kzkn/jscov">jscov</a> という gem です。この gem を使うとページ遷移にまつわる問題を解決できます。</p>
 <p>jscov は <a href="https://github.com/kzkn/jscov/blob/babf18e900d06cb832e5b778464d010af196f8c2/lib/jscov/rack_middleware.rb">Rack Middleware</a> を内包しています。jscov の Rack Middleware を使うと、unload 時に <code>window.__coverage__</code> を <code>console.log</code> に出力するという <a href="https://github.com/kzkn/jscov/blob/babf18e900d06cb832e5b778464d010af196f8c2/lib/jscov/bless.rb#L56">JavaScript コード</a>をレスポンスの HTML に<a href="https://github.com/kzkn/jscov/blob/babf18e900d06cb832e5b778464d010af196f8c2/lib/jscov/bless.rb#L43">ねじ込みます</a>。
-selenium では <code>console.log</code> の取得を明示的に行わない限りログをためていってくれます。なので、rspec の after などでページ遷移ごとに出力された <code>console.log</code> の内容を<a href="https://github.com/kzkn/jscov/blob/master/lib/jscov.rb#L24">収集して保存</a>します。保存したカバレッジデータからのレポート出力には <a href="(https://github.com/istanbuljs/nyc)">nyc</a> を使います。</p>
+selenium では <code>console.log</code> の取得を明示的に行わない限りログをためていってくれます。なので、rspec の after などでページ遷移ごとに出力された <code>console.log</code> の内容を参照することで、一連の操作で生成されたカバレッジデータを<a href="https://github.com/kzkn/jscov/blob/master/lib/jscov.rb#L24">収集して保存</a>することができます。保存したカバレッジデータからのレポート出力には <a href="(https://github.com/istanbuljs/nyc)">nyc</a> を使います。</p>
 <p>セットアップは<a href="https://github.com/kzkn/jscov/blob/master/README.md">面倒くさい</a>ですが、JavaScript コードのカバレッジも集めたいんだって向きには役立つツールになってるんじゃないかと思います。</p>
 
     </article>
