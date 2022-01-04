@@ -5,10 +5,19 @@
     <description>Recent content on kazkn.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Sat, 11 Dec 2021 16:21:15 +0900</lastBuildDate>
+    <lastBuildDate>Tue, 04 Jan 2022 22:34:58 +0900</lastBuildDate>
     
         <atom:link href="https://kazkn.com/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>2022年</title>
+      <link>https://kazkn.com/post/2022/2022/</link>
+      <pubDate>Tue, 04 Jan 2022 22:34:58 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2022/2022/</guid>
+      <description>一年の始まりということで、性懲りもなく新年の抱負を書いてみよう。 去年に思ったこと、とりとめもないことを書くということを書いていた。結局去年は</description>
+    </item>
     
     <item>
       <title>gretel の開発の話</title>
