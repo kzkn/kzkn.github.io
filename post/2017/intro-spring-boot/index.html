@@ -29,7 +29,7 @@
 </blockquote>
 <p>であるとのこと。Spring Boot にはいろんな機能が備わっているわけだが、これらはひとえに Spring Framework ベースのアプリケーションをかんたんに作り、かんたんに運用するために用意されている。それでいて出来上がるアプリケーションはオモチャのようなものではなく、紛れもない本物の Spring Framework ベースのアプリケーションである。</p>
 <p>このページでは、まずは Spring Boot ベースのかんたんな Web アプリケーションを作ってみることにする。その後、少し話題を変えて、Spring Boot の中身を追ってみたい。今回は起動プロセスをかんたんに調べてみることにした。</p>
-<h2 id="プロジェクトを作る-">プロジェクトを作る</h2>
+<h2 id="プロジェクトを作る">プロジェクトを作る</h2>
 <p><a href="http://start.spring.io/">Spring Initializr</a> でプロジェクトのひな形を作ることができる。</p>
 <p>ここでは</p>
 <ul>
@@ -49,7 +49,7 @@
 </li>
 </ul>
 <p>として、ひな形を作る。fortune.zip が落ちてくるので、適当な場所に展開する。</p>
-<pre><code>$ unzip fortune.zip
+<pre tabindex="0"><code>$ unzip fortune.zip
 $ tree fortune
 fortune
 ├── mvnw
@@ -73,12 +73,12 @@ fortune
 
 12 directories, 6 files
 </code></pre><p>Eclipse 用のプロジェクト設定を生成する。</p>
-<pre><code>$ cd fortune
+<pre tabindex="0"><code>$ cd fortune
 $ ./mvnw eclipse:eclipse
 </code></pre><p>Maven をインストールしていなくても、そのラッパースクリプトである mvnw を使うことで、自動的に Maven が導入される。</p>
-<h2 id="起動する-">起動する</h2>
+<h2 id="起動する">起動する</h2>
 <p>プロジェクトを Eclipse で開き、 <code>org.genva.fortune.FortuneApplication</code> を Java Application として実行する。</p>
-<pre><code>15:58:55.047 [main] DEBUG org.springframework.boot.devtools.settings.DevToolsSettings - Included patterns for restart : []
+<pre tabindex="0"><code>15:58:55.047 [main] DEBUG org.springframework.boot.devtools.settings.DevToolsSettings - Included patterns for restart : []
 15:58:55.051 [main] DEBUG org.springframework.boot.devtools.settings.DevToolsSettings - Excluded patterns for restart : [/spring-boot-starter/target/classes/, /spring-boot-autoconfigure/target/classes/, /spring-boot-starter-[\w-]+/, /spring-boot/target/classes/, /spring-boot-actuator/target/classes/, /spring-boot-devtools/target/classes/]
 15:58:55.052 [main] DEBUG org.springframework.boot.devtools.restart.ChangeableUrls - Matching URLs for reloading : [file:/home/kazuki/sources/writing/spring/fortune/target/test-classes/, file:/home/kazuki/sources/writing/spring/fortune/target/classes/]
 
@@ -100,9 +100,9 @@ $ ./mvnw eclipse:eclipse
 2017-03-11 15:58:58.780  INFO 10029 --- [  restartedMain] s.b.c.e.t.TomcatEmbeddedServletContainer : Tomcat started on port(s): 8080 (http)
 2017-03-11 15:58:58.785  INFO 10029 --- [  restartedMain] org.genva.FortuneApplication             : Started FortuneApplication in 3.707 seconds (JVM running for 4.236)
 </code></pre><p>最後のメッセージが表示されれば、アプリケーションの起動が完了している。組み込み Tomcat は :8080 で待ち構えていることが分かる。また、メインスレッドの名前が restartedMain になっていることから、spring-boot-devtools が効いていることが分かる。</p>
-<h2 id="コントローラを追加する-">コントローラを追加する</h2>
+<h2 id="コントローラを追加する">コントローラを追加する</h2>
 <p>コントローラを追加し、HTTP 経由でアプリケーションを叩けるようにする。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@RestController</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@RestController</span>
 <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">FortuneController</span> <span style="color:#f92672">{</span>
     <span style="color:#a6e22e">@GetMapping</span>
     <span style="color:#66d9ef">public</span> String <span style="color:#a6e22e">index</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
@@ -111,14 +111,14 @@ $ ./mvnw eclipse:eclipse
 <span style="color:#f92672">}</span>
 </code></pre></div><p>クラスを追加したり、ファイルを保存したりすると、アプリケーションが自動的に再起動する様子がログから分かる。これは spring-boot-devtools によるもの。アプリケーションのクラスローダーと依存ライブラリのクラスローダーが分かれていて、アプリケーションのソースが更新されると、自動的にアプリケーションのクラスローダーだけが破棄、再読み込みされる。アプリケーションのクラスだけが再読み込みされるので、再起動にかかる時間は短く済む。</p>
 <p>さて、コントローラにアクセスしてみよう。</p>
-<pre><code>$ curl http://localhost:8080/
+<pre tabindex="0"><code>$ curl http://localhost:8080/
 2017-03-11T16:05:26.669
 $ curl http://localhost:8080/
 2017-03-11T16:05:46.557
 </code></pre><p>現在日時が返ってきている。ちゃんと機能しているようだ。</p>
-<h2 id="fortune-の出力を返すようにする-">fortune の出力を返すようにする</h2>
+<h2 id="fortune-の出力を返すようにする">fortune の出力を返すようにする</h2>
 <p>現在日時を返すだけではつまらないし、せっかくの Spring なので依存性注入も使いたい。そこで fortune (/usr/games/fortune) の出力を応答として返すようにする。このような業務処理 (fortune の出力を得ることを、業務と呼ぶべきかどうかはさておき) は、コントローラのようなプレゼンテーション層ではなくサービスなどのモデル層に書くべき処理である。今回はサービスクラスとして作ることにした。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@Service</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@Service</span>
 <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">FortuneService</span> <span style="color:#f92672">{</span>
     <span style="color:#66d9ef">public</span> String <span style="color:#a6e22e">get</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
         ProcessBuilder pb <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ProcessBuilder<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/usr/games/fortune&#34;</span><span style="color:#f92672">);</span>
@@ -145,7 +145,7 @@ $ curl http://localhost:8080/
 <span style="color:#f92672">}</span>
 </code></pre></div><p>/usr/games/fortune のプロセスを起動し、その出力を得るだけのプログラムである。Java でのプロセスの扱いはとても面倒で、かつ間違いが起きやすいので、なるべくなら避けたいものである。<code>closeQuietly</code> は例外を握りつぶしつつ <code>Closeable.close</code> を呼ぶメソッドで、そういうユーティリティがあるものと思ってほしい。</p>
 <p>これを使うよう、コントローラを修正する。層をまたいだ依存関係の設定は、外部 (ここでは Spring) にまかせてしまう (これが依存性注入と呼ばれるもの)。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@RestController</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@RestController</span>
 <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">FortuneController</span> <span style="color:#f92672">{</span>
     <span style="color:#66d9ef">private</span> FortuneService fortune<span style="color:#f92672">;</span>
 
@@ -159,20 +159,20 @@ $ curl http://localhost:8080/
     <span style="color:#f92672">}</span>
 <span style="color:#f92672">}</span>
 </code></pre></div><p>改めて curl で叩く。</p>
-<pre><code>$ curl http://localhost:8080/
+<pre tabindex="0"><code>$ curl http://localhost:8080/
 You are not dead yet.  But watch for further reports.
 $ curl http://localhost:8080/
 Wagner's music is better than it sounds.
                 -- Mark Twain
 </code></pre><p>ありがたいお言葉が返ってくるようになった。</p>
 <p>なお、最初に FortuneApplication を起動してから、fortune の結果を得られるようになるまで、Eclipse を使ったアプリケーションの再起動は一度も行わなかった。spring-boot-devtools は素晴らしい。</p>
-<h2 id="パッケージングデプロイ-">パッケージング、デプロイ</h2>
+<h2 id="パッケージングデプロイ">パッケージング、デプロイ</h2>
 <p>パッケージングは Maven で package すればおしまい。</p>
-<pre><code>$ ./mvnw package
+<pre tabindex="0"><code>$ ./mvnw package
 $ file target/fortune-0.0.1-SNAPSHOT.jar
 target/fortune-0.0.1-SNAPSHOT.jar: Java Jar file data (zip)
 </code></pre><p>この jar ファイルは Maven の spring-boot プラグインによって後処理 (repackage) されたもので、特殊なレイアウトになっている。</p>
-<pre><code>$ unzip -l target/fortune-0.0.1-SNAPSHOT.jar
+<pre tabindex="0"><code>$ unzip -l target/fortune-0.0.1-SNAPSHOT.jar
 Archive:  target/fortune-0.0.1-SNAPSHOT.jar
   Length      Date    Time    Name
 ---------  ---------- -----   ----
@@ -287,7 +287,7 @@ Archive:  target/fortune-0.0.1-SNAPSHOT.jar
  14428721                     107 files
 </code></pre><p>依存ライブラリが jar ファイルのまま内包されていることが分かる。内包する jar ファイルをクラスパスに含めつつアプリケーションの main メソッド (ここでは FortuneApplication.main) を叩くため、spring-boot-loader のクラス群があらかじめ jar ファイル内に展開されている。</p>
 <p>この jar ファイルを使ってアプリケーションを起動するには、java コマンドを叩けばいい。</p>
-<pre><code>$ java -jar target/fortune-0.0.1-SNAPSHOT.jar
+<pre tabindex="0"><code>$ java -jar target/fortune-0.0.1-SNAPSHOT.jar
 
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
@@ -304,11 +304,11 @@ Archive:  target/fortune-0.0.1-SNAPSHOT.jar
 </code></pre><p>Eclipse から起動したときと異なり、メインスレッドの名前が main となっていることが分かる。spring-boot:repackage により、spring-boot-devtools が除外されているため。特に難しいことは考えることなく、リリースする jar ファイルでは spring-boot-devtools による余計な制御が行われないようになっている。</p>
 <p>デプロイするには、この jar ファイルを適当な場所におき、systemd なりから叩くようにすればよい。詳しくは Spring Boot の<a href="http://docs.spring.io/spring-boot/docs/current/reference/html/deployment-install.html">リファレンス</a>参照。</p>
 <p>ここでは紹介しないが、war ファイルとしてパッケージングし、任意の Servlet コンテナにデプロイすることもできる。詳しくは (やはり) <a href="http://docs.spring.io/spring-boot/docs/current/reference/html/build-tool-plugins-maven-plugin.html#build-tool-plugins-maven-packaging">リファレンス</a>を参照。</p>
-<h2 id="組み込み-tomcat-の起動プロセスを追う-">組み込み Tomcat の起動プロセスを追う</h2>
+<h2 id="組み込み-tomcat-の起動プロセスを追う">組み込み Tomcat の起動プロセスを追う</h2>
 <p>少し Spring Boot の中を覗いてみることにする。</p>
 <p>Spring Boot は、Auto Configuration とそこから駆動される便利クラス群から成り立っている。まずは組み込み Tomcat が使われることを決定付ける Auto Configuration を見てみる。</p>
 <p>Eclipse で <code>org.apache.catalina.startup.Tomcat</code> クラスの参照を探すと、 <code>org.springframework.boot.autoconfigure.web.EmbeddedTomcat</code> というクラスが見つかる。パッケージ名に autoconfigure とあることから、これが Tomcat を使うよう決定づける Auto Configuration であると推測できる。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#75715e">/**
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#75715e">/**
 </span><span style="color:#75715e"> * Nested configuration if Tomcat is being used.
 </span><span style="color:#75715e"> */</span>
 <span style="color:#a6e22e">@Configuration</span>
@@ -324,7 +324,7 @@ Archive:  target/fortune-0.0.1-SNAPSHOT.jar
 <span style="color:#f92672">}</span>
 </code></pre></div><p><code>EmbeddedServletContainerFactory</code> の実装として、 <code>TomcatEmbeddedServletContainerFactory</code> を Bean 定義している。こいつが Tomcat のインスタンスを作っているものと推測できる。なお、この設定 (<code>EmbeddedTomcat</code>) が有効になるのは、 <code>javax.servlet.Servlet</code> と <code>org.apache.catalina.startup.Tomcat</code> がクラスパス内に存在し、かつ <code>EmbeddedServletContainerFactory</code> の Bean 定義がない場合に限る。独自に <code>EmbeddedServletContainerFactory</code> の Bean を定義したり、Web 環境でない場合には、この設定は有効とならない。このように、実行時の環境、条件に応じて設定の有効/無効が自動的に切り替わることから、Auto Configuration と呼ばれている。</p>
 <p>次に <code>TomcatEmbeddedServletContainerFactory</code> を追う。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@Override</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@Override</span>
 <span style="color:#66d9ef">public</span> EmbeddedServletContainer <span style="color:#a6e22e">getEmbeddedServletContainer</span><span style="color:#f92672">(</span>
 		ServletContextInitializer<span style="color:#f92672">...</span> initializers<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
 	Tomcat tomcat <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Tomcat<span style="color:#f92672">();</span>
@@ -333,7 +333,7 @@ Archive:  target/fortune-0.0.1-SNAPSHOT.jar
 <span style="color:#f92672">}</span>
 </code></pre></div><p>Tomcat のインスタンスを作り、<code>TomcatEmbeddedServletContainer</code> でラップして返している。</p>
 <p>このメソッドの参照を Eclipse で探すと、<code>EmbeddedWebApplicationContext</code> が見つかる。ソースを読むと、<code>onRefresh</code> メソッド経由で <code>getEmbeddedServletContainer</code> を呼び出していることが分かる。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@Override</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@Override</span>
 <span style="color:#66d9ef">protected</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">onRefresh</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
 	<span style="color:#66d9ef">super</span><span style="color:#f92672">.</span><span style="color:#a6e22e">onRefresh</span><span style="color:#f92672">();</span>
 	<span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
@@ -346,7 +346,7 @@ Archive:  target/fortune-0.0.1-SNAPSHOT.jar
 <span style="color:#f92672">}</span>
 </code></pre></div><p><code>onRefresh</code> は、Spring の IoC コンテナを <code>refresh</code> したときに呼び出されるフックである。ApplicationContext の実装ごとの、特別な Bean の準備するために呼び出される。アプリケーションの起動時はもちろん、spring-boot-devtools でアプリケーションのクラスローダーを再読み込みするときにも呼び出される。以上が Servlet コンテナの構築の流れとなる。</p>
 <p>続けて、起動の流れを追う。<code>TomcatEmbeddedServletContainer.start</code> の参照を探すと、先ほどと同様に <code>EmbeddedWebApplicationContext</code> が見つかる。さらに追っていくと、<code>finishRefresh</code> 経由で呼び出していることが分かる。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@Override</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#a6e22e">@Override</span>
 <span style="color:#66d9ef">protected</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">finishRefresh</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
 	<span style="color:#66d9ef">super</span><span style="color:#f92672">.</span><span style="color:#a6e22e">finishRefresh</span><span style="color:#f92672">();</span>
 	EmbeddedServletContainer localContainer <span style="color:#f92672">=</span> startEmbeddedServletContainer<span style="color:#f92672">();</span>
@@ -357,7 +357,7 @@ Archive:  target/fortune-0.0.1-SNAPSHOT.jar
 <span style="color:#f92672">}</span>
 </code></pre></div><p><code>finishRefresh</code> は IoC コンテナの <code>refresh</code> が完了するタイミングで呼び出されるフックである。すなわち Bean 定義の読み込みや設定がひと通り終わったタイミングで Servlet コンテナが動き始める。</p>
 <p>FortuneApplication の main メソッドで呼び出している <code>SpringApplication.run</code> では、実際に利用する ApplicationContext の決定が行われる。Web 環境で使われるデフォルトの ApplicationContext の実装は、<code>org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext</code> となっている。<code>AnnotationConfigEmbeddedWebApplicationContext</code> は <code>EmbeddedWebApplicationContext</code> のサブクラスである。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">final</span> String DEFAULT_WEB_CONTEXT_CLASS <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;org.springframework.&#34;</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">final</span> String DEFAULT_WEB_CONTEXT_CLASS <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;org.springframework.&#34;</span>
 		<span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext&#34;</span><span style="color:#f92672">;</span>
 
 <span style="color:#f92672">(</span>snip<span style="color:#f92672">)</span>

@@ -25,7 +25,7 @@
     <article>
 	  <p>物事を Event (E) と Resource (R) に分けてモデリングする手法を実践していると、おのずとイベントという時系列データを検索するためのクエリをたくさん書くことになる。時系列データに対するクエリは少し特徴があり、ここでひとつまとめておこうと思う。ここではいくつかの例、方法を紹介するが、よりよい解、または別の解もあると思う。このページで取り上げる SQL はすべて PostgreSQL 9.3 で動作確認している。</p>
 <p>次のようなテーブル構成を例にとる。</p>
-<pre><code>CREATE TABLE person (
+<pre tabindex="0"><code>CREATE TABLE person (
   id SERIAL PRIMARY KEY
 );
 
@@ -41,8 +41,8 @@ CREATE TABLE person_attr_changes (
 <p>例えば 2017/6/15 時点での ID=1 (person.id=1) の人物の属性を取得することを考える。person_attr_changes には変更した時点のタイムスタンプとともに属性値が格納されているので、2017/6/15 以前の person_id=1 のレコードのうち、最後のレコードを選択すればよい。もしこの条件に引っかかるレコードがなければ、その時点では ID=1 の人物は存在しなかったことを意味する。</p>
 <p>このような「ある条件を満たす集合の中で、最新のレコードを選択する」というのが、イベントデータを扱っていてもっとも頻出するパターンのクエリだった。</p>
 <p>2 通りのクエリを考える。</p>
-<h2 id="not-exists--相関サブクエリ-">NOT EXISTS + 相関サブクエリ</h2>
-<pre><code>SELECT a.*
+<h2 id="not-exists--相関サブクエリ">NOT EXISTS + 相関サブクエリ</h2>
+<pre tabindex="0"><code>SELECT a.*
   FROM person_attr_changes a
  WHERE a.person_id = 1
    AND a.created_at &lt;= '2017-6-15'::date
@@ -52,7 +52,7 @@ CREATE TABLE person_attr_changes (
                       AND a2.created_at &lt;= '2017-6-15'::date
                       AND a2.created_at &gt; a.created_at)
 </code></pre><p>こんな感じになる。この相関サブクエリと <code>NOT EXISTS</code> を使ったクエリは頻出する。というか愛用している。解説は後にするとして、まずはうまく動作していることを確認したい。</p>
-<pre><code>select * from person_attr_changes order by id;
+<pre tabindex="0"><code>select * from person_attr_changes order by id;
  id | person_id |      name      |  birthday  |     created_at      
 ----+-----------+----------------+------------+---------------------
   1 |         1 | satou tanaka   | 1980-01-01 | 2017-06-13 00:00:00
@@ -61,7 +61,7 @@ CREATE TABLE person_attr_changes (
   4 |         2 | yamamoto inoue | 1988-02-03 | 2017-06-15 00:00:00
 (4 rows)
 </code></pre><p>person_id=1 の人物は、2017/6/13 に &ldquo;satou tanaka&rdquo; という名前で登録し、2017/6/14 に &ldquo;suzuki tanaka&rdquo; という名前に変更している。さらにその後の 2017/6/16 にはまたもとの &ldquo;satou tanaka&rdquo; という名前に戻している。このようなデータに対し、先ほどのクエリを投げる。言うまでもなく、ここで狙うのは &ldquo;suzuki tanaka&rdquo; のレコード。</p>
-<pre><code>SELECT a.*
+<pre tabindex="0"><code>SELECT a.*
   FROM person_attr_changes a
  WHERE a.person_id = 1
    AND a.created_at &lt;= '2017-6-15'::date
@@ -77,7 +77,7 @@ CREATE TABLE person_attr_changes (
 </code></pre><p>うまくいった。</p>
 <p>このクエリでは person_attr_changes に対して 2 つの <code>SELECT</code> を発行している。いずれにおいても、person_id と created_at に対して同じ条件 (ID=1, 2017/6/15 以前) を与えている。サブクエリのほうではさらに <code>AND a2.created_at &gt; a.created_at</code> を付け加えている。これがキモとなる。これはつまり、<code>person_id = 1 AND created_at &lt;= '2017-6-15'::date</code> を満たす集合から、a.created_at より大きな created_at を持つレコードが存在しないレコード、すなわち最後のレコードを探し出している。</p>
 <p>created_at が同一になりうる場合には、厳密にはこれだけではうまくいかない。複数のレコードがとれてくる可能性がある。先ほどのサンプルデータにそのようなデータを追加して試してみる。</p>
-<pre><code>select * from person_attr_changes order by id;
+<pre tabindex="0"><code>select * from person_attr_changes order by id;
  id | person_id |      name       |  birthday  |     created_at      
 ----+-----------+-----------------+------------+---------------------
   1 |         1 | satou tanaka    | 1980-01-01 | 2017-06-13 00:00:00
@@ -87,7 +87,7 @@ CREATE TABLE person_attr_changes (
   5 |         2 | takahashi inoue | 1988-02-03 | 2017-06-15 00:00:00
 (5 rows)
 </code></pre><p>person_id=2 に created_at が同じレコードがふたつ存在している。</p>
-<pre><code>SELECT a.*
+<pre tabindex="0"><code>SELECT a.*
   FROM person_attr_changes a
  WHERE a.person_id = 2
    AND a.created_at &lt;= '2017-6-15'::date
@@ -102,7 +102,7 @@ CREATE TABLE person_attr_changes (
   5 |         2 | takahashi inoue | 1988-02-03 | 2017-06-15 00:00:00
 (2 rows)
 </code></pre><p>両方のレコードがとれてくる。このようなことを防ぎたければ、絶対に重複せず、かつ前後関係を表すことのできる列 (連番が発行される ID など) を条件に加えればよい。PostgreSQL の場合は <code>ORDER BY</code> と <code>LIMIT 1</code> を組み合わせるのがもっともかんたんかもしれない。</p>
-<pre><code>SELECT a.*
+<pre tabindex="0"><code>SELECT a.*
   FROM person_attr_changes a
  WHERE a.person_id = 2
    AND a.created_at &lt;= '2017-6-15'::date
@@ -118,10 +118,10 @@ CREATE TABLE person_attr_changes (
   5 |         2 | takahashi inoue | 1988-02-03 | 2017-06-15 00:00:00
 (1 row)
 </code></pre><p>すでに十分な数 (要件にもよるところがあるが、現実的にはせいぜい 2 レコード程度ではないだろうか) まで絞り込んだあとの集合に対するソートなので、さほどコストはかからない。</p>
-<h2 id="order-by--limit-1-">ORDER BY + LIMIT 1</h2>
+<h2 id="order-by--limit-1">ORDER BY + LIMIT 1</h2>
 <p>もうひとつの方法として、<code>ORDER BY</code> と <code>LIMIT 1</code> を使った方法を取り上げる。リレーショナルモデルを重んじる身としてはあまり使いたくない方法ではあるのだが、現実的に使わなければならない状況があったりするので、取り上げる。</p>
 <p>上であげたクエリを、<code>ORDER BY</code> と <code>LIMIT 1</code> を使うクエリに書き換える。</p>
-<pre><code>SELECT a.*
+<pre tabindex="0"><code>SELECT a.*
   FROM person_attr_changes a
  WHERE a.person_id = 1
    AND a.created_at &lt;= '2017-6-15'::date
@@ -132,11 +132,11 @@ CREATE TABLE person_attr_changes (
                 ORDER BY a2.created_at
                 LIMIT 1)
 </code></pre><p><code>NOT EXISTS</code> と相関サブクエリを使ったクエリと異なるのは、<code>a.id = (SELECT a2.id</code> 以下の部分となる。サブクエリの中で <code>ORDER BY</code> と <code>LIMIT 1</code> を使っている。サブクエリでは、person_id と created_at の条件を満たす集合を created_at の降順で並べ、その最初のレコードの id をスカラー値として選択している。メインクエリ (という呼び名が正しいかどうかは微妙だが) では、このスカラー値を id に持つ person_attr_changes のレコードを選択するような条件となっている。メインクエリでは a.id 以外の条件は必要なさそうに思えるし、実際なくても正しく動作するのだが、手元で試す限り、サブクエリと同じ条件を含んでいるほうが、PostgreSQL はよい実行計画を出力するようだ。</p>
-<h2 id="実行計画を見る-">実行計画を見る</h2>
+<h2 id="実行計画を見る">実行計画を見る</h2>
 <p><code>NOT EXISTS</code> + 相関サブクエリの弱点のひとつが、集合を十分に絞り込めない条件の場合にコストがかかってしまうということ。先の例では person_id と created_at で絞り込んだ集合の中から、created_at が最大のレコードを探しだした。これは person_id と created_at の条件によって、最大のレコードを探し出す集合を十分に絞り込んでいるため、高速に動作する。集合を絞り込む条件がゆるい、つまり集合を十分に絞り込めない場合、おのずと最大レコードを探し出す範囲も広がり、遅くなる。</p>
 <p>このような状況でも <code>ORDER BY</code> と <code>LIMIT 1</code> を使ったクエリは高速に動作する。もちろん適切にインデックスをはっておく必要はあるが。ここではその違いを実行計画を見ながら比較していく。</p>
 <p>もう少し量の多いデータを例を考える。さすがに 1 人の人物の属性を 100 万回変えるようなことはないと思うので、モデルを変える。センサーによる計測データを蓄積していくようなシナリオを考える。センサーは 1 秒に 1 回程度、計測データを出力する。データベースにはそのすべてをタイムスタンプ付きで記録していく。センサーは複数個存在する。</p>
-<pre><code>CREATE TABLE sensor (
+<pre tabindex="0"><code>CREATE TABLE sensor (
   id SERIAL PRIMARY KEY,
   name VARCHAR NOT NULL
 );
@@ -150,7 +150,7 @@ CREATE TABLE measure (
 );
 
 </code></pre><p>センサーを 100 個、センサーごとに 100 万件ずつの計測データをテストデータとして挿入する。</p>
-<pre><code>INSERT INTO sensor (name) SELECT 'sensor-' || i.v FROM generate_series(1, 100) AS i(v);
+<pre tabindex="0"><code>INSERT INTO sensor (name) SELECT 'sensor-' || i.v FROM generate_series(1, 100) AS i(v);
 INSERT INTO measure (sensor_id, value, created_at)
   SELECT i.v, 'data-' || i.v || '-' || j.v, '2010-1-1'::timestamp + (j.v || ' second')::interval
     FROM generate_series(1, 100) AS i(v)
@@ -160,14 +160,14 @@ CREATE INDEX idx_measure_sensor_id ON measure(sensor_id);
 CREATE INDEX idx_measure_created_at ON measure(created_at);
 </code></pre><p>今回はインデックスをはった。インデックスを使われ方が <code>NOT EXISTS</code> と相関サブクエリを使ったクエリと <code>ORDER BY</code> と <code>LIMIT 1</code> を使ったクエリとで異なるので、その様子を実行計画で見てみたい。</p>
 <p>軽くデータを俯瞰する。</p>
-<pre><code>SELECT MIN(created_at), MAX(created_at), COUNT(*) FROM measure;
+<pre tabindex="0"><code>SELECT MIN(created_at), MAX(created_at), COUNT(*) FROM measure;
          min         |         max         |   count   
 ---------------------+---------------------+-----------
  2010-01-01 00:00:01 | 2010-01-12 13:46:40 | 100000000
 (1 row)
 </code></pre><p>センサー 15 (sensor.id=15) における 2010/1/10 22:00:00 時点の最新の計測データを取得することを考える。</p>
 <p>まずは <code>NOT EXISTS</code> と相関サブクエリを使ったクエリ。</p>
-<pre><code>EXPLAIN ANALYZE
+<pre tabindex="0"><code>EXPLAIN ANALYZE
 SELECT s.id, s.name, m.value, m.created_at as measured_at
   FROM sensor s
        INNER JOIN measure m ON m.sensor_id = s.id
@@ -197,7 +197,7 @@ SELECT s.id, s.name, m.value, m.created_at as measured_at
  Total runtime: 11859.438 ms
 (14 rows)
 </code></pre><p>次は <code>ORDER BY</code> と <code>LIMIT 1</code> を使ったクエリ。</p>
-<pre><code>EXPLAIN ANALYZE
+<pre tabindex="0"><code>EXPLAIN ANALYZE
 SELECT s.id, s.name, m.value, m.created_at as measured_at
   FROM sensor s
        INNER JOIN measure m ON m.sensor_id = s.id
@@ -229,16 +229,16 @@ SELECT s.id, s.name, m.value, m.created_at as measured_at
 (14 rows)
 </code></pre><p><code>EXPLAIN ANALYZE</code> なので実際にクエリを発行し、そのときの実行計画および処理時間、行数などが出力されている。Total runtime を見ると速度の違いは一目瞭然。圧倒的に後者が速い。</p>
 <p>前者では、まず <code>m.created_at &lt;= '2010-1-10 22:00:00'</code> で引っ掛ける集合を <code>Index Scan using idx_measure_created_at</code> で集めている。これを満たすレコードは <code>rows=856800</code> にあるとおり、たくさんある。これを次の <code>Index Scan using idx_measure_created_at on measure m2</code> の条件に含めている。これらを <code>Nested Loop Anti Join</code> で結合するため、ループの回数は <code>loops=856800</code> となっている。つまり 2010-1-10 22:00:00 以前のレコード 856800 件を探すために一度スキャンし、さらにこの中から最大の created_at を持つレコードを探すために 856800 回ループしている。擬似コードに落とすとこんな感じ:</p>
-<pre><code>m = find_by(created_at &lt;= '2010-1-10 22:00:00')  // m.length=856800
+<pre tabindex="0"><code>m = find_by(created_at &lt;= '2010-1-10 22:00:00')  // m.length=856800
 max = m[0]  // max が所望のレコード
 for (m2 in m[1..])
   if m2.created_at &gt; max.created_at
     max = m2
 </code></pre><p>後者はもっとかんたん。<code>Index Scan Backward using idx_measure_created_at</code> によってインデックスを逆順にさかのぼり、<code>ORDER BY created_at DESC</code> と <code>LIMIT 1</code> によって引っ掛けたいレコードを即座に見つけている。そこから芋づる式に必要なデータを集めている。目的の measure レコードの特定に手間がかからないので速い。</p>
-<h2 id="他の例-">他の例</h2>
+<h2 id="他の例">他の例</h2>
 <p>他のバリエーションのクエリを考えてみる。モデルはセンサー、計測データのほうを使う。</p>
 <p>センサーごとの最新の計測データを求めてみる。<code>ORDER BY</code>, <code>LIMIT 1</code> の手法であればかんたん。</p>
-<pre><code>SELECT m.*
+<pre tabindex="0"><code>SELECT m.*
   FROM measure m
        INNER JOIN (SELECT (SELECT m2.id
                              FROM measure m2
@@ -249,7 +249,7 @@ for (m2 in m[1..])
          ON m.id = x.id
 </code></pre><p>センサーごとの最新の measure.id を INNER JOIN の結合対象としているサブクエリで列挙する。レコード数の少ない sensor で駆動しているので、measure をスキャンする回数を抑えられる。これと measure を結合し、所望の計測データの集合を得る。一番内側のクエリに created_at に対する条件をつければ、ある時点におけるセンサーごとの最後の計測データを取得できる。</p>
 <p>センサー 30 (sensor.id=30) の 2010-1-5 における計測値の最小値と最大値、およびそれぞれの計測日時。同じ値を複数計測していれば、それらすべてを選択する。</p>
-<pre><code>SELECT m.*, 'max' AS typ
+<pre tabindex="0"><code>SELECT m.*, 'max' AS typ
   FROM measure m
  WHERE m.sensor_id = 30
    AND m.created_at BETWEEN '2010-1-5' AND '2010-1-5 23:59:59'

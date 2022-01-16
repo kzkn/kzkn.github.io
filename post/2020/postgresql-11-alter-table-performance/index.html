@@ -58,7 +58,7 @@
 なぜ速くなるかは<a href="https://brandur.org/postgres-default#under-the-hood">先の記事</a>が詳しいのでここでは割愛。</p>
 <p>以下、計測作業時のログ:</p>
 <h2 id="ver-104">Ver 10.4</h2>
-<pre><code>postgres=# \d table1
+<pre tabindex="0"><code>postgres=# \d table1
                Table &quot;public.table1&quot;
  Column |  Type   | Collation | Nullable | Default
 --------+---------+-----------+----------+---------
@@ -77,7 +77,7 @@ postgres=# alter table table1 add column y integer not null default 1;
 ALTER TABLE
 Time: 653.094 ms
 </code></pre><h2 id="ver-118">Ver 11.8</h2>
-<pre><code>postgres=# \d table1
+<pre tabindex="0"><code>postgres=# \d table1
                Table &quot;public.table1&quot;
  Column |  Type   | Collation | Nullable | Default 
 --------+---------+-----------+----------+---------

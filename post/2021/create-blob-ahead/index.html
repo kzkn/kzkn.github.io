@@ -34,11 +34,11 @@
 </ol>
 <p>ActiveStorage には Direct Upload という仕組みがあって、それに近い動きではあります。一点違うのは、バックエンドのストレージに誰がアップロードするかという点。Direct Upload は js がストレージへのアップロードを担います。今回紹介するコードでは、サーバーサイドがストレージへのアップロードを担います。</p>
 <p>こんなモデルがあったとして、</p>
-<pre><code>class Comment &lt; ApplicationRecord
+<pre tabindex="0"><code>class Comment &lt; ApplicationRecord
   has_one_attached :image
 end
 </code></pre><p>Blob 用のコントローラを用意して、</p>
-<pre><code>class BlobsController &lt; ApplicationController
+<pre tabindex="0"><code>class BlobsController &lt; ApplicationController
   def create
     file = params[:file]
     blob = ActiveStorage::Blob.create_and_upload!(io: file, filename: file.original_filename)
@@ -46,13 +46,13 @@ end
   end
 end
 </code></pre><p>view に <code>&lt;input type=file&gt;</code> を用意して、</p>
-<pre><code>&lt;%= form_with(model: comment) do |form| %&gt;
+<pre tabindex="0"><code>&lt;%= form_with(model: comment) do |form| %&gt;
   &lt;div class=&quot;field&quot;&gt;
     &lt;input type=&quot;file&quot; class=&quot;js-image-upload&quot;&gt;
   &lt;/div&gt;
 &lt;% end %&gt;
 </code></pre><p>js でゴニョる:</p>
-<pre><code>const input = document.querySelector('.js-image-upload')
+<pre tabindex="0"><code>const input = document.querySelector('.js-image-upload')
 let img
 input.addEventListener('change', () =&gt; {
   const [file] = input.files

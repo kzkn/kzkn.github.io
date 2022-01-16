@@ -35,7 +35,7 @@
 <li>書き出したファイルを Emacs で開く</li>
 </ol>
 <p>Emacs とシェルにちょろっと設定を書くだけで実現できる。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-lisp" data-lang="lisp">(defun sh (<span style="color:#66d9ef">&amp;optional</span> arg)
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-lisp" data-lang="lisp">(defun sh (<span style="color:#66d9ef">&amp;optional</span> arg)
   (interactive <span style="color:#e6db74">&#34;P&#34;</span>)
   (<span style="color:#66d9ef">let*</span> ((start-directory (<span style="color:#66d9ef">if</span> arg
                               (ido-read-directory-name <span style="color:#e6db74">&#34;Starting directory: &#34;</span> default-directory)
@@ -45,7 +45,7 @@
     (call-process-shell-command command)))
 </code></pre></div><p><a href="https://www.emacswiki.org/emacs/InteractivelyDoThings">ido</a> を使いたくなければ <code>ido-read-directory-name</code> ではなく <code>read-directory-name</code> を使うといい。</p>
 <p>シェル (筆者は zsh を使っているが、他のシェルにも簡単に移植できるはず) には以下の設定を追加する。<code>alias</code> はお好みで。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">alias e<span style="color:#f92672">=</span>emacsclient
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">alias e<span style="color:#f92672">=</span>emacsclient
 
 <span style="color:#66d9ef">function</span> _do_tmux_capture <span style="color:#f92672">{</span>
   dir<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/tmp/capture&#34;</span>
@@ -63,7 +63,7 @@
 <span style="color:#66d9ef">function</span> cap <span style="color:#f92672">{</span> _do_tmux_capture <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> -p <span style="color:#f92672">}</span>
 <span style="color:#66d9ef">function</span> caph <span style="color:#f92672">{</span> _do_tmux_capture <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> -pS -32768 <span style="color:#f92672">}</span>
 </code></pre></div><p>こんな感じで使う:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">$ tmux
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">$ tmux
 $ emacs -nw
 <span style="color:#75715e"># emacs 上で M-x sh</span>
 <span style="color:#75715e"># 制御が新しいウィンドウに移る</span>

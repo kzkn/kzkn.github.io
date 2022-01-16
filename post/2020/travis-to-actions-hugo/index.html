@@ -25,48 +25,48 @@
     <article>
 	  <p>Travis CI でやっていた <a href="https://kazkn.com/">Hugo で作ってるサイト</a>のビルドとデプロイを、GitHub Actions に移行した。前からぼんやり「移行しなきゃな〜」とは思っていたのだけど、最近 Travis CI を使おうと思ったときにメンテナンスの時間帯にあたってしまうというのが続いてしまったのもあって、一念発起して移行した。</p>
 <p>GitHub Actions の設定はこんな感じ。雑に準備、ビルド、デプロイ（git push）まで 1 つのジョブにまとめてる。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">name</span>: deploy
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">name</span>: <span style="color:#ae81ff">deploy</span>
 
-<span style="color:#66d9ef">on</span>:
-  <span style="color:#66d9ef">push</span>:
-    <span style="color:#66d9ef">branches</span>: [ hugo ]
+<span style="color:#f92672">on</span>:
+  <span style="color:#f92672">push</span>:
+    <span style="color:#f92672">branches</span>: [ <span style="color:#ae81ff">hugo ]</span>
 
-<span style="color:#66d9ef">jobs</span>:
-  <span style="color:#66d9ef">deploy</span>:
-    <span style="color:#66d9ef">runs-on</span>: ubuntu-latest
+<span style="color:#f92672">jobs</span>:
+  <span style="color:#f92672">deploy</span>:
+    <span style="color:#f92672">runs-on</span>: <span style="color:#ae81ff">ubuntu-latest</span>
 
-    <span style="color:#66d9ef">steps</span>:
-    - <span style="color:#66d9ef">uses</span>: actions/checkout@v2
-      <span style="color:#66d9ef">with</span>:
-        <span style="color:#66d9ef">submodules</span>: <span style="color:#66d9ef">true</span>
+    <span style="color:#f92672">steps</span>:
+    - <span style="color:#f92672">uses</span>: <span style="color:#ae81ff">actions/checkout@v2</span>
+      <span style="color:#f92672">with</span>:
+        <span style="color:#f92672">submodules</span>: <span style="color:#66d9ef">true</span>
 
-    - <span style="color:#66d9ef">uses</span>: actions/checkout@v2
-      <span style="color:#66d9ef">with</span>:
-        <span style="color:#66d9ef">ref</span>: master
-        <span style="color:#66d9ef">path</span>: public
+    - <span style="color:#f92672">uses</span>: <span style="color:#ae81ff">actions/checkout@v2</span>
+      <span style="color:#f92672">with</span>:
+        <span style="color:#f92672">ref</span>: <span style="color:#ae81ff">master</span>
+        <span style="color:#f92672">path</span>: <span style="color:#ae81ff">public</span>
 
-    - <span style="color:#66d9ef">name</span>: Install hugo
-      <span style="color:#66d9ef">uses</span>: peaceiris/actions-hugo@v2
-      <span style="color:#66d9ef">with</span>:
-        <span style="color:#66d9ef">hugo-version</span>: <span style="color:#e6db74">&#39;0.69.2&#39;</span>
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Install hugo</span>
+      <span style="color:#f92672">uses</span>: <span style="color:#ae81ff">peaceiris/actions-hugo@v2</span>
+      <span style="color:#f92672">with</span>:
+        <span style="color:#f92672">hugo-version</span>: <span style="color:#e6db74">&#39;0.69.2&#39;</span>
 
-    - <span style="color:#66d9ef">name</span>: Build
-      <span style="color:#66d9ef">run</span>: <span style="color:#e6db74">|
-</span><span style="color:#e6db74">        hugo</span>
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Build</span>
+      <span style="color:#f92672">run</span>: |<span style="color:#e6db74">
+</span><span style="color:#e6db74">        </span>        <span style="color:#ae81ff">hugo</span>
 
-    - <span style="color:#66d9ef">name</span>: Commit
-      <span style="color:#66d9ef">run</span>: <span style="color:#e6db74">|
-</span><span style="color:#e6db74">        git config --local user.email &#34;kz.nishikawa@gmail.com&#34;</span>
-        git config --local user.name <span style="color:#e6db74">&#34;Kazuki Nishikawa&#34;</span>
-        git add .
-        git commit -m <span style="color:#e6db74">&#34;actions build&#34;</span>
-      <span style="color:#66d9ef">working-directory</span>: public
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Commit</span>
+      <span style="color:#f92672">run</span>: |<span style="color:#e6db74">
+</span><span style="color:#e6db74">        git config --local user.email &#34;kz.nishikawa@gmail.com&#34;
+</span><span style="color:#e6db74">        git config --local user.name &#34;Kazuki Nishikawa&#34;
+</span><span style="color:#e6db74">        git add .
+</span><span style="color:#e6db74">        git commit -m &#34;actions build&#34;</span>        
+      <span style="color:#f92672">working-directory</span>: <span style="color:#ae81ff">public</span>
 
-    - <span style="color:#66d9ef">name</span>: Push
-      <span style="color:#66d9ef">uses</span>: ad-m/github-push-action@master
-      <span style="color:#66d9ef">with</span>:
-        <span style="color:#66d9ef">github_token</span>: ${{ secrets.GITHUB_TOKEN }}
-        <span style="color:#66d9ef">directory</span>: public
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Push</span>
+      <span style="color:#f92672">uses</span>: <span style="color:#ae81ff">ad-m/github-push-action@master</span>
+      <span style="color:#f92672">with</span>:
+        <span style="color:#f92672">github_token</span>: <span style="color:#ae81ff">${{ secrets.GITHUB_TOKEN }}</span>
+        <span style="color:#f92672">directory</span>: <span style="color:#ae81ff">public</span>
 </code></pre></div><p>Hugo のコードは hugo ブランチ入れてるので、ビルド対象は hugo ブランチだけにした。テーマは themes 配下に submodule として配置してるので、<code>submodule: true</code> している。</p>
 <p>ビルド結果（＝公開サイトのコンテンツ）は master ブランチに入れているので、ビルドするより前に、ビルドの出力ディレクトリに master ブランチを clone しておく。</p>
 <p>hugo のインストールは <a href="https://github.com/peaceiris/actions-hugo">peaceiris/actions-hugo</a> を使った。自前で curl を使ってインストールするでもよかったんだけど、今回はありものを使ってみた。</p>
@@ -74,17 +74,17 @@
 <p>ビルドは hugo コマンドの実行。このサイトは github.io で運用してるので、push すればデプロイ完了。</p>
 <p>ちょろっと使った感じ、Travis CI より速く動いてると思う。</p>
 <p>ちなみに Travis CI の設定はこんな感じだった。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#75715e">### .travis.yml</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#75715e">### .travis.yml</span>
 
-<span style="color:#66d9ef">language</span>: minimal
-<span style="color:#66d9ef">before_install</span>: travis/fetch.sh
-<span style="color:#66d9ef">install</span>: travis/install.sh
-<span style="color:#66d9ef">script</span>: travis/build.sh
-<span style="color:#66d9ef">after_success</span>: travis/deploy.sh
-<span style="color:#66d9ef">env</span>:
-  <span style="color:#66d9ef">global</span>:
-    <span style="color:#66d9ef">secure</span>: blahblahblah
-</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#75715e">### travis/fetch.sh</span>
+<span style="color:#f92672">language</span>: <span style="color:#ae81ff">minimal</span>
+<span style="color:#f92672">before_install</span>: <span style="color:#ae81ff">travis/fetch.sh</span>
+<span style="color:#f92672">install</span>: <span style="color:#ae81ff">travis/install.sh</span>
+<span style="color:#f92672">script</span>: <span style="color:#ae81ff">travis/build.sh</span>
+<span style="color:#f92672">after_success</span>: <span style="color:#ae81ff">travis/deploy.sh</span>
+<span style="color:#f92672">env</span>:
+  <span style="color:#f92672">global</span>:
+    <span style="color:#f92672">secure</span>: <span style="color:#ae81ff">blahblahblah</span>
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh"><span style="color:#75715e">### travis/fetch.sh</span>
 <span style="color:#75715e">#!/bin/sh</span>
 git clone https://<span style="color:#e6db74">${</span>GH_TOKEN<span style="color:#e6db74">}</span>@github.com/kzkn/kzkn.github.io public
 

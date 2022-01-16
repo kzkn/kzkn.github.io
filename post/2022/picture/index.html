@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>picture 要素</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <link rel="alternate" type="application/rss+xml" href="/index.xml">
+    <script>
+     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+     })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+     ga('create', 'UA-86485151-1', 'auto');
+     ga('send', 'pageview');
+    </script>
+  </head>
+
+<body>
+  <header>
+    <h1>picture 要素</h1>
+    <time>2022-01-16</time>
+  </header>
+  <main>
+    <article>
+	  <p>HTML5 で導入された picture 要素だけど、存在は知りつつも、仕事のコードで使ったことはないし、どういうマークアップをするとどういう挙動になるのかをよく知らないままだった。なんかの記事で紹介されているのを見て、改めて調べてみるかってことで調べてみた。</p>
+<p><a href="https://developer.mozilla.org/ja/docs/Web/HTML/Element/picture">https://developer.mozilla.org/ja/docs/Web/HTML/Element/picture</a></p>
+<p>マークアップについては冒頭に分かりやすくまとめられていた。</p>
+<blockquote>
+<p>HTML の &lt;picture&gt; 要素は、0個以上の &lt;source&gt; 要素と一つの &lt;img&gt; 要素を含み、様々な画面や端末の条件に応じた画像を提供します。</p>
+</blockquote>
+<p>ざっと読んだところ、source 要素でいくつかの画像のバリエーションを定義しつつ、その中からブラウザが最適な source 要素を選択して、それを同じ picture 要素内の兄弟にあたる img 要素の領域に表示するという感じっぽい。img 要素に直接指定した src はフォールバックとして使われる様子。この img 要素の使われ方がよく分かってなかったんだな。</p>
+<p>source 要素で定義する画像のバリエーションは主に以下の3つの軸で提供するとよさそう:</p>
+<ul>
+<li>ファイルフォーマット</li>
+<li>画面サイズ</li>
+<li>DPI</li>
+</ul>
+<hr>
+<p>最近 Web アプリケーションのパフォーマンスに関心があることもあって、<a href="https://pagespeed.web.dev/">PageSpeed Insights</a> で遊んだりしているのだけど、画像のファイルフォーマットの最適化はよく指摘される事項なのだった。webp にしろ、的なやつ。picture 要素使うと楽そうだな。</p>
+
+    </article>
+  </main>
+  <footer><a href="https://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>

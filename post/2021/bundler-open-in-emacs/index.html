@@ -26,7 +26,7 @@
 	  <p>最近書いた Emacs の小物の紹介です。</p>
 <p><code>bundle open</code> というコマンドがあります。引数に gem の名前を渡すと、環境変数 <code>BUNDLER_EDITOR</code> で gem のディレクトリを開いてくれるコマンドです。gem の中に潜っていくときに役立ちます。</p>
 <p>はじめは <code>BUNDLER_EDITOR</code> に <code>emacsclient -nw</code> を設定して使っていたんだけど、Emacs の中で完結したいってことで、一つ関数をこさえました。</p>
-<pre><code>(defun bundle-open (gem-name)
+<pre tabindex="0"><code>(defun bundle-open (gem-name)
   (interactive
    (let* ((gems (shell-command-to-string &quot;bundle list --name-only&quot;))
           (candidates (split-string gems &quot;\n&quot; t)))

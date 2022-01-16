@@ -30,7 +30,7 @@
 <p><a href="https://www.archlinux.jp/">archlinux.jp</a> を見て、手動での操作が必要にならないかを確認する。事後に確認することもできるのだけど、前もって知っておくと驚きが減るので、事前に確認するようにしている。たまに jp が落ちていることもあるので、そういうときは落ち着いて <a href="https://www.archlinux.org/">org</a> を見に行く。</p>
 <h2 id="システムアップデート中にやること">システムアップデート中にやること</h2>
 <p>pacman (私はそのラッパーの <a href="https://github.com/Jguer/yay">yay</a> を使っている) はそれ自体が <code>/var/log</code> 配下にログを残すようになっているが、念には念を入れて、自前でログを残すようにしている。具体的には以下のようなラッパースクリプトを実行するようにしている。</p>
-<pre><code>#!/bin/sh
+<pre tabindex="0"><code>#!/bin/sh
 
 mkdir -p $HOME/sysupd
 logfile=$HOME/sysupd/`date &quot;+%Y%m%d%H%M%S&quot;`.log

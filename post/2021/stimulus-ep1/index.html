@@ -33,18 +33,18 @@
 </ul>
 <p>これだけです。発想は Hotwire のそれに近い。というかほぼ同じで、Turbo を使うか、Rails UJS と Stimulus で自前実装するかの違いってぐらいです。もちろん Turbo のほうが高機能だけど。</p>
 <p>実装はこんな感じ:</p>
-<pre><code># app/controllers/greetings_controller.rb
+<pre tabindex="0"><code># app/controllers/greetings_controller.rb
 class GreetingsController &lt; ApplicationController
   def show
     render layout: nil
   end
 end
-</code></pre><pre><code>&lt;div id=&quot;replace-here&quot;&gt;&lt;/div&gt;
+</code></pre><pre tabindex="0"><code>&lt;div id=&quot;replace-here&quot;&gt;&lt;/div&gt;
 &lt;%= link_to 'click here', '/greeting', remote: true, data: { controller: 'remote', remote_target_value: '#replace-here', action: 'ajax:success-&gt;remote#replace' }
 %&gt;
-</code></pre><pre><code>&lt;%# greetings/show.html.erb %&gt;
+</code></pre><pre tabindex="0"><code>&lt;%# greetings/show.html.erb %&gt;
 &lt;div&gt;Hello!&lt;/div&gt;
-</code></pre><pre><code>// remote_controller.js
+</code></pre><pre tabindex="0"><code>// remote_controller.js
 export default class extends Controller {
   static values = { target: String }
 
@@ -61,19 +61,19 @@ export default class extends Controller {
 <p>サーバーから返ってくる HTML の処理方法としては <code>replace</code> 以外にも <code>append</code>, <code>prepend</code>, <code>remove</code> とかのバリエーションがあってもいいですね。今回は <code>link_to</code> で使ったけど Rails UJS のイベントが拾えるなら使えます。<code>form_with</code> とか。あとは <code>data-remote-target-value</code> を必須にしてるけど、これを任意にして、未設定なら <code>this.element</code> を <code>targetElement</code> の戻り値にするなんていうバリエーションがあってもよさそうです。</p>
 <p>データを変更するエンドポイントに対する要求への応答には、「登録しました」みたいな通知メッセージを出したくなるんじゃないでしょうか。それにも使えます。応答の中に通知メッセージを含む <code>&lt;template&gt;</code> を埋めておいて、<code>&lt;template&gt;</code> 経由でメッセージを表示する感じです。</p>
 <p>例えば <a href="https://www.npmjs.com/package/toastr">toastr</a> を使う場合だとこんな感じ:</p>
-<pre><code>class GreetingsController &lt; ApplicationController
+<pre tabindex="0"><code>class GreetingsController &lt; ApplicationController
   def create
     render layout: nil
   end
 end
-</code></pre><pre><code>&lt;div id=&quot;replace-here&quot;&gt;&lt;/div&gt;
+</code></pre><pre tabindex="0"><code>&lt;div id=&quot;replace-here&quot;&gt;&lt;/div&gt;
 &lt;%= link_to 'click here', '/greeting', remote: true, method: :post, data: { controller: 'remote', remote_target_value: '#replace-here', action: 'ajax:success-&gt;remote#replace' } %&gt;
-</code></pre><pre><code>&lt;%# greetings/create.html.erb %&gt;
+</code></pre><pre tabindex="0"><code>&lt;%# greetings/create.html.erb %&gt;
 &lt;div&gt;Created&lt;/div&gt;
 &lt;template data-controller=&quot;notice&quot;&gt;
   Succeeded!
 &lt;/template&gt;
-</code></pre><pre><code>// notice_controller.js
+</code></pre><pre tabindex="0"><code>// notice_controller.js
 export default class extends Controller {
   connect() {
     toastr.success(this.element.textContent)

@@ -32,11 +32,11 @@
 <p>ちゃんと名前があって、<a href="https://css-tricks.com/the-blur-up-technique-for-loading-background-images/">&ldquo;Blur Up&rdquo;</a> というそうです。知りませんでした。</p>
 <p>複数の画像を用意しなきゃいけないけれど、Rails の ActiveStorage なんかを使えば、そこはわりとかんたんにクリアできます。js 側も、作ってみると結構かんたんでした（こだわらなければ）。</p>
 <p>こんなモデルがあったとして、</p>
-<pre><code>class Comment &lt; ApplicationRecord
+<pre tabindex="0"><code>class Comment &lt; ApplicationRecord
   has_one_attached :image
 end
 </code></pre><p>こんなヘルパーを用意して、</p>
-<pre><code>def blur_up_image_tag(comment, width:, height:)
+<pre tabindex="0"><code>def blur_up_image_tag(comment, width:, height:)
   image_tag low_quality_image(comment), data: { high_src: url_for(high_quality_image(comment)) },
     class: 'js-blur-up', width: width, height: height
 end
@@ -49,9 +49,9 @@ def high_quality_image(comment)
   comment.image.variant(resize_to_limit: [800, 800], saver: { quality: 90 })
 end
 </code></pre><p>erb からヘルパーを叩いて、</p>
-<pre><code>&lt;%= blur_up_image_tag(@comment, width: 500, height: 320) %&gt;
+<pre tabindex="0"><code>&lt;%= blur_up_image_tag(@comment, width: 500, height: 320) %&gt;
 </code></pre><p>js でゴニョります。</p>
-<pre><code>for (const img of document.querySelectorAll('.js-blur-up')) {
+<pre tabindex="0"><code>for (const img of document.querySelectorAll('.js-blur-up')) {
   img.style.filter = 'blur(20px)'
 
   const high = new Image()

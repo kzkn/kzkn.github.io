@@ -1,190 +1,119 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
-  
   <url>
     <loc>https://kazkn.com/</loc>
-    <lastmod>2022-01-06T21:55:23+09:00</lastmod>
-  </url>
-  
-  <url>
+    <lastmod>2022-01-16T11:24:41+09:00</lastmod>
+  </url><url>
+    <loc>https://kazkn.com/post/2022/picture/</loc>
+    <lastmod>2022-01-16T11:24:41+09:00</lastmod>
+  </url><url>
     <loc>https://kazkn.com/post/</loc>
-    <lastmod>2022-01-06T21:55:23+09:00</lastmod>
-  </url>
-  
-  <url>
+    <lastmod>2022-01-16T11:24:41+09:00</lastmod>
+  </url><url>
     <loc>https://kazkn.com/post/2022/2022-01-06/</loc>
     <lastmod>2022-01-06T21:55:23+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2022/2022/</loc>
     <lastmod>2022-01-04T22:34:58+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2021/gretel/</loc>
     <lastmod>2021-12-11T16:21:15+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2021/jscov/</loc>
     <lastmod>2021-11-03T15:26:46+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2021/habit/</loc>
     <lastmod>2021-03-24T09:35:59+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2021/bundler-open-in-emacs/</loc>
     <lastmod>2021-03-13T13:14:17+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2021/read-zurui-kotoba/</loc>
     <lastmod>2021-03-10T09:43:18+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2021/unfollow-news/</loc>
     <lastmod>2021-03-03T22:12:16+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2021/write-essay/</loc>
     <lastmod>2021-03-02T21:45:07+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2021/create-blob-ahead/</loc>
     <lastmod>2021-02-27T16:08:38+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2021/blur-up/</loc>
     <lastmod>2021-02-27T15:44:40+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2021/stimulus-ep1/</loc>
     <lastmod>2021-02-23T14:53:28+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2020/my-archlinux-op-sysupd/</loc>
     <lastmod>2020-11-03T10:57:27+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2020/postgresql-11-alter-table-performance/</loc>
     <lastmod>2020-07-01T22:57:27+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2020/travis-to-actions-rails/</loc>
     <lastmod>2020-04-26T14:54:01+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2020/travis-to-actions-hugo/</loc>
     <lastmod>2020-04-26T14:34:04+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2020/use-dart-sass-with-webpacker/</loc>
     <lastmod>2020-04-12T01:54:22+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2020/debug-webpack-config-with-webpacker/</loc>
     <lastmod>2020-04-12T01:48:02+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2020/xmonad-recompile-error/</loc>
     <lastmod>2020-04-12T00:04:38+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2018/update-x1c6-bios/</loc>
     <lastmod>2018-10-06T11:43:55+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2018/https-on-github-pages-with-custom-domain/</loc>
     <lastmod>2018-05-23T23:24:14+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2018/vim-like-f-in-emacs/</loc>
     <lastmod>2018-03-19T22:45:39+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2017/emacs-tmux-sh/</loc>
     <lastmod>2017-12-12T00:00:00+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2017/use-model-attribute/</loc>
     <lastmod>2017-09-19T21:53:03+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2017/the-design-of-everyday-things/</loc>
     <lastmod>2017-06-20T23:20:04+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2017/query-for-tsd/</loc>
     <lastmod>2017-06-16T00:56:29+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2017/bash-loop-ffmpeg/</loc>
     <lastmod>2017-05-25T22:04:21+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2017/perfect-js/</loc>
     <lastmod>2017-04-25T20:56:07+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2017/the-m3/</loc>
     <lastmod>2017-04-17T23:01:24+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2017/spring-boot-nashorn-react-ssr/</loc>
     <lastmod>2017-04-13T00:03:07+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2017/intro-spring-ioc-container/</loc>
     <lastmod>2017-03-15T21:34:43+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2017/intro-spring-boot/</loc>
     <lastmod>2017-03-11T15:44:46+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2017/goodbye-bind9/</loc>
     <lastmod>2017-02-22T22:26:27+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2017/dns-server/</loc>
     <lastmod>2017-02-22T22:25:29+09:00</lastmod>
-  </url>
-  
-  <url>
+  </url><url>
     <loc>https://kazkn.com/post/2017/postgresql-transaction/</loc>
     <lastmod>2017-02-22T22:23:07+09:00</lastmod>
   </url>
-  
 </urlset>

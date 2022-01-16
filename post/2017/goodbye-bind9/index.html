@@ -27,14 +27,14 @@
 <p>そこで BIND9 からの卒業を考える。新たな仲間は <a href="https://www.nlnetlabs.nl/projects/nsd/">NSD</a> と <a href="https://www.nlnetlabs.nl/projects/unbound/">Unbound</a> だ。NSD も Unbound も、BIND9 に比べて脆弱性の報告が<a href="https://www.cvedetails.com/product/17420/Nlnetlabs-NSD.html?vendor_id=9613">ずっと</a> <a href="https://www.cvedetails.com/product/20882/Nlnetlabs-Unbound.html?vendor_id=9613">少ない</a>。BIND9 の設定にもうんざりしている。NSD, Unbound は設定も簡潔に見える。とにかく BIND9 には数多のフラストレーションを抱えており、隣の芝は青く見えるというもので、NSD, Unbound に逃げようという趣旨だ。</p>
 <p>BIND9 は広く普及していて、その意味では偉大なソフトウェアのひとつであることは間違いない。古くからインターネットを支えてきた、重要なソフトウェアのひとつだろう。その一方で BIND9 は複雑化する DNS の仕様を古くから実装してきたからか、その実装もまた複雑怪奇になっていると聞く。脆弱性が報告されるのも仕方がない。そろそろ BIND9 を楽にしてやってもいいのではないだろうか。</p>
 <p>余談だが、最近は <a href="https://www.isc.org/blogs/bind-9-refactoring/">BIND9 をリファクタリングしよう</a> という向きもあるらしい。</p>
-<h1 id="bind9-vs-nsd-unbound-">BIND9 vs NSD, Unbound</h1>
+<h1 id="bind9-vs-nsd-unbound">BIND9 vs NSD, Unbound</h1>
 <p>詳しい説明は他に譲るとして、DNS サーバーの役割と BIND9, NSD, Unbound の関係について、かんたんに触れておく。</p>
 <p>DNS サーバーには <strong>権威サーバー</strong> という役割と <strong>キャッシュサーバー</strong> という大きく 2 つの役割がある。NSD は権威サーバーの実装、Unbound はキャッシュサーバーの実装である。BIND9 は両方の実装である。</p>
 <p>BIND9 の使い方にもよるが、基本的には BIND9 でやっていたことを役割ごとに NSD と Unbound に分割してやる必要がある。</p>
-<h1 id="bind9-から-nsd-へ-">BIND9 から NSD へ</h1>
+<h1 id="bind9-から-nsd-へ">BIND9 から NSD へ</h1>
 <p>一言で言えば、zone ファイルを NSD へ移行する。zone ファイル自体は RFC 1305 で標準化されており、可搬性があるので、BIND9 で使っていたものをそのまま使いまわすことができる。</p>
 <p>以下は BIND9 の設定を NSD の設定に書きなおしたものだ:</p>
-<pre><code>// BIND9 named.conf
+<pre tabindex="0"><code>// BIND9 named.conf
 
 options {
   listen-on port 53 { 127.0.0.1; };
@@ -73,7 +73,7 @@ view &quot;internal&quot; {
   include &quot;/etc/named.rfc1912.zones&quot;;
   include &quot;/etc/named.root.key&quot;;
 };
-</code></pre><pre><code># NSD nsd.conf
+</code></pre><pre tabindex="0"><code># NSD nsd.conf
 
 server:
 	port: 10053
@@ -90,11 +90,11 @@ zone:
 zone:
 	name: &quot;10.in-addr.arpa&quot;
 	zonefile: &quot;foobar.local.rev.zone&quot;
-</code></pre><h1 id="bind9-から-unbound-へ-">BIND9 から Unbound へ</h1>
+</code></pre><h1 id="bind9-から-unbound-へ">BIND9 から Unbound へ</h1>
 <p>DNS サーバーへの要求のほとんどは <strong>名前解決</strong> であり、それはキャッシュサーバーの役割となる。キャッシュサーバーは自身が管理する名前と IP アドレスのマッピングから、クライアントに要求される名前の解決結果を返す。自身で解決できない場合には上位のサーバーに問い合わせし、その結果を返す。この時、上位のサーバーへの問い合わせ結果を自身に保存 (= キャッシュ) するので、キャッシュサーバーと呼ばれる。以後は上位サーバーに問い合わせすることなく、自身で名前解決できるようになり、高速に応答を返すことができるようになる。</p>
 <p>Unbound はキャッシュサーバーでありながらも、単純なレコードの定義 (A レコード, MX レコードなど) は自身にその定義を持つことができる。<code>local-data</code> という設定を使う。ワイルドカードや CNAME などの複雑な定義を要する場合には、権威サーバーに処理を移譲するよう設定する。BIND9 は自身が権威サーバー <strong>でも</strong> あるので、この点についてはあまり小難しいことを考える必要がなかった。</p>
 <p>以下は BIND9 の設定を Unbound の設定に書きなおしたものだ:</p>
-<pre><code>// BIND9 named.conf
+<pre tabindex="0"><code>// BIND9 named.conf
 acl &quot;foobar-network&quot; {
   10.0.0.0/8;
 };
@@ -179,7 +179,7 @@ view &quot;internal&quot; {
   include &quot;/etc/named.rfc1912.zones&quot;;
   include &quot;/etc/named.root.key&quot;;
 };
-</code></pre><pre><code># Unbound unbound.conf
+</code></pre><pre tabindex="0"><code># Unbound unbound.conf
 
 server:
 	interface: 0.0.0.0

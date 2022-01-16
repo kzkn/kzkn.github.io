@@ -25,130 +25,130 @@
     <article>
 	  <p>Travis CI でやっていた Rails 製サイトの RSpec 実行を、GitHub Actions に移行した。前からぼんやり「移行しなきゃな〜」とは思っていたのだけど、最近 Travis CI を使おうと思ったときにメンテナンスの時間帯にあたってしまうというのが続いてしまったのもあって、一念発起して移行した。</p>
 <p>GitHub Actions の設定はこんな感じ。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">name</span>: test
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">name</span>: <span style="color:#ae81ff">test</span>
 
-<span style="color:#66d9ef">on</span>: [push]
+<span style="color:#f92672">on</span>: [<span style="color:#ae81ff">push]</span>
 
-<span style="color:#66d9ef">jobs</span>:
-  <span style="color:#66d9ef">build</span>:
+<span style="color:#f92672">jobs</span>:
+  <span style="color:#f92672">build</span>:
 
-    <span style="color:#66d9ef">runs-on</span>: ubuntu-latest
+    <span style="color:#f92672">runs-on</span>: <span style="color:#ae81ff">ubuntu-latest</span>
 
-    <span style="color:#66d9ef">env</span>:
-      <span style="color:#66d9ef">RAILS_ENV</span>: test
-      <span style="color:#66d9ef">TZ</span>: Asia/Tokyo
+    <span style="color:#f92672">env</span>:
+      <span style="color:#f92672">RAILS_ENV</span>: <span style="color:#ae81ff">test</span>
+      <span style="color:#f92672">TZ</span>: <span style="color:#ae81ff">Asia/Tokyo</span>
 
-    <span style="color:#66d9ef">services</span>:
-      <span style="color:#66d9ef">postgres</span>:
-        <span style="color:#66d9ef">image</span>: postgres:<span style="color:#ae81ff">12</span>
-        <span style="color:#66d9ef">ports</span>:
+    <span style="color:#f92672">services</span>:
+      <span style="color:#f92672">postgres</span>:
+        <span style="color:#f92672">image</span>: <span style="color:#ae81ff">postgres:12</span>
+        <span style="color:#f92672">ports</span>:
           - <span style="color:#ae81ff">5432</span>:<span style="color:#ae81ff">5432</span>
-        <span style="color:#66d9ef">env</span>:
-          <span style="color:#66d9ef">POSTGRES_USER</span>: pguser
-          <span style="color:#66d9ef">POSTGRES_PASSWORD</span>: password
+        <span style="color:#f92672">env</span>:
+          <span style="color:#f92672">POSTGRES_USER</span>: <span style="color:#ae81ff">pguser</span>
+          <span style="color:#f92672">POSTGRES_PASSWORD</span>: <span style="color:#ae81ff">password</span>
 
-    <span style="color:#66d9ef">steps</span>:
-    - <span style="color:#66d9ef">uses</span>: actions/checkout@v2
+    <span style="color:#f92672">steps</span>:
+    - <span style="color:#f92672">uses</span>: <span style="color:#ae81ff">actions/checkout@v2</span>
 
-    - <span style="color:#66d9ef">name</span>: Set up Ruby <span style="color:#ae81ff">2.7</span>
-      <span style="color:#66d9ef">uses</span>: actions/setup-ruby@v1
-      <span style="color:#66d9ef">with</span>:
-        <span style="color:#66d9ef">ruby-version</span>: <span style="color:#ae81ff">2.7</span>
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Set up Ruby 2.7</span>
+      <span style="color:#f92672">uses</span>: <span style="color:#ae81ff">actions/setup-ruby@v1</span>
+      <span style="color:#f92672">with</span>:
+        <span style="color:#f92672">ruby-version</span>: <span style="color:#ae81ff">2.7</span>
 
-    - <span style="color:#66d9ef">name</span>: Get yarn cache directory path
-      <span style="color:#66d9ef">id</span>: yarn-cache-dir-path
-      <span style="color:#66d9ef">run</span>: echo <span style="color:#e6db74">&#34;::set-output name=dir::$(yarn cache dir)&#34;</span>
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Get yarn cache directory path</span>
+      <span style="color:#f92672">id</span>: <span style="color:#ae81ff">yarn-cache-dir-path</span>
+      <span style="color:#f92672">run</span>: <span style="color:#ae81ff">echo &#34;::set-output name=dir::$(yarn cache dir)&#34;</span>
 
-    - <span style="color:#66d9ef">uses</span>: actions/cache@v1
-      <span style="color:#66d9ef">id</span>: yarn-cache <span style="color:#75715e"># use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != &#39;true&#39;`)</span>
-      <span style="color:#66d9ef">with</span>:
-        <span style="color:#66d9ef">path</span>: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-        <span style="color:#66d9ef">key</span>: ${{ runner.os }}-yarn-${{ hashFiles(<span style="color:#e6db74">&#39;**/yarn.lock&#39;</span>) }}
-        <span style="color:#66d9ef">restore-keys</span>: <span style="color:#e6db74">|
-</span><span style="color:#e6db74">          ${{ runner.os }}-yarn-</span>
+    - <span style="color:#f92672">uses</span>: <span style="color:#ae81ff">actions/cache@v1</span>
+      <span style="color:#f92672">id</span>: <span style="color:#ae81ff">yarn-cache</span> <span style="color:#75715e"># use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != &#39;true&#39;`)</span>
+      <span style="color:#f92672">with</span>:
+        <span style="color:#f92672">path</span>: <span style="color:#ae81ff">${{ steps.yarn-cache-dir-path.outputs.dir }}</span>
+        <span style="color:#f92672">key</span>: <span style="color:#ae81ff">${{ runner.os }}-yarn-${{ hashFiles(&#39;**/yarn.lock&#39;) }}</span>
+        <span style="color:#f92672">restore-keys</span>: |<span style="color:#e6db74">
+</span><span style="color:#e6db74">          </span>          <span style="color:#ae81ff">${{ runner.os }}-yarn-</span>
 
-    - <span style="color:#66d9ef">uses</span>: actions/cache@v1
-      <span style="color:#66d9ef">with</span>:
-        <span style="color:#66d9ef">path</span>: vendor/bundle
-        <span style="color:#66d9ef">key</span>: ${{ runner.os }}-gems-${{ hashFiles(<span style="color:#e6db74">&#39;**/Gemfile.lock&#39;</span>) }}
-        <span style="color:#66d9ef">restore-keys</span>: <span style="color:#e6db74">|
-</span><span style="color:#e6db74">          ${{ runner.os }}-gems-</span>
+    - <span style="color:#f92672">uses</span>: <span style="color:#ae81ff">actions/cache@v1</span>
+      <span style="color:#f92672">with</span>:
+        <span style="color:#f92672">path</span>: <span style="color:#ae81ff">vendor/bundle</span>
+        <span style="color:#f92672">key</span>: <span style="color:#ae81ff">${{ runner.os }}-gems-${{ hashFiles(&#39;**/Gemfile.lock&#39;) }}</span>
+        <span style="color:#f92672">restore-keys</span>: |<span style="color:#e6db74">
+</span><span style="color:#e6db74">          </span>          <span style="color:#ae81ff">${{ runner.os }}-gems-</span>
 
-    - <span style="color:#66d9ef">name</span>: Install dependencies
-      <span style="color:#66d9ef">run</span>: <span style="color:#e6db74">|
-</span><span style="color:#e6db74">        gem install bundler</span>
-        bundle config path vendor/bundle
-        bundle install --jobs <span style="color:#ae81ff">4</span> --retry <span style="color:#ae81ff">3</span>
-        yarn
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Install dependencies</span>
+      <span style="color:#f92672">run</span>: |<span style="color:#e6db74">
+</span><span style="color:#e6db74">        gem install bundler
+</span><span style="color:#e6db74">        bundle config path vendor/bundle
+</span><span style="color:#e6db74">        bundle install --jobs 4 --retry 3
+</span><span style="color:#e6db74">        yarn</span>        
 
-    - <span style="color:#66d9ef">name</span>: Setup database
-      <span style="color:#66d9ef">run</span>: <span style="color:#e6db74">|
-</span><span style="color:#e6db74">        cp config/database.yml.actions config/database.yml</span>
-        bundle exec rails db:create db:migrate
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Setup database</span>
+      <span style="color:#f92672">run</span>: |<span style="color:#e6db74">
+</span><span style="color:#e6db74">        cp config/database.yml.actions config/database.yml
+</span><span style="color:#e6db74">        bundle exec rails db:create db:migrate</span>        
 
-    - <span style="color:#66d9ef">name</span>: Run test
-      <span style="color:#66d9ef">run</span>: <span style="color:#e6db74">|
-</span><span style="color:#e6db74">        COVERAGE=1 bundle exec rspec</span>
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Run test</span>
+      <span style="color:#f92672">run</span>: |<span style="color:#e6db74">
+</span><span style="color:#e6db74">        </span>        <span style="color:#ae81ff">COVERAGE=1 bundle exec rspec</span>
 
-    - <span style="color:#66d9ef">name</span>: Upload coverage report
-      <span style="color:#66d9ef">if</span>: always()
-      <span style="color:#66d9ef">uses</span>: actions/upload-artifact@v2
-      <span style="color:#66d9ef">with</span>:
-        <span style="color:#66d9ef">name</span>: coverage
-        <span style="color:#66d9ef">path</span>: coverage
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Upload coverage report</span>
+      <span style="color:#f92672">if</span>: <span style="color:#ae81ff">always()</span>
+      <span style="color:#f92672">uses</span>: <span style="color:#ae81ff">actions/upload-artifact@v2</span>
+      <span style="color:#f92672">with</span>:
+        <span style="color:#f92672">name</span>: <span style="color:#ae81ff">coverage</span>
+        <span style="color:#f92672">path</span>: <span style="color:#ae81ff">coverage</span>
 
-    - <span style="color:#66d9ef">name</span>: Upload screenshots
-      <span style="color:#66d9ef">if</span>: failure()
-      <span style="color:#66d9ef">uses</span>: actions/upload-artifact@v2
-      <span style="color:#66d9ef">with</span>:
-        <span style="color:#66d9ef">name</span>: screenshots
-        <span style="color:#66d9ef">path</span>: tmp/screenshots
+    - <span style="color:#f92672">name</span>: <span style="color:#ae81ff">Upload screenshots</span>
+      <span style="color:#f92672">if</span>: <span style="color:#ae81ff">failure()</span>
+      <span style="color:#f92672">uses</span>: <span style="color:#ae81ff">actions/upload-artifact@v2</span>
+      <span style="color:#f92672">with</span>:
+        <span style="color:#f92672">name</span>: <span style="color:#ae81ff">screenshots</span>
+        <span style="color:#f92672">path</span>: <span style="color:#ae81ff">tmp/screenshots</span>
 </code></pre></div><p>PostgreSQL は<a href="https://help.github.com/ja/actions/configuring-and-managing-workflows/about-service-containers">サービスコンテナ</a>として起動してる。ここに繋ぐための設定を config/database.yml.actions としてあらかじめ定義しておき、データベースのセットアップ前に config/database.yml に上書きしている。config/database.yml.actions はこんな感じ。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">test</span>:
-  <span style="color:#66d9ef">adapter</span>: postgresql
-  <span style="color:#66d9ef">database</span>: actions_test
-  <span style="color:#66d9ef">host</span>: localhost
-  <span style="color:#66d9ef">user</span>: pguser
-  <span style="color:#66d9ef">password</span>: password
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">test</span>:
+  <span style="color:#f92672">adapter</span>: <span style="color:#ae81ff">postgresql</span>
+  <span style="color:#f92672">database</span>: <span style="color:#ae81ff">actions_test</span>
+  <span style="color:#f92672">host</span>: <span style="color:#ae81ff">localhost</span>
+  <span style="color:#f92672">user</span>: <span style="color:#ae81ff">pguser</span>
+  <span style="color:#f92672">password</span>: <span style="color:#ae81ff">password</span>
 </code></pre></div><p>yarn と bundle をキャッシュするようにしてる。この辺の設定は <a href="https://github.com/actions/cache">actions/cache</a> にあった設定例を丸っと拝借している。</p>
 <p>Headless Chrome を使った System Spec もあるプロジェクトなんだけど、<a href="https://github.com/actions/virtual-environments/blob/master/images/linux/Ubuntu1804-README.md">Chrome は実行環境にあらかじめインストールされている</a>ので、Chrome をインストールするためのコードは不要。</p>
 <p>テスト実行による副産物を Artifact として保存するようにしている。simplecov が出力するカバレッジレポートと、System Spec (Headless Chrome) が失敗したときに自動取得されるスクリーンショット。Zip にアーカイブされて、ダウンロードできるようになる。カバレッジレポートはテストが失敗しても取得するように、スクショはテストが失敗したときだけ取得するようにしている。</p>
 <p>キャッシュもちゃんと効いてるし、実行スピードも特に不満はなく、今のところは目立ったデメリットを感じてない。</p>
 <p>ちなみに Travis CI の設定はこんな感じだった。キャッシュの設定は腐ってると思う。ビルドの動きを見てた感じ、たぶん効いてなかった。</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#66d9ef">language</span>: ruby
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml"><span style="color:#f92672">language</span>: <span style="color:#ae81ff">ruby</span>
 
-<span style="color:#66d9ef">services</span>:
-  - postgresql
+<span style="color:#f92672">services</span>:
+  - <span style="color:#ae81ff">postgresql</span>
 
-<span style="color:#66d9ef">cache</span>:
-  <span style="color:#66d9ef">bundler</span>: <span style="color:#66d9ef">true</span>
-  <span style="color:#66d9ef">directories</span>:
-    - node_modules
-  <span style="color:#66d9ef">yarn</span>: <span style="color:#66d9ef">true</span>
+<span style="color:#f92672">cache</span>:
+  <span style="color:#f92672">bundler</span>: <span style="color:#66d9ef">true</span>
+  <span style="color:#f92672">directories</span>:
+    - <span style="color:#ae81ff">node_modules</span>
+  <span style="color:#f92672">yarn</span>: <span style="color:#66d9ef">true</span>
 
-<span style="color:#66d9ef">before_install</span>:
-  - sudo apt-get update
-  - sudo apt-get install -y libappindicator3<span style="color:#ae81ff">-1</span>
-  - curl -L -o google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-  - sudo dpkg -i google-chrome.deb
+<span style="color:#f92672">before_install</span>:
+  - <span style="color:#ae81ff">sudo apt-get update</span>
+  - <span style="color:#ae81ff">sudo apt-get install -y libappindicator3-1</span>
+  - <span style="color:#ae81ff">curl -L -o google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb</span>
+  - <span style="color:#ae81ff">sudo dpkg -i google-chrome.deb</span>
 
-<span style="color:#66d9ef">install</span>:
-  - bundle install --jobs=<span style="color:#ae81ff">3</span> --retry=<span style="color:#ae81ff">3</span>
-  - nvm install <span style="color:#ae81ff">10</span>
-  - node -v
-  - npm i -g yarn
-  - yarn
+<span style="color:#f92672">install</span>:
+  - <span style="color:#ae81ff">bundle install --jobs=3 --retry=3</span>
+  - <span style="color:#ae81ff">nvm install 10</span>
+  - <span style="color:#ae81ff">node -v</span>
+  - <span style="color:#ae81ff">npm i -g yarn</span>
+  - <span style="color:#ae81ff">yarn</span>
 
-<span style="color:#66d9ef">before_script</span>:
-  - export TZ=Asia/Tokyo
-  - cp config/database.yml.travisci config/database.yml
-  - RAILS_ENV=test bundle exec rails db:create db:migrate
+<span style="color:#f92672">before_script</span>:
+  - <span style="color:#ae81ff">export TZ=Asia/Tokyo</span>
+  - <span style="color:#ae81ff">cp config/database.yml.travisci config/database.yml</span>
+  - <span style="color:#ae81ff">RAILS_ENV=test bundle exec rails db:create db:migrate</span>
 
-<span style="color:#66d9ef">script</span>:
-  - bundle exec rspec
+<span style="color:#f92672">script</span>:
+  - <span style="color:#ae81ff">bundle exec rspec</span>
 
-<span style="color:#66d9ef">notifications</span>:
-  <span style="color:#66d9ef">email</span>: <span style="color:#66d9ef">false</span>
+<span style="color:#f92672">notifications</span>:
+  <span style="color:#f92672">email</span>: <span style="color:#66d9ef">false</span>
 </code></pre></div>
     </article>
   </main>
