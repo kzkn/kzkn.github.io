@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>日記</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <link rel="alternate" type="application/rss+xml" href="/index.xml">
+  </head>
+
+<body>
+  <header>
+    <h1>日記</h1>
+    <time>2022-04-05</time>
+  </header>
+  <main>
+    <article>
+	  <p>しばらく書いていなかったし肩の力を抜いて思うままに書いてみる。とか書くと肩の力が入るので、次からはこういう前置きもなしにしよう。</p>
+<p>サイトのテンプレートを簡素化させる方向にちょっと修正した。見えない部分として Google Analytics のタグを消した。自分が <a href="https://privacybadger.org/">Privacy Badger</a> を使いながら、訪問者には GA をかけちゃうってのはちょっとないなと思ったのだった。実際見てないし、いらないからその気になったタイミングで掃除。</p>
+<p><a href="https://viewsourcecode.org/snaptoken/kilo/">Build Your Own Text Editor</a> をやった。C でゼロから kilo というエディタを書くというやつ。なかなかおもしろかった。普段 Ruby や JavaScript といったスクリプト言語ばかり触っているのだけど、C のような言語もたまに触るとおもしろい。文字列比較一つとっても、部分文字列の比較で無駄にメモリを使わずにあっさり書けたりして、こっちのほうがエレガントなんじゃね？という気になってしまうこともあったり。スクリプト言語ではじゃんじゃんメモリを使うのに、C だととても貴重なもののように感じてしまうのはなぜだろう。昔 C++ 書いてたときもこの感覚があったな。new 書いたら負け、的な。</p>
+<p>動的にメモリを確保する文字列のバッファを自作するところなんかも C らしくていい。こういうのはスクリプト言語圏ではあまり見ない。そもそも言語組み込みの機能がリッチだし、そこになくてもたいていのものはサードパーティライブラリがあって、比較的かんたんにそれを取り込むことができるから。</p>
+<p>kilo はターミナルエミュレータ上で動作するテキストエディタだったのだけど、事前に特殊な設定をしたあとは、エスケープシーケンスを駆使してひたすら write (2) で画面を描画していた。入力は read (2) で受け取っていた。入力を無限に待つと描画機会が失われるので、10ms ぐらいのタイムアウト付きで <code>read</code> を呼び出していた。思っていた以上にずっとシンプルな実装なのだけど、本当によく動く。その気になれば一日で終わるレベルだと思う。</p>
+
+    </article>
+  </main>
+  <footer><a href="https://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>
