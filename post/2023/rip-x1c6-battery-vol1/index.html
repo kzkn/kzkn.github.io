@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>ThinkPad X1 Carbon (6 Gen) のバッテリーが死んだ - システム破壊・復旧編</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <link rel="alternate" type="application/rss+xml" href="/index.xml">
+  </head>
+
+<body>
+  <header>
+    <h1>ThinkPad X1 Carbon (6 Gen) のバッテリーが死んだ - システム破壊・復旧編</h1>
+    <time>2023-02-04</time>
+  </header>
+  <main>
+    <article>
+	  <p>タイトルの通り、マシンのバッテリーが死んでしまった。悪いタイミングでバッテリーが死んでしまったため、マシンのシステム (Arch Linux) が壊れてしまった。その復旧の記録と、バッテリー換装作業の記録を残しておく。今回はシステム破壊と復旧について。</p>
+<p>先に教訓をまとめておくと:</p>
+<ul>
+<li>システムアップデートは確実な電源を確保したうえでやろう</li>
+<li>Linux をブート可能な USB メディアはいつでも使える状態にしておこう</li>
+</ul>
+<p>です。</p>
+<hr>
+<p>かんたんにまとめると、こんなことが起こった:</p>
+<ul>
+<li>yay でシステムアップデート中にバッテリーが死んでマシンがシャットダウンした</li>
+<li>タイミングが悪かったのか、ブートイメージが消えた</li>
+<li>ブートイメージがないのでマシンを起動できなくなった</li>
+</ul>
+<p>まず、何はともあれブートイメージを復旧させなくてはならない。というわけで以下のようなことをやった:</p>
+<ul>
+<li>Arch Linux のインストール用に作っていた USB メディアでブート</li>
+<li>/ パーティションをマウントする
+<ul>
+<li>LUKS を使っているので事前に <code>cryptsetup open --type luks hogehoge</code> が必要だった</li>
+</ul>
+</li>
+<li>/boot パーティションをマウントする</li>
+<li>/ をマウントした場所へ <code>arch-chroot</code></li>
+<li>/usr/lib/modules/6.1.7-arch1-1/vmlinuz を /boot にコピー</li>
+<li>mkinitcpio -g /boot/initramfs-linux.img -k /boot/vmlinuz-linux</li>
+<li>念のため linux-lts パッケージ関連のファイルにも同様の操作</li>
+<li>もろもろアンマウントしてリブート</li>
+</ul>
+<p>これでマシンが立ち上がるところまで復旧できた。</p>
+<p>yay の途中で強制的にシャットダウンしてしまったため、pacman のローカルデータベースが破損したような状態になっていた。
+yay をやり直そうとしても、署名があわないとかいうエラーが出てしまう。エラーが出るパッケージのローカルキャッシュの sig ファイルが空っぽになっており、この辺が原因のように見える。</p>
+<p>ここから色々やってさらに破壊を進めたり、どうにか復旧したり、また壊れてしまったりを繰り返した。最終的には Arch Wiki の<a href="https://wiki.archlinux.jp/index.php/Pacman/%E3%83%AD%E3%83%BC%E3%82%AB%E3%83%AB%E3%83%87%E3%83%BC%E3%82%BF%E3%83%99%E3%83%BC%E3%82%B9%E3%81%AE%E5%BE%A9%E5%85%83">Pacman/ローカルデータベースの復元</a>に従って復旧できた。こちらを参考に操作するのがよいと思う。</p>
+<hr>
+<p>バッテリーの死亡タイミングがほんの少し前か後ろにずれていれば、こんなすったもんだもなかったはず。この日は他にも小さめのアンラッキーが続いて、まぁそういう日だったんだろう。</p>
+<p>教訓としては冒頭に書いた通り。もうやりたくない。</p>
+
+    </article>
+  </main>
+  <footer><a href="https://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>
