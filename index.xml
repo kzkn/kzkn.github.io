@@ -5,10 +5,19 @@
     <description>Recent content on kazkn.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Sat, 04 Feb 2023 12:05:42 +0900</lastBuildDate>
+    <lastBuildDate>Tue, 14 Feb 2023 08:57:32 +0900</lastBuildDate>
     
         <atom:link href="https://kazkn.com/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>日記</title>
+      <link>https://kazkn.com/post/2023/2023-02-14/</link>
+      <pubDate>Tue, 14 Feb 2023 08:57:32 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2023/2023-02-14/</guid>
+      <description>先週末から花粉が舞い始めるとの天気予報だったので、毎年恒例の抗アレルギー薬を病院で処方してもらった。昨日の晩からくしゃみやアレルギー性の鼻水</description>
+    </item>
     
     <item>
       <title>ThinkPad X1 Carbon (6 Gen) のバッテリーが死んだ - バッテリー換装編</title>
