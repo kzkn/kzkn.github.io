@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>ニューマシンのセットアップメモ</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <link rel="alternate" type="application/rss+xml" href="/index.xml">
+  </head>
+
+<body>
+  <header>
+    <h1>ニューマシンのセットアップメモ</h1>
+    <time>2023-02-28</time>
+  </header>
+  <main>
+    <article>
+	  <p>メインマシンとして使っていた ThinkPad X1 Carbon (6th) に若干の性能不足を感じはじめたので、マシンを新調した。福岡の地元企業を応援ということ意味も込めて、<a href="https://shop.applied-net.co.jp/shopdetail/000000420629/">アプライドの Barikata-420629</a> を購入した。名前がイカス。メモリを64GBに増設して、OS無しを選択。1月下旬に注文して2月中旬に届き、セットアップが一段落したのが先週末といった具合。</p>
+<p>メインマシンをラップトップからデスクトップに移行するにあたり、デスク周りの整備もいくつか実施した。</p>
+<ul>
+<li>メインモニタを座席の正面に移動</li>
+<li>机の奥行きを拡張</li>
+<li>メインモニタを壁掛け (まだ途中)</li>
+</ul>
+<p>メインモニタには <a href="https://www.eizo.co.jp/products/lcd/ev2785/">EIZO の EV2785</a> を使っている。机の奥行きが狭く、従来は座席から向かって右斜め前に配置することで距離をとっていたのだけど、メインモニタが横にあるのも首が辛くなりそう。ということで机の奥行きを20cmほど拡張しつつ、モニタを壁掛けにすることでギリギリまで壁に寄せることで距離をとることにした。</p>
+<p>なお、壁掛けについては壁掛け金具とモニタを直接接続できず、モニタ側にアダプタが必要だった。VESAならなんでも接続できるのかと思っていたのだけど、そうでもないらしい。<a href="https://www.eizo.co.jp/products/ac/vesamp100/index.html">EIZO の VESAMP100</a> を注文している。うまくいけばいいんだけど。</p>
+<p>ニューマシンには Arch Linux をセットアップした。5年ぶりの Arch Linux のセットアップということもあり、色々とハマった。ざっとハマったポイントを挙げていく。</p>
+<ul>
+<li>USBブートできなかった
+<ul>
+<li>BIOSでセキュアブートを無効化</li>
+</ul>
+</li>
+<li>キーボードを認識しなかった
+<ul>
+<li>USB切替器を経由していたせい？</li>
+<li>直接マシンに挿して解決</li>
+</ul>
+</li>
+<li>USBメディアからの起動でネットにつながらない
+<ul>
+<li>IPアドレスが振られていない</li>
+<li><code>lspci -nnk</code> の結果を見るに、ドライバがなかった様子
+<ul>
+<li>5年前に焼いた iso をそのまま使っており、メディアが古かったのが悪かった様子</li>
+</ul>
+</li>
+<li>USBに最新の iso を焼き直して解決</li>
+</ul>
+</li>
+<li>ディスク容量が思ったより少ない
+<ul>
+<li>1TB の SSD を積んでいるはずだが、<code>fdisk</code> ではパーティション全体で 930GB ほどしか確保できていなかった</li>
+<li>購入スペックは TiB 表記のようだった。<code>1000000000 / 1024 / 1024 / 1024 = 0.931</code> ぐらいになることを確認して納得</li>
+</ul>
+</li>
+<li>ディスク暗号化
+<ul>
+<li>今回は <a href="https://wiki.archlinux.jp/index.php/Dm-crypt/%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E5%85%A8%E4%BD%93%E3%81%AE%E6%9A%97%E5%8F%B7%E5%8C%96#LVM_on_LUKS">LVM on LUKS</a> な構成を選択</li>
+<li>前回は <a href="https://wiki.archlinux.jp/index.php/Dm-crypt/%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E5%85%A8%E4%BD%93%E3%81%AE%E6%9A%97%E5%8F%B7%E5%8C%96#LUKS_on_LVM">LUKS on LVM</a> を選択していたようで、ブートオプションの指定の違いで微妙にハマる（後述）</li>
+</ul>
+</li>
+<li><code>bootctl install</code> に失敗
+<ul>
+<li><code>/boot</code> を ext2 で作っていた</li>
+<li>fat32 で作り直し</li>
+<li>ファイルシステムの作り直しによって vmlinuz も消えたので、root パーティションのファイルシステムを作るところからやり直した
+<ul>
+<li>vmlinuz さえ復旧させればいいはずで、部分的にやり直すこともできそうだったが、ここでケチってイレギュラーな対応をするよりは、まっさらな状態からきれいに組み立てることを選んだ</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>mkinitcpio</code> でエラー
+<ul>
+<li>lvm2 をインストール</li>
+<li>xfsprogs をインストール
+<ul>
+<li>fsck.xfs がないと怒られた</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>ブート時にディスクをマウントしない
+<ul>
+<li>カーネルオプションが足りなかった</li>
+<li>ディスク暗号化の構成違いで、前の設定を使いまわすことはできず、結局以下の設定にたどり着いた</li>
+<li><code>options crypt=:::: cryptdevice=/dev/disk/by-uuid/{UUID}:cryptlvm root=/dev/mapper/myvol-root quiet rw</code></li>
+</ul>
+</li>
+<li>ディスクからのブートでネットにつながらない
+<ul>
+<li>systemd-networkd, systemd-resolved を起動＆有効化</li>
+<li>networkd の設定ファイルを書いて DHCP を有効化</li>
+</ul>
+</li>
+<li>lightdm からログインできない
+<ul>
+<li><code>~/.dmrc</code> にウィンドウマネージャのセッションを記述</li>
+</ul>
+</li>
+<li>音が鳴らない
+<ul>
+<li>プライマリとして期待しない音声出力デバイスを使っている様子</li>
+<li><code>aplay -l</code> でそれっぽいデバイスを探して <code>/etc/environment</code> に <code>ALSA_CARD</code> 環境変数を設定</li>
+</ul>
+</li>
+<li>ruby の resolv モジュールで名前解決できない
+<ul>
+<li><code>/etc/resolv.conf</code> の設定が<a href="https://wiki.archlinux.jp/index.php/Systemd-resolved#DNS">よくなかった様子</a></li>
+<li><code>ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf</code> で解決</li>
+</ul>
+</li>
+</ul>
+<hr>
+<p>環境固有のものもあれば、手順を見逃していたものもあったり、原因は様々だった。</p>
+<p>USBメディアでセットアップを始めてからディスクで起動できるようになるまでに4時間ほどかかった。幸いまとまった時間を確保して作業したのはよかった。</p>
+
+    </article>
+  </main>
+  <footer><a href="https://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>
