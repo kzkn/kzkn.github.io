@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>日記</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <link rel="alternate" type="application/rss+xml" href="/index.xml">
+  </head>
+
+<body>
+  <header>
+    <h1>日記</h1>
+    <time>2023-04-02</time>
+  </header>
+  <main>
+    <article>
+	  <p>花粉症の症状はまだ続いている。とはいえ、辛いと思うほどではなくなってはいる。薬のおかげか、花粉の飛散量のおかげなのか。これまであまり気にしていなかった花粉予報を眺めてみたところ、今は（というかしばらく前から）もうスギではなくヒノキの時期になっているらしい。アレルギーがあるのはスギだけかと思っていたが、この感じじゃヒノキも濃厚だな。が、今はもう外で遊んでも大丈夫なぐらいになっているので、今年はもう乗り切ったと言えるのではないか。</p>
+<p>今年に入ってからメンテをしている <a href="https://github.com/ruby-formatter/rufo">rufo</a> のパターンマッチ構文の対応をようやく一通り実装して、さっき<a href="https://github.com/ruby-formatter/rufo/pull/302">リリースした</a>。長かった。パターンマッチと一口に言っても、リテラルを使うパターン、ピン演算子、Findパターン、ガード節などなど色々ある。一気に終わらせるのは無理だと悟ったので、<a href="https://github.com/ruby-formatter/rufo/pull/294">チェックリスト化して</a>地道に進めていた。</p>
+<p>実は Ruby のパターンマッチ構文をまともに使ったことがなかった。というか今でもない。構文には明るくなったが、どういう場面で役立つかがいまいちピンと来てない。Haskell では息をするようにパターンマッチするわけだけど、それがなぜか Ruby だと日常使いの道具として出てこない。慣れの問題だろうか？Ruby 2.7 が EOL になったし、これからライブラリのコードでもパターンマッチを見かけることが増えるかもしれない。具体的な応用例を見ながら便利に使えるようになるといいなと思っている。</p>
+<p>それからこちらも地道に作っていた ECS 向けのデプロイツールも一段落した。実際に使うかどうかはさておき、ECS と周辺サービスをどう組み合わせて使うのか、IAM Role がどう働くかについて解像度が上がったのはよかったと思っている。結局コードは捨てたけど、オートスケール周りの仕組みについてもだいたい理解できた。</p>
+<p>定期実行の基盤としては EventBridge Scheduler を採用してみた。スケジュールを組んで、RunTask で処理を実行する感じ。処理ごとにタスク定義を用意するのは流石にバカバカしいので、タスク定義は一つ、あとはタスクでのオーバーライドでコマンドの切り替えやらをやろうと目論んでいたのだけど、これを実現する方法にたどり着くのに苦労した。<a href="https://docs.aws.amazon.com/sdk-for-ruby/v3/api/Aws/Scheduler/Client.html#create_schedule-instance_method">create_schedule</a> の <a href="https://docs.aws.amazon.com/sdk-for-ruby/v3/api/Aws/Scheduler/Types/EcsParameters.html">ecs_parameters</a> には <code>override</code> や <code>containerOverrides</code> の項目がない。ではどうするかというと、<a href="https://docs.aws.amazon.com/sdk-for-ruby/v3/api/Aws/Scheduler/Types/Target.html#input-instance_method">input</a> という項目に <code>override</code> 相当の JSON 文字列を突っ込む。例えばこんな感じ(関係ない部分は省略):</p>
+<pre tabindex="0"><code>create_schedule({
+  target: {
+    ecs_parameters: {
+      task_definition_arn:,
+    },
+    input: { cpu: '512', containerOverrides: [{ name: 'app', command: %w[echo hello] }] }.to_json
+  },
+})
+</code></pre><p>これでタスク定義の CPU を 512 に、<code>app</code> コンテナのコマンドを <code>[&quot;echo&quot;, &quot;hello&quot;]</code> にオーバーライドできる。</p>
+<p>なかなかこの情報にたどり着くのが難しかった。ちまたの情報はともかく、AWS が提供するドキュメントではこの辺のこともカバーしておいてほしいなと思った。</p>
+
+    </article>
+  </main>
+  <footer><a href="https://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>
