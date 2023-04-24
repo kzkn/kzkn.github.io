@@ -8,10 +8,56 @@
     <description>Recent content on kazkn.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Thu, 20 Apr 2023 09:11:39 +0900</lastBuildDate>
+    <lastBuildDate>Mon, 24 Apr 2023 12:30:29 +0900</lastBuildDate>
     
         <atom:link href="https://kazkn.com/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>EventBridge Scheduler で RunTask するときにタスク定義をオーバーライドする方法</title>
+      <link>https://kazkn.com/post/2023/event-bridge-scheduler-run-task-override/</link>
+      <pubDate>Mon, 24 Apr 2023 12:30:29 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2023/event-bridge-scheduler-run-task-override/</guid>
+      <description>表題の How To 記事です。内容的には2023/4/2の日記に書いていたものとほぼ同じだけど、たどり着きやすいように独立した記事にしておく。 例えば Rails</description>
+      <content:encoded>&lt;p&gt;表題の How To 記事です。内容的には&lt;a href=&#34;https://kazkn.com/post/2023/2023-04-24/&#34;&gt;2023/4/2&lt;/a&gt;の日記に書いていたものとほぼ同じだけど、たどり着きやすいように独立した記事にしておく。&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;例えば Rails アプリにおける定期実行を EventBridge Scheduler から RunTask する形で組む場合、処理の種類ごとにタスク定義を用意するのは煩雑だと思う。だいたいの場合は、アプリケーション本体のために用意したタスク定義のコマンドを上書きするだけでよいはず。例えば &lt;code&gt;lib/cron.rake&lt;/code&gt; に定期実行するタスクを書いておいて、コンテナのコマンドとして &lt;code&gt;bin/rake cron:my_task&lt;/code&gt;, &lt;code&gt;bin/rake cron:my_task_2&lt;/code&gt; を指定する感じ。&lt;/p&gt;
+&lt;p&gt;また、処理の種類によってはタスク実行基盤に用意させるリソースを増やしたり減らしたりしたいかもしれない。&lt;/p&gt;
+&lt;p&gt;一言で言えば、EventBridge Scheduler から RunTask する際に、&lt;a href=&#34;https://docs.aws.amazon.com/cli/latest/reference/ecs/run-task.html&#34;&gt;aws ecs run-task&lt;/a&gt; の &lt;code&gt;--overrides&lt;/code&gt; 相当のパラメータを指定したい。&lt;/p&gt;
+&lt;p&gt;これを実現する方法にたどり着くのに苦労した。&lt;a href=&#34;https://docs.aws.amazon.com/sdk-for-ruby/v3/api/Aws/Scheduler/Client.html#create_schedule-instance_method&#34;&gt;create_schedule&lt;/a&gt; の &lt;a href=&#34;https://docs.aws.amazon.com/sdk-for-ruby/v3/api/Aws/Scheduler/Types/EcsParameters.html&#34;&gt;ecs_parameters&lt;/a&gt; には &lt;code&gt;override&lt;/code&gt; や &lt;code&gt;containerOverrides&lt;/code&gt; の項目がない。ではどうするかというと、&lt;a href=&#34;https://docs.aws.amazon.com/sdk-for-ruby/v3/api/Aws/Scheduler/Types/Target.html#input-instance_method&#34;&gt;input&lt;/a&gt; という項目に &lt;code&gt;override&lt;/code&gt; 相当の JSON 文字列を突っ込む。例えばこんな感じ(関係ない部分は省略):&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;create_schedule({
+  target: {
+    ecs_parameters: {
+      task_definition_arn:,
+    },
+    input: { cpu: &#39;512&#39;, containerOverrides: [{ name: &#39;app&#39;, command: %w[echo hello] }] }.to_json
+  },
+})
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;これでタスク定義の CPU を 512 に、&lt;code&gt;app&lt;/code&gt; コンテナのコマンドを &lt;code&gt;[&amp;quot;echo&amp;quot;, &amp;quot;hello&amp;quot;]&lt;/code&gt; にオーバーライドできる。&lt;/p&gt;
+</content:encoded>
+    </item>
+    
+    <item>
+      <title>日記</title>
+      <link>https://kazkn.com/post/2023/2023-04-24/</link>
+      <pubDate>Mon, 24 Apr 2023 12:17:50 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2023/2023-04-24/</guid>
+      <description>最近よく小説を読んでる。今までも年に2,3冊は読んでいたのだけど、ここ最近はペースが上がっている。たまたま本屋で見つけた本が面白くて、それを</description>
+      <content:encoded>&lt;p&gt;最近よく小説を読んでる。今までも年に2,3冊は読んでいたのだけど、ここ最近はペースが上がっている。たまたま本屋で見つけた本が面白くて、それをきっかけにあれこれ手を出すようになった。覚えている範囲で最近読んだ本はこんな感じ:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.amazon.co.jp/dp/4864108455&#34;&gt;変な家&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.amazon.co.jp/dp/4575245674&#34;&gt;変な絵&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.amazon.co.jp/dp/4396347383&#34;&gt;黒鳥の湖&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.amazon.co.jp/dp/4103522348&#34;&gt;#真相をお話しします&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.amazon.co.jp/dp/4763135074&#34;&gt;コーヒーが冷めないうちに&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.amazon.co.jp/dp/4041026423&#34;&gt;騙し絵の牙&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;わりとジャンルを問わず楽しめるタイプということもあって、どの本も（多少の差はあれど）おもしろく読めた。もう何冊かストックしているので、まだしばらくは楽しめそう。&lt;/p&gt;
+&lt;p&gt;読むのが遅いこともあいまって、長く楽しめるのもよいポイントだと思う。マンガもいいんだけど、3,4ヶ月待った新刊が1時間ぐらいで読み終わっちゃって、また待つというのがちょっとなーと思うところがある。&lt;/p&gt;
+</content:encoded>
+    </item>
     
     <item>
       <title>日記</title>

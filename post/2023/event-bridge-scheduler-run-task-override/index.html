@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>EventBridge Scheduler で RunTask するときにタスク定義をオーバーライドする方法</title>
+	<link rel="stylesheet" href="/css/style.css">
+    <link rel="alternate" type="application/rss+xml" href="/index.xml">
+  </head>
+
+<body>
+  <header>
+    <h1>EventBridge Scheduler で RunTask するときにタスク定義をオーバーライドする方法</h1>
+    <time>2023-04-24</time>
+  </header>
+  <main>
+    <article>
+	  <p>表題の How To 記事です。内容的には<a href="/post/2023/2023-04-24/">2023/4/2</a>の日記に書いていたものとほぼ同じだけど、たどり着きやすいように独立した記事にしておく。</p>
+<hr>
+<p>例えば Rails アプリにおける定期実行を EventBridge Scheduler から RunTask する形で組む場合、処理の種類ごとにタスク定義を用意するのは煩雑だと思う。だいたいの場合は、アプリケーション本体のために用意したタスク定義のコマンドを上書きするだけでよいはず。例えば <code>lib/cron.rake</code> に定期実行するタスクを書いておいて、コンテナのコマンドとして <code>bin/rake cron:my_task</code>, <code>bin/rake cron:my_task_2</code> を指定する感じ。</p>
+<p>また、処理の種類によってはタスク実行基盤に用意させるリソースを増やしたり減らしたりしたいかもしれない。</p>
+<p>一言で言えば、EventBridge Scheduler から RunTask する際に、<a href="https://docs.aws.amazon.com/cli/latest/reference/ecs/run-task.html">aws ecs run-task</a> の <code>--overrides</code> 相当のパラメータを指定したい。</p>
+<p>これを実現する方法にたどり着くのに苦労した。<a href="https://docs.aws.amazon.com/sdk-for-ruby/v3/api/Aws/Scheduler/Client.html#create_schedule-instance_method">create_schedule</a> の <a href="https://docs.aws.amazon.com/sdk-for-ruby/v3/api/Aws/Scheduler/Types/EcsParameters.html">ecs_parameters</a> には <code>override</code> や <code>containerOverrides</code> の項目がない。ではどうするかというと、<a href="https://docs.aws.amazon.com/sdk-for-ruby/v3/api/Aws/Scheduler/Types/Target.html#input-instance_method">input</a> という項目に <code>override</code> 相当の JSON 文字列を突っ込む。例えばこんな感じ(関係ない部分は省略):</p>
+<pre tabindex="0"><code>create_schedule({
+  target: {
+    ecs_parameters: {
+      task_definition_arn:,
+    },
+    input: { cpu: '512', containerOverrides: [{ name: 'app', command: %w[echo hello] }] }.to_json
+  },
+})
+</code></pre><p>これでタスク定義の CPU を 512 に、<code>app</code> コンテナのコマンドを <code>[&quot;echo&quot;, &quot;hello&quot;]</code> にオーバーライドできる。</p>
+
+    </article>
+  </main>
+  <footer><a href="https://kazkn.com/">&laquo; Back to top</a></footer>
+</body>
+</html>

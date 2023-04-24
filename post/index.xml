@@ -6,7 +6,25 @@
     <description>Recent content in Posts on kazkn.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Thu, 20 Apr 2023 09:11:39 +0900</lastBuildDate><atom:link href="https://kazkn.com/post/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 24 Apr 2023 12:30:29 +0900</lastBuildDate><atom:link href="https://kazkn.com/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>EventBridge Scheduler で RunTask するときにタスク定義をオーバーライドする方法</title>
+      <link>https://kazkn.com/post/2023/event-bridge-scheduler-run-task-override/</link>
+      <pubDate>Mon, 24 Apr 2023 12:30:29 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2023/event-bridge-scheduler-run-task-override/</guid>
+      <description>表題の How To 記事です。内容的には2023/4/2の日記に書いていたものとほぼ同じだけど、たどり着きやすいように独立した記事にしておく。 例えば Rails</description>
+    </item>
+    
+    <item>
+      <title>日記</title>
+      <link>https://kazkn.com/post/2023/2023-04-24/</link>
+      <pubDate>Mon, 24 Apr 2023 12:17:50 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2023/2023-04-24/</guid>
+      <description>最近よく小説を読んでる。今までも年に2,3冊は読んでいたのだけど、ここ最近はペースが上がっている。たまたま本屋で見つけた本が面白くて、それを</description>
+    </item>
+    
     <item>
       <title>日記</title>
       <link>https://kazkn.com/post/2023/2023-04-20/</link>
