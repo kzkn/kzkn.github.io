@@ -8,10 +8,24 @@
     <description>Recent content on kazkn.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Mon, 24 Apr 2023 12:30:29 +0900</lastBuildDate>
+    <lastBuildDate>Tue, 09 May 2023 09:21:23 +0900</lastBuildDate>
     
         <atom:link href="https://kazkn.com/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>日記</title>
+      <link>https://kazkn.com/post/2023/2023-05-09/</link>
+      <pubDate>Tue, 09 May 2023 09:21:23 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2023/2023-05-09/</guid>
+      <description>今年のGWはあまり遠出はしなかったけど、近くの友人と会う機会が多かった。近所同士なら渋滞や人混みに巻き込まれることもないし、快適だなと思った</description>
+      <content:encoded>&lt;p&gt;今年のGWはあまり遠出はしなかったけど、近くの友人と会う機会が多かった。近所同士なら渋滞や人混みに巻き込まれることもないし、快適だなと思った。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.amazon.co.jp/dp/4150504105&#34;&gt;ファストアンドスロー&lt;/a&gt;を読んでいる。詳しい書評は他に譲るとして、システム1の説明を見るにつき、分かるわー、あるわーと思わず首を縦に振ってしまう。一方で普段からそこそこシステム2が稼働してるのか、はたまたこの本を読んでいる間だけシステム2が活発なのか、大半の人はシステム1が優位に働いてこうなのよ、という説明も、俺はそうでもないなと思う部分もある。いずれにせよ、普段無意識にうちに行っている思考や判断の根拠が言語化されているのはおもしろい。&lt;/p&gt;
+&lt;p&gt;おもしろいのだけど、どうしても眠くなる。一度に読むのは1, 2章ぐらいが限界。システム2が稼働しまくってるんだろうか。はたまた内心つまらないと思ってるんだろうか。というわけで少しずつ読んでいて、なかなか進まない。下巻を読むのはちょっと間をあけようかと思ってる。他に読みたい本が色々あるし。&lt;/p&gt;
+&lt;p&gt;GnuCash がクラッシュする問題について送っていた &lt;a href=&#34;https://github.com/Gnucash/gnucash/pull/1610&#34;&gt;Pullreq がマージされた&lt;/a&gt;。マージされたといっても、修正内容はメンテナが提案してくれたものをそのまま使っただけなのだけど、ともあれ問題が修正されたのはめでたい。この修正が含まれたバージョンも &lt;a href=&#34;https://github.com/Gnucash/gnucash/releases/tag/5.1&#34;&gt;5.1 としてリリースされた&lt;/a&gt;様子。まだ手元の環境では自分でビルドしたバージョンを使っていて試していないけれど、このバイナリもそろそろお役御免だろう。&lt;/p&gt;
+</content:encoded>
+    </item>
     
     <item>
       <title>EventBridge Scheduler で RunTask するときにタスク定義をオーバーライドする方法</title>

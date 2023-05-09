@@ -6,7 +6,16 @@
     <description>Recent content in Posts on kazkn.com</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja</language>
-    <lastBuildDate>Mon, 24 Apr 2023 12:30:29 +0900</lastBuildDate><atom:link href="https://kazkn.com/post/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 09 May 2023 09:21:23 +0900</lastBuildDate><atom:link href="https://kazkn.com/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>日記</title>
+      <link>https://kazkn.com/post/2023/2023-05-09/</link>
+      <pubDate>Tue, 09 May 2023 09:21:23 +0900</pubDate>
+      
+      <guid>https://kazkn.com/post/2023/2023-05-09/</guid>
+      <description>今年のGWはあまり遠出はしなかったけど、近くの友人と会う機会が多かった。近所同士なら渋滞や人混みに巻き込まれることもないし、快適だなと思った</description>
+    </item>
+    
     <item>
       <title>EventBridge Scheduler で RunTask するときにタスク定義をオーバーライドする方法</title>
       <link>https://kazkn.com/post/2023/event-bridge-scheduler-run-task-override/</link>
